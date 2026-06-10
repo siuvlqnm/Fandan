@@ -59,7 +59,7 @@
 			</Card.Description>
 		</Card.Header>
 		<Card.Content class="grid gap-3 md:grid-cols-3">
-			<Button href="/app" variant="outline">用餐对象</Button>
+			<Button href="/app/targets" variant="outline">用餐对象</Button>
 			<Button href="/app" variant="outline">菜品库</Button>
 			<Button href="/app" variant="outline">新建饭单</Button>
 		</Card.Content>

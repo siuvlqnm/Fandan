@@ -2,6 +2,34 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-86 - Meal Target List And Edit Pages
+
+Status: implemented.
+
+Commit: see Git history entry `Add meal target management pages`.
+
+What changed:
+
+- Added `/app/targets` list page with search, type filter, target cards and delete action.
+- Added `/app/targets/new` create page.
+- Added `/app/targets/:id` edit page with historical meal-plan section and delete action.
+- Added shared `TargetForm` component for create/edit forms.
+- Added placeholder `/app/meal-plans/new?targetId=:id` and `/app/meal-plans/:id` routes so target card links are not broken before LES-90/LES-91.
+- Updated `/app` dashboard target entry to point to `/app/targets`.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Browser smoke: sign up, open `/app/targets`, create target, filter/search, edit, open meal-plan placeholder, delete target.
+- Mobile viewport browser check for `/app/targets` and `/app/targets/new`.
+
+Notes for next threads:
+
+- Use `docs/development/targets-pages.md` for route and UX boundaries.
+- Meal-plan placeholder routes are intentionally minimal and should be replaced by LES-90 and LES-91.
+- Target page actions reuse `src/lib/server/targets.ts`; keep future page/API behavior aligned there.
+
 ## LES-85 - Meal Target CRUD API
 
 Status: implemented.

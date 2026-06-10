@@ -7,6 +7,9 @@ import type { AuthenticatedContext } from './context';
 const targetTypeSchema = z.enum(['home', 'client', 'gathering', 'other']);
 
 const notesSchema = z.string().trim().max(2000).nullable().optional();
+const emptyStringToNull = (value: unknown) => (value === '' ? null : value);
+const emptyStringToUndefined = (value: unknown) => (value === '' ? undefined : value);
+const formNotesSchema = z.preprocess(emptyStringToNull, notesSchema);
 
 const targetFieldsSchema = z.object({
 	name: z.string().trim().min(1, '请输入用餐对象名称').max(80),
@@ -27,8 +30,19 @@ export const updateTargetSchema = targetFieldsSchema
 	.partial()
 	.refine((value) => Object.keys(value).length > 0, { message: 'At least one field is required' });
 
+export const targetFormSchema = z.object({
+	name: z.string().trim().min(1, '请输入用餐对象名称').max(80),
+	type: targetTypeSchema.default('home'),
+	peopleCount: z.preprocess(emptyStringToUndefined, z.coerce.number().int().min(1).max(999).default(1)),
+	tasteNotes: formNotesSchema,
+	dietaryRestrictions: formNotesSchema,
+	budgetNotes: formNotesSchema,
+	contactNotes: formNotesSchema
+});
+
 type CreateTargetInput = z.infer<typeof createTargetSchema>;
 type UpdateTargetInput = z.infer<typeof updateTargetSchema>;
+export type TargetFormInput = z.infer<typeof targetFormSchema>;
 
 const serializeTarget = (target: MealTarget) => ({
 	id: target.id,
