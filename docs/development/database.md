@@ -46,13 +46,15 @@ curl http://127.0.0.1:5173/api/health
 ```json
 {
 	"ok": true,
-	"service": "fandan",
-	"runtime": "sveltekit-cloudflare",
-	"database": {
-		"binding": "DB",
-		"available": true,
-		"queryOk": true,
-		"spaces": 1
+	"data": {
+		"service": "fandan",
+		"runtime": "sveltekit-cloudflare",
+		"database": {
+			"binding": "DB",
+			"available": true,
+			"queryOk": true,
+			"spaces": 1
+		}
 	}
 }
 ```

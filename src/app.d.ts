@@ -18,7 +18,13 @@ declare global {
 			auth?: ReturnType<typeof createAuth>
 		}
 
-		// interface Error {}
+		interface Error {
+			code?: string;
+			issues?: Array<{
+				path: string;
+				message: string;
+			}>;
+		}
 		// interface PageData {}
 		// interface PageState {}
 	}

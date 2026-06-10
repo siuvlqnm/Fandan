@@ -1,7 +1,7 @@
-import { json } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import { apiRoute } from '$lib/server/api/handler';
+import { apiOk } from '$lib/server/api/response';
 
-export const GET: RequestHandler = async ({ platform }) => {
+export const GET = apiRoute(async ({ platform }) => {
 	const env = platform?.env as Env | undefined;
 	let queryOk = false;
 	let spaces = 0;
@@ -17,8 +17,7 @@ export const GET: RequestHandler = async ({ platform }) => {
 		}
 	}
 
-	return json({
-		ok: true,
+	return apiOk({
 		service: 'fandan',
 		runtime: 'sveltekit-cloudflare',
 		database: {
@@ -29,4 +28,4 @@ export const GET: RequestHandler = async ({ platform }) => {
 			error
 		}
 	});
-};
+});

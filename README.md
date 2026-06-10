@@ -64,6 +64,7 @@ npm run dev
 
 数据库本地开发说明见 [docs/development/database.md](docs/development/database.md)。
 核心数据模型说明见 [docs/development/data-model.md](docs/development/data-model.md)。
+服务端 API 约定见 [docs/development/server.md](docs/development/server.md)。
 
 ## 验证
 
