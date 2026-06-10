@@ -2,6 +2,33 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-85 - Meal Target CRUD API
+
+Status: implemented.
+
+Commit: see Git history entry `Add meal target CRUD API`.
+
+What changed:
+
+- Added space-scoped target API routes under `/api/targets`.
+- Added create, list, detail, patch, delete and target meal-plan list endpoints.
+- Added `src/lib/server/targets.ts` for Zod validation, serialization and Drizzle operations.
+- `POST /api/targets` supports creating a target with only `name`; `type` defaults to `home` and `peopleCount` defaults to `1`.
+- `PATCH /api/targets/:id` only changes explicitly provided fields and does not reset missing fields to defaults.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Authenticated smoke test creates, lists, reads, updates, lists meal plans for, and deletes a target.
+- Logged-out `GET /api/targets` returns the unified 401 envelope.
+
+Notes for next threads:
+
+- Use `docs/development/targets-api.md` as the contract for page work.
+- The implemented route prefix is `/api`; Linear's `/targets` notation refers to the product endpoint family.
+- All creator-side target queries filter by the current `space.id`.
+
 ## LES-84 - Better Auth Login And Default Workspace
 
 Status: implemented.

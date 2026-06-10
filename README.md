@@ -68,6 +68,7 @@ npm run dev
 核心数据模型说明见 [docs/development/data-model.md](docs/development/data-model.md)。
 服务端 API 约定见 [docs/development/server.md](docs/development/server.md)。
 登录和默认工作空间说明见 [docs/development/auth.md](docs/development/auth.md)。
+用餐对象 API 说明见 [docs/development/targets-api.md](docs/development/targets-api.md)。
 每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 
 ## 验证

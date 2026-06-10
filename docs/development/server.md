@@ -106,3 +106,4 @@ Public share routes are the exception. They should resolve data through `share_l
 
 - `GET /api/health`: public health check with D1 query status.
 - `GET /api/me`: protected endpoint returning current user, session and space.
+- `/api/targets/**`: protected meal target CRUD API. See `docs/development/targets-api.md`.
