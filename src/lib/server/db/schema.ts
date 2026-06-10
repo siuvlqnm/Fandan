@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 const id = () => text('id').primaryKey().$defaultFn(() => crypto.randomUUID());
@@ -11,7 +11,7 @@ export const spaces = sqliteTable('spaces', {
 	ownerUserId: text('owner_user_id').notNull(),
 	createdAt: createdAt(),
 	updatedAt: updatedAt()
-});
+}, (table) => [index('spaces_owner_idx').on(table.ownerUserId)]);
 
 export const mealTargets = sqliteTable(
 	'meal_targets',
@@ -28,7 +28,10 @@ export const mealTargets = sqliteTable(
 		createdAt: createdAt(),
 		updatedAt: updatedAt()
 	},
-	(table) => [index('meal_targets_space_idx').on(table.spaceId)]
+	(table) => [
+		index('meal_targets_space_idx').on(table.spaceId),
+		index('meal_targets_space_type_idx').on(table.spaceId, table.type)
+	]
 );
 
 export const dishes = sqliteTable(
@@ -44,7 +47,11 @@ export const dishes = sqliteTable(
 		createdAt: createdAt(),
 		updatedAt: updatedAt()
 	},
-	(table) => [index('dishes_space_idx').on(table.spaceId), index('dishes_name_idx').on(table.name)]
+	(table) => [
+		index('dishes_space_idx').on(table.spaceId),
+		index('dishes_space_name_idx').on(table.spaceId, table.name),
+		index('dishes_space_category_idx').on(table.spaceId, table.category)
+	]
 );
 
 export const dishIngredients = sqliteTable(
@@ -83,6 +90,8 @@ export const mealPlans = sqliteTable(
 	},
 	(table) => [
 		index('meal_plans_space_idx').on(table.spaceId),
+		index('meal_plans_space_status_idx').on(table.spaceId, table.status),
+		index('meal_plans_space_start_date_idx').on(table.spaceId, table.startDate),
 		index('meal_plans_target_idx').on(table.targetId),
 		index('meal_plans_status_idx').on(table.status)
 	]
@@ -104,6 +113,8 @@ export const mealPlanItems = sqliteTable(
 	},
 	(table) => [
 		index('meal_plan_items_plan_idx').on(table.mealPlanId),
+		index('meal_plan_items_plan_sort_idx').on(table.mealPlanId, table.sortOrder),
+		index('meal_plan_items_plan_date_idx').on(table.mealPlanId, table.plannedDate),
 		index('meal_plan_items_dish_idx').on(table.dishId)
 	]
 );
@@ -137,7 +148,11 @@ export const shoppingListItems = sqliteTable(
 		createdAt: createdAt(),
 		updatedAt: updatedAt()
 	},
-	(table) => [index('shopping_list_items_list_idx').on(table.shoppingListId)]
+	(table) => [
+		index('shopping_list_items_list_idx').on(table.shoppingListId),
+		index('shopping_list_items_list_checked_idx').on(table.shoppingListId, table.checked),
+		index('shopping_list_items_source_dish_idx').on(table.sourceDishId)
+	]
 );
 
 export const shareLinks = sqliteTable(
@@ -170,8 +185,125 @@ export const feedback = sqliteTable(
 	},
 	(table) => [
 		index('feedback_share_link_idx').on(table.shareLinkId),
+		index('feedback_share_link_reaction_idx').on(table.shareLinkId, table.reaction),
 		index('feedback_plan_item_idx').on(table.mealPlanItemId)
 	]
 );
+
+export const spacesRelations = relations(spaces, ({ many }) => ({
+	mealTargets: many(mealTargets),
+	dishes: many(dishes),
+	mealPlans: many(mealPlans)
+}));
+
+export const mealTargetsRelations = relations(mealTargets, ({ one, many }) => ({
+	space: one(spaces, {
+		fields: [mealTargets.spaceId],
+		references: [spaces.id]
+	}),
+	mealPlans: many(mealPlans)
+}));
+
+export const dishesRelations = relations(dishes, ({ one, many }) => ({
+	space: one(spaces, {
+		fields: [dishes.spaceId],
+		references: [spaces.id]
+	}),
+	ingredients: many(dishIngredients),
+	mealPlanItems: many(mealPlanItems),
+	shoppingListItems: many(shoppingListItems)
+}));
+
+export const dishIngredientsRelations = relations(dishIngredients, ({ one }) => ({
+	dish: one(dishes, {
+		fields: [dishIngredients.dishId],
+		references: [dishes.id]
+	})
+}));
+
+export const mealPlansRelations = relations(mealPlans, ({ one, many }) => ({
+	space: one(spaces, {
+		fields: [mealPlans.spaceId],
+		references: [spaces.id]
+	}),
+	target: one(mealTargets, {
+		fields: [mealPlans.targetId],
+		references: [mealTargets.id]
+	}),
+	items: many(mealPlanItems),
+	shoppingLists: many(shoppingLists),
+	shareLinks: many(shareLinks)
+}));
+
+export const mealPlanItemsRelations = relations(mealPlanItems, ({ one, many }) => ({
+	mealPlan: one(mealPlans, {
+		fields: [mealPlanItems.mealPlanId],
+		references: [mealPlans.id]
+	}),
+	dish: one(dishes, {
+		fields: [mealPlanItems.dishId],
+		references: [dishes.id]
+	}),
+	feedback: many(feedback)
+}));
+
+export const shoppingListsRelations = relations(shoppingLists, ({ one, many }) => ({
+	mealPlan: one(mealPlans, {
+		fields: [shoppingLists.mealPlanId],
+		references: [mealPlans.id]
+	}),
+	items: many(shoppingListItems)
+}));
+
+export const shoppingListItemsRelations = relations(shoppingListItems, ({ one }) => ({
+	shoppingList: one(shoppingLists, {
+		fields: [shoppingListItems.shoppingListId],
+		references: [shoppingLists.id]
+	}),
+	sourceDish: one(dishes, {
+		fields: [shoppingListItems.sourceDishId],
+		references: [dishes.id]
+	})
+}));
+
+export const shareLinksRelations = relations(shareLinks, ({ one, many }) => ({
+	mealPlan: one(mealPlans, {
+		fields: [shareLinks.mealPlanId],
+		references: [mealPlans.id]
+	}),
+	feedback: many(feedback)
+}));
+
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+	shareLink: one(shareLinks, {
+		fields: [feedback.shareLinkId],
+		references: [shareLinks.id]
+	}),
+	mealPlanItem: one(mealPlanItems, {
+		fields: [feedback.mealPlanItemId],
+		references: [mealPlanItems.id]
+	})
+}));
+
+export type Space = typeof spaces.$inferSelect;
+export type NewSpace = typeof spaces.$inferInsert;
+export type MealTarget = typeof mealTargets.$inferSelect;
+export type NewMealTarget = typeof mealTargets.$inferInsert;
+export type Dish = typeof dishes.$inferSelect;
+export type NewDish = typeof dishes.$inferInsert;
+export type DishIngredient = typeof dishIngredients.$inferSelect;
+export type NewDishIngredient = typeof dishIngredients.$inferInsert;
+export type MealPlan = typeof mealPlans.$inferSelect;
+export type NewMealPlan = typeof mealPlans.$inferInsert;
+export type MealPlanItem = typeof mealPlanItems.$inferSelect;
+export type NewMealPlanItem = typeof mealPlanItems.$inferInsert;
+export type ShoppingList = typeof shoppingLists.$inferSelect;
+export type NewShoppingList = typeof shoppingLists.$inferInsert;
+export type ShoppingListItem = typeof shoppingListItems.$inferSelect;
+export type NewShoppingListItem = typeof shoppingListItems.$inferInsert;
+export type ShareLink = typeof shareLinks.$inferSelect;
+export type NewShareLink = typeof shareLinks.$inferInsert;
+export type Feedback = typeof feedback.$inferSelect;
+export type NewFeedback = typeof feedback.$inferInsert;
 
 export * from './auth.schema';

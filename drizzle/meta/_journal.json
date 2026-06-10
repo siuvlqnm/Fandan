@@ -8,6 +8,13 @@
       "when": 1781081411564,
       "tag": "0000_panoramic_carnage",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1781091345823,
+      "tag": "0001_groovy_wilson_fisk",
+      "breakpoints": true
     }
   ]
 }

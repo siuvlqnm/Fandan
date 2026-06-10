@@ -67,6 +67,7 @@ curl http://127.0.0.1:5173/api/health
 - `src/lib/server/db/auth.schema.ts`: Better Auth 生成的认证 schema。
 - `drizzle/0000_panoramic_carnage.sql`: 初始 migration。
 - `scripts/db/seed.local.sql`: 本地演示数据。
+- `docs/development/data-model.md`: MVP 数据模型和关系说明。
 
 ## Remote D1
 
