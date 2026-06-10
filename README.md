@@ -56,11 +56,13 @@ npm install
 cp .env.example .env
 npm run auth:schema
 npm run db:generate
-npm run db:migrate:local
+npm run db:setup:local
 npm run dev
 ```
 
 打开 `http://127.0.0.1:5173/`。
+
+数据库本地开发说明见 [docs/development/database.md](docs/development/database.md)。
 
 ## 验证
 
