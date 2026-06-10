@@ -33,8 +33,43 @@
 - Tailwind CSS
 - shadcn-svelte
 - Better Auth
+- Superforms + Zod
 - Cloudflare D1 + Drizzle
 - SvelteKit server routes/actions
+
+## 当前骨架
+
+- 首页：`/`
+- 登录/注册占位：`/login`
+- 健康检查：`/api/health`
+- 数据库 schema：`src/lib/server/db/schema.ts`
+- Better Auth schema：`src/lib/server/db/auth.schema.ts`
+- Drizzle migration：`drizzle/`
+- Cloudflare Worker/D1 配置：`wrangler.jsonc`
+
+## 本地开发
+
+当前 Svelte/Vite 依赖要求 Node `^20.19 || ^22.12 || >=24`。
+
+```bash
+npm install
+cp .env.example .env
+npm run auth:schema
+npm run db:generate
+npm run db:migrate:local
+npm run dev
+```
+
+打开 `http://127.0.0.1:5173/`。
+
+## 验证
+
+```bash
+npm run check
+npm run build
+```
+
+`npm run check` 会先生成 `worker-configuration.d.ts`，再执行 Svelte typecheck。
 
 ## 暂不做
 
