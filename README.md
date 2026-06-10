@@ -40,7 +40,9 @@
 ## 当前骨架
 
 - 首页：`/`
-- 登录/注册占位：`/login`
+- 登录/注册：`/login`
+- 创建者工作台：`/app`
+- 退出登录：`POST /logout`
 - 健康检查：`/api/health`
 - 数据库 schema：`src/lib/server/db/schema.ts`
 - Better Auth schema：`src/lib/server/db/auth.schema.ts`
@@ -65,6 +67,8 @@ npm run dev
 数据库本地开发说明见 [docs/development/database.md](docs/development/database.md)。
 核心数据模型说明见 [docs/development/data-model.md](docs/development/data-model.md)。
 服务端 API 约定见 [docs/development/server.md](docs/development/server.md)。
+登录和默认工作空间说明见 [docs/development/auth.md](docs/development/auth.md)。
+每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 
 ## 验证
 

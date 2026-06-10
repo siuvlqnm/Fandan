@@ -34,8 +34,8 @@
 				</p>
 			</div>
 			<div class="flex flex-wrap gap-3">
-				<Button href="/login" size="lg">
-					开始搭建登录
+				<Button href="/app" size="lg">
+					进入饭单工作台
 					<ArrowRight class="size-4" />
 				</Button>
 				<Button href="/api/health" variant="outline" size="lg">查看 API 健康检查</Button>

@@ -3,6 +3,9 @@ import { APIError } from 'better-auth/api';
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { z } from 'zod';
+import { getRequestContext } from '$lib/server/context';
+import { ensureDefaultSpace } from '$lib/server/workspace';
+import type { RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 const signInSchema = z.object({
@@ -14,9 +17,14 @@ const signUpSchema = signInSchema.extend({
 	name: z.string().min(1, '请输入名称')
 });
 
+const getRedirectTo = (event: RequestEvent) => {
+	const next = event.url.searchParams.get('next');
+	return next?.startsWith('/') && !next.startsWith('//') ? next : '/app';
+};
+
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
-		return redirect(302, '/');
+		return redirect(302, getRedirectTo(event));
 	}
 
 	return {
@@ -43,20 +51,23 @@ export const actions: Actions = {
 		}
 
 		try {
-			await event.locals.auth.api.signInEmail({
+			const result = await event.locals.auth.api.signInEmail({
 				body: {
 					email: form.data.email,
 					password: form.data.password,
-					callbackURL: '/'
+					callbackURL: getRedirectTo(event)
 				},
 				headers: event.request.headers
 			});
+
+			const { db } = getRequestContext(event);
+			await ensureDefaultSpace(db, result.user);
 		} catch (error) {
 			const message = error instanceof APIError ? error.message : '登录失败，请稍后重试';
 			return fail(400, { signInForm: { ...form, message } });
 		}
 
-		return redirect(302, '/');
+		return redirect(302, getRedirectTo(event));
 	},
 
 	signUpEmail: async (event) => {
@@ -76,20 +87,23 @@ export const actions: Actions = {
 		}
 
 		try {
-			await event.locals.auth.api.signUpEmail({
+			const result = await event.locals.auth.api.signUpEmail({
 				body: {
 					email: form.data.email,
 					password: form.data.password,
 					name: form.data.name,
-					callbackURL: '/'
+					callbackURL: getRedirectTo(event)
 				},
 				headers: event.request.headers
 			});
+
+			const { db } = getRequestContext(event);
+			await ensureDefaultSpace(db, result.user);
 		} catch (error) {
 			const message = error instanceof APIError ? error.message : '注册失败，请稍后重试';
 			return fail(400, { signUpForm: { ...form, message } });
 		}
 
-		return redirect(302, '/');
+		return redirect(302, getRedirectTo(event));
 	}
 };

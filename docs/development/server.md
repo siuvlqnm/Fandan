@@ -8,6 +8,7 @@
 - `src/routes/**/+page.server.ts`: 页面 load/actions，只服务当前页面表单和页面数据。
 - `src/lib/server/api/*`: API 响应、错误和校验基础设施。
 - `src/lib/server/context.ts`: 当前请求的 D1、Drizzle、用户和 space 上下文。
+- `src/lib/server/workspace.ts`: 默认 space 创建和查询 helper。
 - `src/lib/server/db/*`: schema、relations、DB client。
 
 页面 action 可以复用 `src/lib/server/context.ts`，但不要直接复用 API route handler。API route 返回统一 JSON；页面 action 返回 Superforms/SvelteKit action data。
@@ -97,7 +98,7 @@ This enforces:
 
 - D1 binding is available.
 - The request is authenticated.
-- The user has a current `spaces` row.
+- The user has a current `spaces` row; if missing, the default workspace is created.
 
 Public share routes are the exception. They should resolve data through `share_links.token` and only return fields allowed for visitors.
 

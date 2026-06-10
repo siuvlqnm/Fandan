@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { apiError } from './api/errors';
 import { getDb } from './db';
 import { spaces, type Space } from './db/schema';
+import { ensureDefaultSpace } from './workspace';
 import type { RequestEvent } from '@sveltejs/kit';
 
 export type RequestContext = {
@@ -37,11 +38,7 @@ export const getCurrentSpace = async (event: RequestEvent, context = getRequestC
 
 	const [space] = await context.db.select().from(spaces).where(eq(spaces.ownerUserId, user.id)).limit(1);
 
-	if (!space) {
-		throw apiError('NOT_FOUND', 'Current user does not have a workspace');
-	}
-
-	return space;
+	return space ?? ensureDefaultSpace(context.db, user);
 };
 
 export const requireUserSpace = async (event: RequestEvent): Promise<AuthenticatedContext> => {

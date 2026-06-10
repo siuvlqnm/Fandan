@@ -2,8 +2,10 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { ChefHat } from 'lucide-svelte';
+	import type { Snippet } from 'svelte';
+	import type { LayoutData } from './$types';
 
-	let { children } = $props();
+	let { children, data }: { children: Snippet; data: LayoutData } = $props();
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -18,7 +20,14 @@
 				<span>饭单</span>
 			</a>
 			<nav class="flex items-center gap-2 text-sm text-muted-foreground">
-				<a class="rounded-md px-2 py-1 hover:bg-muted hover:text-foreground" href="/login">登录</a>
+				<a class="rounded-md px-2 py-1 hover:bg-muted hover:text-foreground" href="/app">工作台</a>
+				{#if data.user}
+					<form method="post" action="/logout">
+						<button class="rounded-md px-2 py-1 hover:bg-muted hover:text-foreground" type="submit">退出</button>
+					</form>
+				{:else}
+					<a class="rounded-md px-2 py-1 hover:bg-muted hover:text-foreground" href="/login">登录</a>
+				{/if}
 				<a class="rounded-md px-2 py-1 hover:bg-muted hover:text-foreground" href="/api/health">健康检查</a>
 			</nav>
 		</div>
