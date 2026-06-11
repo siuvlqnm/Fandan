@@ -2,6 +2,35 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-87 - Dish And Ingredient CRUD API
+
+Status: implemented.
+
+Commit: see Git history entry `Add dish ingredient CRUD API`.
+
+What changed:
+
+- Added protected `/api/dishes` list and create endpoints.
+- Added protected `/api/dishes/:id` detail, patch and delete endpoints.
+- Added `src/lib/server/dishes.ts` with Zod validation, serialization, space-scoped Drizzle operations and ingredient replacement behavior.
+- Dish create supports saving with only `name`; `tags`, `ingredients` and `visibility` receive MVP defaults.
+- Dish create/update supports multiple ingredients with name, quantity, unit, category, notes and sort order.
+- Dish list supports `q` or `search` query against dish name, category, tags and ingredient names.
+- Added `docs/development/dishes-api.md` and linked it from the README.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Authenticated smoke test creates a name-only dish, creates a dish with multiple ingredients, searches by dish name, ingredient name and tag, patches fields and ingredients, reads detail, and deletes the dish.
+- Logged-out `GET /api/dishes` returns the unified 401 envelope.
+
+Notes for next threads:
+
+- Use `docs/development/dishes-api.md` as the contract for LES-88 page work.
+- `PATCH /api/dishes/:id` keeps existing ingredients when `ingredients` is omitted and replaces the full list when `ingredients` is provided.
+- Search currently runs in the service layer after loading current-space dishes and ingredients, which is acceptable for the MVP library size but can move into SQL if the dish library grows.
+
 ## LES-86 - Meal Target List And Edit Pages
 
 Status: implemented.
