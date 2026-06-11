@@ -2,6 +2,34 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-97 - Dashboard And New User Empty State
+
+Status: implemented.
+
+Commit: see Git history entry `Add dashboard empty states`.
+
+What changed:
+
+- Replaced `/app` placeholder copy with a creator dashboard focused on the next meal-plan action.
+- Added a first-screen new-user empty state with primary entry to create the first meal plan.
+- Added dashboard stats linking to targets, dishes and meal plans.
+- Prioritized pending-confirmation meal plans before today's plans and recent plans.
+- Added current-week, recent meal-plan, recent-target and recent-dish sections.
+- Added `docs/development/dashboard.md` and linked it from the README.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Authenticated browser smoke for `/app` as a new user: empty state and primary first-meal-plan action render.
+- Authenticated browser smoke for `/app` with temporary target, dish and pending meal plan: pending confirmation is prioritized and recent sections render.
+- Mobile viewport check for `/app` with no horizontal overflow and visible core action.
+
+Notes for next threads:
+
+- The dashboard date logic currently compares existing `YYYY-MM-DD` date strings.
+- LES-98 can use this page as the mobile polish baseline rather than returning to the old placeholder.
+
 ## LES-96 - Meal Plan Feedback Aggregation
 
 Status: implemented.
