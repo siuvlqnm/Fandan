@@ -2,6 +2,7 @@
 	import TargetForm from '$lib/components/target-form.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, ClipboardList, Plus } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -80,8 +81,16 @@
 					<Card.Description>删除后不会删除已存在饭单，但饭单会失去对象关联。</Card.Description>
 				</Card.Header>
 				<Card.Content>
-					<form method="post" action="?/delete">
-						<Button type="submit" variant="destructive" class="w-full">删除对象</Button>
+					<form method="post" action="?/delete" use:enhanceWithFeedback>
+						<Button
+							type="submit"
+							variant="destructive"
+							class="w-full"
+							data-confirm={`删除对象「${target.name}」？已存在饭单不会删除，但会失去对象关联。`}
+							data-pending-label="删除中..."
+						>
+							删除对象
+						</Button>
 					</form>
 				</Card.Content>
 			</Card.Root>

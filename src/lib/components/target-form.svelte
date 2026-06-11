@@ -2,6 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { cn } from '$lib/utils';
 
 	type TargetFormValues = {
@@ -45,7 +46,7 @@
 		'dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 aria-invalid:border-destructive h-9 w-full min-w-0 rounded-md border bg-transparent px-2.5 py-1 text-base shadow-xs outline-none transition-[color,box-shadow] focus-visible:ring-3 aria-invalid:ring-3 md:text-sm';
 </script>
 
-<form method="post" {action} class="space-y-5">
+<form method="post" {action} use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-5">
 	<div class="grid gap-4 md:grid-cols-[1fr_180px_160px]">
 		<div class="space-y-2">
 			<Label for="target-name">对象名称</Label>
@@ -143,6 +144,6 @@
 
 	<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
 		<Button href={cancelHref} variant="outline">取消</Button>
-		<Button type="submit">{submitLabel}</Button>
+		<Button type="submit" data-pending-label="保存中...">{submitLabel}</Button>
 	</div>
 </form>

@@ -2,6 +2,34 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-98 - Mobile Polish And Error-State Readiness
+
+Status: implemented.
+
+Commit: see Git history entry `Add mobile form safety`.
+
+What changed:
+
+- Added `src/lib/forms/enhance.ts`, a reusable SvelteKit form enhancement for pending state and destructive-action confirmation.
+- Added pending labels and disabled submit states to core create/edit flows for targets, dishes, meal plans, shopping lists and share confirmation.
+- Added confirmation prompts for destructive or overwriting actions: delete, archive, remove meal-plan item and regenerate shopping list.
+- Kept fast reversible actions, such as shopping-list purchased toggles, responsive with pending state only.
+- Added `docs/development/mobile-polish.md` and linked it from the README.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- HTTP smoke on `wrangler dev`: `/` and `/login` return 200, protected `/app` and `/app/meal-plans` redirect to login, invalid `/share/:token` renders a public unavailable page.
+- Authenticated HTTP smoke on `wrangler dev`: sign up a temporary user, open `/app`, `/app/meal-plans`, `/app/meal-plans/new`, `/app/dishes` and `/app/targets`, create a dish, create a meal plan, generate a shopping list, create a share link and open `/share/:token`.
+- Browser mobile viewport smoke at 390px: `/app`, `/app/meal-plans`, `/app/meal-plans/new`, `/app/shopping-lists/:id` and `/share/:token` render without horizontal overflow.
+- Browser interaction smoke: create a temporary account and meal plan, generate a shopping list, and verify delete/archive/regenerate controls expose confirmation prompts while submit controls expose pending labels.
+
+Notes for next threads:
+
+- LES-99 can focus on production D1/env/deploy/seed data rather than returning to baseline form safety.
+- New SvelteKit form actions should use `enhanceWithFeedback` unless they need a custom modal or optimistic update.
+
 ## LES-97 - Dashboard And New User Empty State
 
 Status: implemented.

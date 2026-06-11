@@ -3,6 +3,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ChefHat, ClipboardPlus, ListChecks, Plus, Search, Tags } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -121,9 +122,17 @@
 								<ClipboardPlus class="size-4" />
 								加入饭单
 							</Button>
-							<form method="post" action="?/delete" class="ml-auto">
+							<form method="post" action="?/delete" use:enhanceWithFeedback class="ml-auto">
 								<input type="hidden" name="id" value={dish.id} />
-								<Button type="submit" variant="destructive" size="sm">删除</Button>
+								<Button
+									type="submit"
+									variant="destructive"
+									size="sm"
+									data-confirm={`删除菜品「${dish.name}」？它会从菜品库移除。`}
+									data-pending-label="删除中..."
+								>
+									删除
+								</Button>
 							</form>
 						</div>
 					</Card.Content>

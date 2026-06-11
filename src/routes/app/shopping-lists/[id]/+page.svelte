@@ -3,6 +3,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import {
 		ArrowLeft,
 		CheckCircle2,
@@ -48,8 +49,14 @@
 				<ClipboardList class="size-4" />
 				打开饭单
 			</Button>
-			<form method="post" action="?/regenerate">
-				<Button type="submit" variant="outline" class="w-full sm:w-auto">
+			<form method="post" action="?/regenerate" use:enhanceWithFeedback>
+				<Button
+					type="submit"
+					variant="outline"
+					class="w-full sm:w-auto"
+					data-confirm="重新生成会替换当前购物项，确认继续？"
+					data-pending-label="重新生成中..."
+				>
 					<RefreshCw class="size-4" />
 					重新生成
 				</Button>
@@ -95,8 +102,8 @@
 					</Card.Header>
 					<Card.Content class="flex flex-col gap-3 sm:flex-row">
 						<Button href={`/app/meal-plans/${data.mealPlan.id}`} variant="outline">打开饭单</Button>
-						<form method="post" action="?/regenerate">
-							<Button type="submit">
+						<form method="post" action="?/regenerate" use:enhanceWithFeedback={{ pendingLabel: '生成中...' }}>
+							<Button type="submit" data-pending-label="生成中...">
 								<RefreshCw class="size-4" />
 								重新生成
 							</Button>
@@ -115,7 +122,7 @@
 						<Card.Content class="space-y-3">
 							{#each group.items as item}
 								<article class="grid gap-3 rounded-md border p-3 md:grid-cols-[52px_1fr] md:items-start" data-testid={`shopping-list-item-${item.id}`}>
-									<form method="post" action="?/toggleItem" class="md:pt-1">
+										<form method="post" action="?/toggleItem" use:enhanceWithFeedback class="md:pt-1">
 										<input type="hidden" name="itemId" value={item.id} />
 										<input type="hidden" name="checked" value={item.checked ? 'false' : 'true'} />
 										<Button
@@ -143,7 +150,7 @@
 											</p>
 										</div>
 
-										<form method="post" action="?/updateItem" class="space-y-3">
+										<form method="post" action="?/updateItem" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-3">
 											<input type="hidden" name="itemId" value={item.id} />
 											<div class="grid gap-3 md:grid-cols-[1fr_110px_100px_120px]">
 												<div class="space-y-2">
@@ -168,16 +175,22 @@
 												<textarea id={`notes-${item.id}`} name="notes" class={textAreaClass}>{item.notes ?? ''}</textarea>
 											</div>
 											<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-												<Button type="submit" variant="outline">
-													<Save class="size-4" />
-													保存
+													<Button type="submit" variant="outline" data-pending-label="保存中...">
+														<Save class="size-4" />
+														保存
 												</Button>
 											</div>
 										</form>
 
-										<form method="post" action="?/deleteItem" class="flex justify-end">
+										<form method="post" action="?/deleteItem" use:enhanceWithFeedback class="flex justify-end">
 											<input type="hidden" name="itemId" value={item.id} />
-											<Button type="submit" variant="destructive" size="sm">
+											<Button
+												type="submit"
+												variant="destructive"
+												size="sm"
+												data-confirm={`删除购物项「${item.name}」？`}
+												data-pending-label="删除中..."
+											>
 												<Trash2 class="size-4" />
 												删除
 											</Button>
@@ -200,7 +213,7 @@
 					</Card.Title>
 				</Card.Header>
 				<Card.Content>
-					<form method="post" action="?/addItem" class="space-y-4">
+					<form method="post" action="?/addItem" use:enhanceWithFeedback={{ pendingLabel: '添加中...' }} class="space-y-4">
 						<div class="space-y-2">
 							<Label for="new-item-name">名称</Label>
 							<Input id="new-item-name" name="name" value={String(addValues.name ?? '')} placeholder="例如：葱" required />
@@ -230,7 +243,7 @@
 							<textarea id="new-item-notes" name="notes" class={textAreaClass}>{String(addValues.notes ?? '')}</textarea>
 						</div>
 
-						<Button type="submit" class="w-full">
+						<Button type="submit" class="w-full" data-pending-label="添加中...">
 							<Plus class="size-4" />
 							添加
 						</Button>
@@ -247,8 +260,14 @@
 					<Card.Description>会按当前饭单食材重新生成，并替换现有购物项。</Card.Description>
 				</Card.Header>
 				<Card.Content>
-					<form method="post" action="?/regenerate">
-						<Button type="submit" variant="outline" class="w-full">
+					<form method="post" action="?/regenerate" use:enhanceWithFeedback>
+						<Button
+							type="submit"
+							variant="outline"
+							class="w-full"
+							data-confirm="重新生成会替换当前购物项，确认继续？"
+							data-pending-label="重新生成中..."
+						>
 							<RefreshCw class="size-4" />
 							重新生成清单
 						</Button>

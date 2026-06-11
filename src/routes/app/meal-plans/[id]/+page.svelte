@@ -3,6 +3,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import {
 		Archive,
 		ArrowDown,
@@ -55,13 +56,15 @@
 
 		<div class="flex flex-wrap gap-2">
 			{#each data.statusOptions as option}
-				<form method="post" action="?/setStatus">
+				<form method="post" action="?/setStatus" use:enhanceWithFeedback>
 					<input type="hidden" name="status" value={option.value} />
 					<Button
 						type="submit"
 						variant={data.mealPlan.status === option.value ? 'secondary' : 'outline'}
 						size="sm"
 						disabled={isArchived || data.mealPlan.status === option.value}
+						data-confirm={option.value === 'archived' ? '归档后详情页会保持只读，确认归档这份饭单？' : undefined}
+						data-pending-label="更新中..."
 					>
 						{#if option.value === 'archived'}
 							<Archive class="size-4" />
@@ -97,7 +100,7 @@
 					</Card.Title>
 				</Card.Header>
 				<Card.Content>
-					<form method="post" action="?/updateMeta" class="space-y-5">
+					<form method="post" action="?/updateMeta" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-5">
 						<div class="space-y-2">
 							<Label for="meal-plan-title">饭单标题</Label>
 							<Input
@@ -154,7 +157,7 @@
 						</div>
 
 						<div class="flex justify-end">
-							<Button type="submit" disabled={isArchived}>
+							<Button type="submit" disabled={isArchived} data-pending-label="保存中...">
 								<CheckCircle2 class="size-4" />
 								保存基础信息
 							</Button>
@@ -227,9 +230,16 @@
 												{#if item.dishId}
 													<Button href={`/app/dishes/${item.dishId}`} variant="ghost" size="sm">打开菜品</Button>
 												{/if}
-												<form method="post" action="?/removeItem">
+												<form method="post" action="?/removeItem" use:enhanceWithFeedback>
 													<input type="hidden" name="itemId" value={item.id} />
-													<Button type="submit" variant="destructive" size="icon-sm" disabled={isArchived} aria-label="移除">
+													<Button
+														type="submit"
+														variant="destructive"
+														size="icon-sm"
+														disabled={isArchived}
+														aria-label="移除"
+														data-confirm={`从饭单中移除「${item.dishName}」？`}
+													>
 														<Trash2 class="size-4" />
 													</Button>
 												</form>
@@ -433,8 +443,14 @@
 							打开购物清单
 						</Button>
 					{/if}
-					<form method="post" action="?/generateShoppingList">
-						<Button type="submit" variant={data.shoppingList ? 'outline' : 'default'} class="w-full">
+					<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback>
+						<Button
+							type="submit"
+							variant={data.shoppingList ? 'outline' : 'default'}
+							class="w-full"
+							data-confirm={data.shoppingList ? '重新生成会替换当前购物清单项目，确认继续？' : undefined}
+							data-pending-label={data.shoppingList ? '重新生成中...' : '生成中...'}
+						>
 							<ShoppingCart class="size-4" />
 							{data.shoppingList ? '重新生成清单' : '生成购物清单'}
 						</Button>
@@ -482,7 +498,7 @@
 					</Card.Title>
 				</Card.Header>
 				<Card.Content>
-					<form method="post" action="?/addDish" class="space-y-4">
+					<form method="post" action="?/addDish" use:enhanceWithFeedback={{ pendingLabel: '添加中...' }} class="space-y-4">
 						<div class="space-y-2">
 							<Label for="dish-id">菜品</Label>
 							<select id="dish-id" name="dishId" class={selectClass} disabled={isArchived || data.dishes.length === 0} required>
@@ -525,7 +541,7 @@
 							<textarea id="add-notes" name="notes" class={textAreaClass} disabled={isArchived}></textarea>
 						</div>
 
-						<Button type="submit" class="w-full" disabled={isArchived || data.dishes.length === 0}>
+						<Button type="submit" class="w-full" disabled={isArchived || data.dishes.length === 0} data-pending-label="添加中...">
 							<Plus class="size-4" />
 							添加菜品
 						</Button>
@@ -541,7 +557,7 @@
 					</Card.Title>
 				</Card.Header>
 				<Card.Content>
-					<form method="post" action="?/quickAddDish" class="space-y-4">
+					<form method="post" action="?/quickAddDish" use:enhanceWithFeedback={{ pendingLabel: '新建中...' }} class="space-y-4">
 						<div class="space-y-2">
 							<Label for="quick-dish-name">菜品名称</Label>
 							<Input id="quick-dish-name" name="name" placeholder="例如：番茄炒蛋" disabled={isArchived} required />
@@ -581,7 +597,7 @@
 							<textarea id="quick-notes" name="notes" class={textAreaClass} disabled={isArchived}></textarea>
 						</div>
 
-						<Button type="submit" class="w-full" disabled={isArchived}>
+						<Button type="submit" class="w-full" disabled={isArchived} data-pending-label="新建中...">
 							<Plus class="size-4" />
 							新建并加入
 						</Button>

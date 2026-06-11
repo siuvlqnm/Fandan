@@ -3,6 +3,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, CalendarDays, ChefHat, Plus, UsersRound } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -59,7 +60,7 @@
 				<Card.Description>没有用餐对象时，可以在本流程里快速创建一个。</Card.Description>
 			</Card.Header>
 			<Card.Content>
-				<form method="post" class="space-y-6">
+				<form method="post" use:enhanceWithFeedback={{ pendingLabel: '创建中...' }} class="space-y-6">
 					<div class="space-y-2">
 						<Label for="meal-plan-title">饭单标题</Label>
 						<Input id="meal-plan-title" name="title" value={values.title ?? ''} placeholder="例如：周三晚餐" required />
@@ -162,7 +163,7 @@
 
 					<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
 						<Button href="/app/meal-plans" variant="outline">取消</Button>
-						<Button type="submit">
+						<Button type="submit" data-pending-label="创建中...">
 							<Plus class="size-4" />
 							创建饭单
 						</Button>

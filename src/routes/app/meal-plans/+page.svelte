@@ -2,6 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Label } from '$lib/components/ui/label';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { CalendarDays, ClipboardCopy, ClipboardList, Plus, UsersRound } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -126,22 +127,38 @@
 						</p>
 						<div class="flex flex-wrap gap-2">
 							<Button href={`/app/meal-plans/${mealPlan.id}`} variant="outline" size="sm">打开</Button>
-							<form method="post" action="?/duplicate">
+							<form method="post" action="?/duplicate" use:enhanceWithFeedback={{ pendingLabel: '复制中...' }}>
 								<input type="hidden" name="id" value={mealPlan.id} />
-								<Button type="submit" variant="ghost" size="sm">
+								<Button type="submit" variant="ghost" size="sm" data-pending-label="复制中...">
 									<ClipboardCopy class="size-4" />
 									复制
 								</Button>
 							</form>
 							{#if mealPlan.status !== 'archived'}
-								<form method="post" action="?/archive">
+								<form method="post" action="?/archive" use:enhanceWithFeedback>
 									<input type="hidden" name="id" value={mealPlan.id} />
-									<Button type="submit" variant="ghost" size="sm">归档</Button>
+									<Button
+										type="submit"
+										variant="ghost"
+										size="sm"
+										data-confirm={`归档饭单「${mealPlan.title}」？归档后详情页会保持只读。`}
+										data-pending-label="归档中..."
+									>
+										归档
+									</Button>
 								</form>
 							{/if}
-							<form method="post" action="?/delete" class="ml-auto">
+							<form method="post" action="?/delete" use:enhanceWithFeedback class="ml-auto">
 								<input type="hidden" name="id" value={mealPlan.id} />
-								<Button type="submit" variant="destructive" size="sm">删除</Button>
+								<Button
+									type="submit"
+									variant="destructive"
+									size="sm"
+									data-confirm={`删除饭单「${mealPlan.title}」？关联的饭单条目、购物清单和反馈会一并移除。`}
+									data-pending-label="删除中..."
+								>
+									删除
+								</Button>
 							</form>
 						</div>
 					</Card.Content>

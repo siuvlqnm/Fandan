@@ -3,6 +3,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import {
 		AlertCircle,
 		CalendarDays,
@@ -77,8 +78,8 @@
 						</div>
 					</div>
 					{#if canConfirm}
-						<form method="post" action="?/confirm" class="hidden md:block">
-							<Button type="submit" disabled={disabledByConfirmed}>
+						<form method="post" action="?/confirm" use:enhanceWithFeedback={{ pendingLabel: '确认中...' }} class="hidden md:block">
+							<Button type="submit" disabled={disabledByConfirmed} data-pending-label="确认中...">
 								<CheckCircle2 class="size-4" />
 								{disabledByConfirmed ? '已确认' : '确认饭单'}
 							</Button>
@@ -169,7 +170,7 @@
 					<Card.Description>可只填写有意见的菜。没有意见时，直接点底部确认即可。</Card.Description>
 				</Card.Header>
 				<Card.Content>
-					<form method="post" action="?/feedback" class="space-y-5">
+					<form method="post" action="?/feedback" use:enhanceWithFeedback={{ pendingLabel: '提交中...' }} class="space-y-5">
 						<div class="grid gap-4 md:grid-cols-2">
 							<div class="space-y-2">
 								<Label for="guest-name">你的称呼</Label>
@@ -257,7 +258,7 @@
 						{/if}
 
 						<div class="flex justify-end">
-							<Button type="submit" disabled={!canFeedback}>
+							<Button type="submit" disabled={!canFeedback} data-pending-label="提交中...">
 								<Send class="size-4" />
 								提交反馈
 							</Button>
@@ -275,7 +276,7 @@
 					<Card.Description>确认后，创建者会看到这份饭单已确认。</Card.Description>
 				</Card.Header>
 				<Card.Content>
-					<form method="post" action="?/confirm" class="space-y-4">
+					<form method="post" action="?/confirm" use:enhanceWithFeedback={{ pendingLabel: '确认中...' }} class="space-y-4">
 						<div class="grid gap-4 md:grid-cols-2">
 							<div class="space-y-2">
 								<Label for="confirm-guest-name">你的称呼</Label>
@@ -302,7 +303,7 @@
 								disabled={!canConfirm || disabledByConfirmed}
 							>{confirmNoteValue}</textarea>
 						</div>
-						<Button type="submit" class="w-full" disabled={!canConfirm || disabledByConfirmed}>
+						<Button type="submit" class="w-full" disabled={!canConfirm || disabledByConfirmed} data-pending-label="确认中...">
 							<CheckCircle2 class="size-4" />
 							{disabledByConfirmed ? '这份饭单已确认' : '确认这份饭单'}
 						</Button>

@@ -2,6 +2,7 @@
 	import DishForm from '$lib/components/dish-form.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, ClipboardPlus, ListChecks } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -81,8 +82,16 @@
 					<Card.Description>删除后会移除菜品库记录和它的食材。</Card.Description>
 				</Card.Header>
 				<Card.Content>
-					<form method="post" action="?/delete">
-						<Button type="submit" variant="destructive" class="w-full">删除菜品</Button>
+					<form method="post" action="?/delete" use:enhanceWithFeedback>
+						<Button
+							type="submit"
+							variant="destructive"
+							class="w-full"
+							data-confirm={`删除菜品「${dish.name}」？它会从菜品库移除。`}
+							data-pending-label="删除中..."
+						>
+							删除菜品
+						</Button>
 					</form>
 				</Card.Content>
 			</Card.Root>

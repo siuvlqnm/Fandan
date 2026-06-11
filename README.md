@@ -80,6 +80,7 @@ npm run dev
 访客分享确认页面说明见 [docs/development/share-pages.md](docs/development/share-pages.md)。
 反馈聚合说明见 [docs/development/feedback-aggregation.md](docs/development/feedback-aggregation.md)。
 首页工作台说明见 [docs/development/dashboard.md](docs/development/dashboard.md)。
+移动端打磨和表单交互说明见 [docs/development/mobile-polish.md](docs/development/mobile-polish.md)。
 每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 
 ## 验证

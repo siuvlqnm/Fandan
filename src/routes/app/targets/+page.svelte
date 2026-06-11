@@ -3,6 +3,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { CalendarClock, Plus, Search, Utensils, UsersRound } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -117,9 +118,17 @@
 							<Button href={`/app/targets/${target.id}`} variant="outline" size="sm">编辑</Button>
 							<Button href={`/app/targets/${target.id}#meal-plans`} variant="ghost" size="sm">历史饭单</Button>
 							<Button href={`/app/meal-plans/new?targetId=${target.id}`} variant="ghost" size="sm">新建饭单</Button>
-							<form method="post" action="?/delete" class="ml-auto">
+							<form method="post" action="?/delete" use:enhanceWithFeedback class="ml-auto">
 								<input type="hidden" name="id" value={target.id} />
-								<Button type="submit" variant="destructive" size="sm">删除</Button>
+								<Button
+									type="submit"
+									variant="destructive"
+									size="sm"
+									data-confirm={`删除对象「${target.name}」？已存在饭单不会删除，但会失去对象关联。`}
+									data-pending-label="删除中..."
+								>
+									删除
+								</Button>
 							</form>
 						</div>
 					</Card.Content>

@@ -2,6 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { cn } from '$lib/utils';
 	import { Plus, Trash2 } from 'lucide-svelte';
 
@@ -85,7 +86,7 @@
 	const tagsText = $derived(values.tagsText ?? values.tags?.join(', ') ?? '');
 </script>
 
-<form method="post" {action} class="space-y-6">
+<form method="post" {action} use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-6">
 	<div class="grid gap-4 md:grid-cols-[1fr_180px_160px]">
 		<div class="space-y-2">
 			<Label for="dish-name">菜品名称</Label>
@@ -216,6 +217,6 @@
 
 	<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
 		<Button href={cancelHref} variant="outline">取消</Button>
-		<Button type="submit">{submitLabel}</Button>
+		<Button type="submit" data-pending-label="保存中...">{submitLabel}</Button>
 	</div>
 </form>
