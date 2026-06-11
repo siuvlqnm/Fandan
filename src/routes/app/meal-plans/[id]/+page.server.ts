@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ApiError } from '$lib/server/api/errors';
 import { requireUserSpace } from '$lib/server/context';
 import { createDish, createDishSchema, listDishes } from '$lib/server/dishes';
+import { emptyItemFeedback, getMealPlanFeedbackSummary } from '$lib/server/feedback';
 import { archiveMealPlan, getMealPlan, updateMealPlan } from '$lib/server/meal-plans';
 import { generateShoppingList, getMealPlanShoppingList } from '$lib/server/shopping-lists';
 import { listTargets } from '$lib/server/targets';
@@ -195,11 +196,12 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	try {
-		const [mealPlan, targets, dishes, shoppingList] = await Promise.all([
+		const [mealPlan, targets, dishes, shoppingList, feedbackSummary] = await Promise.all([
 			getMealPlan(context, id),
 			listTargets(context),
 			listDishes(context),
-			getMealPlanShoppingList(context, id)
+			getMealPlanShoppingList(context, id),
+			getMealPlanFeedbackSummary(context, id)
 		]);
 		const targetById = new Map(targets.map((target) => [target.id, target]));
 		const dishById = new Map(dishes.map((dish) => [dish.id, dish]));
@@ -211,6 +213,7 @@ export const load: PageServerLoad = async (event) => {
 				dishName: dish?.name ?? '未关联菜品',
 				dishCategory: dish?.category ?? null,
 				dishIngredientCount: dish?.ingredients.length ?? 0,
+				feedback: feedbackSummary.byItem[item.id] ?? emptyItemFeedback(item.id),
 				canMoveUp: index > 0,
 				canMoveDown: index < allItems.length - 1
 			};
@@ -249,6 +252,7 @@ export const load: PageServerLoad = async (event) => {
 			targets,
 			dishes,
 			shoppingList,
+			feedbackSummary,
 			groups,
 			mealSlotOptions,
 			typeOptions: Object.entries(typeLabels).map(([value, label]) => ({ value, label })),

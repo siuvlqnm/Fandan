@@ -78,6 +78,7 @@ npm run dev
 购物清单页面说明见 [docs/development/shopping-lists-pages.md](docs/development/shopping-lists-pages.md)。
 分享链接和访客反馈 API 说明见 [docs/development/share-links-api.md](docs/development/share-links-api.md)。
 访客分享确认页面说明见 [docs/development/share-pages.md](docs/development/share-pages.md)。
+反馈聚合说明见 [docs/development/feedback-aggregation.md](docs/development/feedback-aggregation.md)。
 每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 
 ## 验证

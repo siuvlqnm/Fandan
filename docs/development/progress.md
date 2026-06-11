@@ -2,6 +2,34 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-96 - Meal Plan Feedback Aggregation
+
+Status: implemented.
+
+Commit: see Git history entry `Add meal plan feedback aggregation`.
+
+What changed:
+
+- Added `src/lib/server/feedback.ts` for space-scoped creator-side feedback aggregation.
+- Added feedback summary loading to `/app/meal-plans/:id`.
+- Added a `访客反馈` section below the dish workspace with totals for likes, dislikes, replacements and confirmations.
+- Added per-dish feedback counts and visitor notes without changing existing dish editing controls.
+- Added global dietary notes and freeform visitor notes.
+- Added a compact sidebar feedback status card.
+- Added `docs/development/feedback-aggregation.md` and linked it from the README.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Local D1/browser smoke with temporary `smoke_les96_*` records: open the protected meal-plan detail page with feedback rows, verify totals, per-dish counts, global dietary note and confirmation state render.
+- Mobile viewport check for `/app/meal-plans/:id` with feedback rows.
+
+Notes for next threads:
+
+- Applying feedback directly to modify the meal plan remains deferred.
+- LES-97 can use the confirmation/feedback status to prioritize pending-confirmation meal plans on the dashboard.
+
 ## LES-95 - Guest Share Confirmation Page
 
 Status: implemented.

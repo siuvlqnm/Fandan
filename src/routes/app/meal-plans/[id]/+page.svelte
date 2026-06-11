@@ -12,8 +12,12 @@
 		CheckCircle2,
 		ChefHat,
 		ClipboardList,
+		Heart,
+		MessageSquareText,
 		Plus,
+		RefreshCw,
 		ShoppingCart,
+		ThumbsDown,
 		Trash2,
 		UsersRound
 	} from 'lucide-svelte';
@@ -28,6 +32,7 @@
 		'dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full min-w-0 rounded-md border bg-transparent px-2.5 py-1 text-base shadow-xs outline-none transition-[color,box-shadow] focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm';
 	const textAreaClass =
 		'dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 min-h-20 w-full min-w-0 rounded-md border bg-transparent px-2.5 py-2 text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm';
+	const feedbackTotals = $derived(data.feedbackSummary.totals);
 </script>
 
 <svelte:head>
@@ -237,9 +242,176 @@
 					{/if}
 				</Card.Content>
 			</Card.Root>
+
+			<Card.Root class="rounded-lg" data-testid="meal-plan-feedback">
+				<Card.Header>
+					<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+						<div>
+							<Card.Title class="flex items-center gap-2">
+								<MessageSquareText class="size-5" />
+								访客反馈
+							</Card.Title>
+							<Card.Description>
+								{#if data.feedbackSummary.total > 0}
+									{data.feedbackSummary.total} 条反馈 · {data.feedbackSummary.confirmations.length} 次确认
+								{:else}
+									分享后，访客的确认和菜品反馈会出现在这里。
+								{/if}
+							</Card.Description>
+						</div>
+						{#if data.feedbackSummary.latestConfirmation}
+							<span class="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-sm text-secondary-foreground">
+								<CheckCircle2 class="size-4" />
+								{data.feedbackSummary.latestConfirmation.guestName} 已确认
+							</span>
+						{/if}
+					</div>
+				</Card.Header>
+				<Card.Content class="space-y-5">
+					{#if data.feedbackSummary.total === 0}
+						<div class="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+							暂无访客反馈。创建分享链接并发给家人或客户后，这里会聚合确认状态、忌口和每道菜的意见。
+						</div>
+					{:else}
+						<section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+							<div class="rounded-md border p-3">
+								<p class="flex items-center gap-1.5 text-sm text-muted-foreground">
+									<Heart class="size-4" />
+									喜欢
+								</p>
+								<p class="mt-1 text-2xl font-semibold">{feedbackTotals.like}</p>
+							</div>
+							<div class="rounded-md border p-3">
+								<p class="flex items-center gap-1.5 text-sm text-muted-foreground">
+									<ThumbsDown class="size-4" />
+									不喜欢
+								</p>
+								<p class="mt-1 text-2xl font-semibold">{feedbackTotals.dislike}</p>
+							</div>
+							<div class="rounded-md border p-3">
+								<p class="flex items-center gap-1.5 text-sm text-muted-foreground">
+									<RefreshCw class="size-4" />
+									想替换
+								</p>
+								<p class="mt-1 text-2xl font-semibold">{feedbackTotals.replace}</p>
+							</div>
+							<div class="rounded-md border p-3">
+								<p class="flex items-center gap-1.5 text-sm text-muted-foreground">
+									<CheckCircle2 class="size-4" />
+									确认
+								</p>
+								<p class="mt-1 text-2xl font-semibold">{feedbackTotals.confirm}</p>
+							</div>
+						</section>
+
+						{#if data.feedbackSummary.dietaryNotes.length > 0 || data.feedbackSummary.globalNotes.length > 0}
+							<section class="space-y-3">
+								<h3 class="text-sm font-medium">全局备注</h3>
+								<div class="grid gap-3 md:grid-cols-2">
+									{#each data.feedbackSummary.dietaryNotes as note}
+										<article class="rounded-md border bg-muted/30 p-3 text-sm">
+											<p class="font-medium">{note.guestName} 的忌口备注</p>
+											<p class="mt-1 break-words text-muted-foreground">{note.dietaryNote}</p>
+										</article>
+									{/each}
+									{#each data.feedbackSummary.globalNotes as note}
+										<article class="rounded-md border bg-muted/30 p-3 text-sm">
+											<p class="font-medium">{note.guestName} · {note.reactionLabel}</p>
+											<p class="mt-1 break-words text-muted-foreground">{note.note}</p>
+										</article>
+									{/each}
+								</div>
+							</section>
+						{/if}
+
+						<section class="space-y-4">
+							<h3 class="text-sm font-medium">按菜品查看</h3>
+							{#each data.groups as group}
+								<div class="space-y-3">
+									<div class="flex flex-wrap items-center gap-2 text-sm font-medium">
+										<span class="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-secondary-foreground">
+											<CalendarDays class="size-4" />
+											{group.dateLabel}
+										</span>
+										<span class="rounded-md border px-2 py-1">{group.slotLabel}</span>
+									</div>
+									<div class="space-y-3">
+										{#each group.items as item}
+											<article class="rounded-md border p-3" data-testid={`feedback-item-${item.id}`}>
+												<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+													<div class="min-w-0">
+														<h4 class="break-words font-medium">{item.dishName}</h4>
+														<p class="text-sm text-muted-foreground">{item.servings} 份</p>
+													</div>
+													<div class="grid grid-cols-3 gap-2 text-center text-sm">
+														<span class="rounded-md bg-muted px-2 py-1">喜欢 {item.feedback.counts.like}</span>
+														<span class="rounded-md bg-muted px-2 py-1">不喜欢 {item.feedback.counts.dislike}</span>
+														<span class="rounded-md bg-muted px-2 py-1">替换 {item.feedback.counts.replace}</span>
+													</div>
+												</div>
+
+												{#if item.feedback.notes.length > 0 || item.feedback.dietaryNotes.length > 0}
+													<div class="mt-3 space-y-2">
+														{#each item.feedback.notes as note}
+															<p class="rounded-md bg-muted/40 p-2 text-sm">
+																<span class="font-medium">{note.guestName} · {note.reactionLabel}</span>
+																<span class="break-words text-muted-foreground">：{note.note}</span>
+															</p>
+														{/each}
+														{#each item.feedback.dietaryNotes as note}
+															<p class="rounded-md bg-muted/40 p-2 text-sm">
+																<span class="font-medium">{note.guestName} · 忌口</span>
+																<span class="break-words text-muted-foreground">：{note.dietaryNote}</span>
+															</p>
+														{/each}
+													</div>
+												{:else}
+													<p class="mt-3 text-sm text-muted-foreground">暂无这道菜的文字备注。</p>
+												{/if}
+											</article>
+										{/each}
+									</div>
+								</div>
+							{/each}
+						</section>
+					{/if}
+				</Card.Content>
+			</Card.Root>
 		</div>
 
 		<aside class="space-y-4">
+			<Card.Root class="rounded-lg">
+				<Card.Header>
+					<Card.Title class="flex items-center gap-2">
+						<MessageSquareText class="size-5" />
+						反馈状态
+					</Card.Title>
+					<Card.Description>
+						{#if data.feedbackSummary.latestFeedback}
+							最近反馈：{data.feedbackSummary.latestFeedback.guestName} · {data.feedbackSummary.latestFeedback.reactionLabel}
+						{:else}
+							暂无访客反馈。
+						{/if}
+					</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-3 text-sm">
+					<p class="rounded-md border p-3">
+						<span class="block text-muted-foreground">确认状态</span>
+						{#if data.feedbackSummary.latestConfirmation}
+							{data.feedbackSummary.latestConfirmation.guestName} 已确认
+						{:else if data.mealPlan.status === 'confirmed'}
+							饭单状态已确认
+						{:else}
+							等待确认
+						{/if}
+					</p>
+					<p class="rounded-md border p-3">
+						<span class="block text-muted-foreground">反馈汇总</span>
+						喜欢 {feedbackTotals.like} · 不喜欢 {feedbackTotals.dislike} · 想替换 {feedbackTotals.replace}
+					</p>
+				</Card.Content>
+			</Card.Root>
+
 			<Card.Root class="rounded-lg">
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2">
