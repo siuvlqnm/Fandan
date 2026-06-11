@@ -2,6 +2,38 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-92 - Shopping List Generation API
+
+Status: implemented.
+
+Commit: see Git history entry `Add shopping list generation API`.
+
+What changed:
+
+- Added `src/lib/server/shopping-lists.ts` for shopping-list generation, serialization, space scoping and item edits.
+- Added `POST /api/meal-plans/:id/shopping-list/generate`.
+- Added `GET /api/shopping-lists/:id`.
+- Added `POST /api/shopping-lists/:id/items`.
+- Added `PATCH /api/shopping-lists/:id/items/:itemId`.
+- Added `DELETE /api/shopping-lists/:id/items/:itemId`.
+- Generation reads meal-plan dishes and dish ingredients, groups ingredients by name and unit, keeps different units separate and defaults missing categories to `其他`.
+- Numeric ingredient quantities are multiplied by servings and summed; non-numeric quantities are preserved as text fragments.
+- Regeneration reuses the meal plan's default shopping list and replaces items only when the generate endpoint is called.
+- Added `docs/development/shopping-lists-api.md` and linked it from the README/server docs.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Authenticated smoke test: create dishes with ingredients, create meal plan with servings, generate shopping list, verify aggregation/category rules, add custom item, patch checked/quantity, delete item, regenerate and confirm explicit overwrite behavior.
+- Logged-out `POST /api/meal-plans/:id/shopping-list/generate` returns the unified 401 envelope.
+
+Notes for next threads:
+
+- Use `docs/development/shopping-lists-api.md` as the contract for LES-93 page work.
+- LES-93 can add `/app/shopping-lists/:id` and a meal-plan detail button that calls generate or opens the existing list.
+- The API currently keeps one default shopping list per meal plan by reusing the latest list on regeneration.
+
 ## LES-91 - Meal Plan Detail Workspace
 
 Status: implemented.

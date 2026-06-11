@@ -109,3 +109,4 @@ Public share routes are the exception. They should resolve data through `share_l
 - `/api/targets/**`: protected meal target CRUD API. See `docs/development/targets-api.md`.
 - `/api/dishes/**`: protected dish and ingredient CRUD API. See `docs/development/dishes-api.md`.
 - `/api/meal-plans/**`: protected meal-plan CRUD and state API. See `docs/development/meal-plans-api.md`.
+- `/api/shopping-lists/**`: protected shopping-list read and item editing API. See `docs/development/shopping-lists-api.md`.
