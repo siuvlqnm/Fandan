@@ -73,6 +73,7 @@ npm run dev
 菜品与食材 API 说明见 [docs/development/dishes-api.md](docs/development/dishes-api.md)。
 菜品库页面说明见 [docs/development/dishes-pages.md](docs/development/dishes-pages.md)。
 饭单 API 说明见 [docs/development/meal-plans-api.md](docs/development/meal-plans-api.md)。
+饭单页面说明见 [docs/development/meal-plans-pages.md](docs/development/meal-plans-pages.md)。
 每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 
 ## 验证

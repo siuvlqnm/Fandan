@@ -49,9 +49,24 @@ export const updateMealPlanSchema = mealPlanFieldsSchema
 	.partial()
 	.refine((value) => Object.keys(value).length > 0, { message: 'At least one field is required' });
 
+export const mealPlanFormSchema = z.object({
+	title: z.string().trim().min(1, '请输入饭单标题').max(120),
+	targetId: nullableIdSchema,
+	quickTargetName: z.string().trim().max(80).optional(),
+	quickTargetType: z.enum(['home', 'client', 'gathering', 'other']).optional().default('home'),
+	type: mealPlanTypeSchema.default('single_meal'),
+	startDate: nullableTextSchema(20),
+	endDate: nullableTextSchema(20),
+	mealSlot: nullableTextSchema(40),
+	dishId: nullableIdSchema,
+	servings: z.number().int().min(1).max(999).default(1),
+	notes: nullableTextSchema(2000)
+});
+
 type CreateMealPlanInput = z.infer<typeof createMealPlanSchema>;
 type UpdateMealPlanInput = z.infer<typeof updateMealPlanSchema>;
 type MealPlanItemInput = z.infer<typeof itemSchema>;
+export type MealPlanFormInput = z.infer<typeof mealPlanFormSchema>;
 
 type SerializedMealPlanItem = ReturnType<typeof serializeMealPlanItem>;
 type SerializedMealPlan = ReturnType<typeof serializeMealPlan>;

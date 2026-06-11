@@ -2,6 +2,36 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-90 - Meal Plan List And Create Flow
+
+Status: implemented.
+
+Commit: see Git history entry `Add meal plan list and create flow`.
+
+What changed:
+
+- Added `/app/meal-plans` list page with status, type and target filters.
+- Added list actions to open, duplicate, archive and delete meal plans.
+- Replaced `/app/meal-plans/new` placeholder with a real create flow.
+- New meal-plan flow supports selecting an existing target, quickly creating a target, setting title/type/date/meal slot and optionally adding the first dish.
+- Existing `targetId` and `dishId` entry links now prefill the create flow.
+- Updated `/app/meal-plans/:id` placeholder to read through `getMealPlan` and show type/item count.
+- Updated dashboard "新建饭单" entry to `/app/meal-plans/new`.
+- Added `docs/development/meal-plans-pages.md` and linked it from the README.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Browser smoke: sign up, open `/app/meal-plans`, create first meal plan with quick target, create from existing target/dish context, verify detail placeholder, filter list, duplicate, archive and delete.
+- Mobile viewport browser check for `/app/meal-plans` and `/app/meal-plans/new`.
+
+Notes for next threads:
+
+- Use `docs/development/meal-plans-pages.md` for LES-91 handoff.
+- Detail editing is intentionally still placeholder-level and belongs to LES-91.
+- New flow creates at most one initial dish item; the full item workspace starts in LES-91.
+
 ## LES-89 - Meal Plan CRUD API And Status Flow
 
 Status: implemented.

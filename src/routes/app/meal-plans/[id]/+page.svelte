@@ -12,9 +12,9 @@
 </svelte:head>
 
 <main class="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 md:py-10">
-	<Button href="/app/targets" variant="ghost" size="sm" class="self-start px-0">
+	<Button href="/app/meal-plans" variant="ghost" size="sm" class="self-start px-0">
 		<ArrowLeft class="size-4" />
-		返回用餐对象
+		返回饭单列表
 	</Button>
 
 	<Card.Root class="rounded-lg">
@@ -24,7 +24,7 @@
 				{data.mealPlan.title}
 			</Card.Title>
 			<Card.Description>
-				饭单详情工作台会在 LES-91 接入。当前页面先用于从对象历史记录进入并确认 space 隔离。
+				饭单详情工作台会在 LES-91 接入。当前页面先用于确认新建流程、状态和 space 隔离。
 			</Card.Description>
 		</Card.Header>
 		<Card.Content class="grid gap-3 text-sm md:grid-cols-2">
@@ -33,8 +33,16 @@
 				{data.mealPlan.status}
 			</p>
 			<p class="rounded-md border p-3">
+				<span class="block text-muted-foreground">类型</span>
+				{data.mealPlan.type}
+			</p>
+			<p class="rounded-md border p-3">
 				<span class="block text-muted-foreground">日期</span>
 				{data.mealPlan.startDate || '未设置'}
+			</p>
+			<p class="rounded-md border p-3">
+				<span class="block text-muted-foreground">菜品数量</span>
+				{data.mealPlan.items.length} 道
 			</p>
 		</Card.Content>
 	</Card.Root>

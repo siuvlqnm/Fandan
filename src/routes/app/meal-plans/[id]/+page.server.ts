@@ -1,7 +1,7 @@
-import { and, eq } from 'drizzle-orm';
 import { redirect, error as kitError } from '@sveltejs/kit';
+import { ApiError } from '$lib/server/api/errors';
 import { requireUserSpace } from '$lib/server/context';
-import { mealPlans } from '$lib/server/db/schema';
+import { getMealPlan } from '$lib/server/meal-plans';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -16,17 +16,15 @@ export const load: PageServerLoad = async (event) => {
 		throw kitError(400, '缺少饭单 ID');
 	}
 
-	const [mealPlan] = await context.db
-		.select()
-		.from(mealPlans)
-		.where(and(eq(mealPlans.id, id), eq(mealPlans.spaceId, context.space.id)))
-		.limit(1);
+	try {
+		return {
+			mealPlan: await getMealPlan(context, id)
+		};
+	} catch (cause) {
+		if (cause instanceof ApiError) {
+			throw kitError(cause.status, cause.message);
+		}
 
-	if (!mealPlan) {
-		throw kitError(404, '饭单不存在');
+		throw cause;
 	}
-
-	return {
-		mealPlan
-	};
 };
