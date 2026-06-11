@@ -13,6 +13,7 @@
 		ChefHat,
 		ClipboardList,
 		Plus,
+		ShoppingCart,
 		Trash2,
 		UsersRound
 	} from 'lucide-svelte';
@@ -239,6 +240,36 @@
 		</div>
 
 		<aside class="space-y-4">
+			<Card.Root class="rounded-lg">
+				<Card.Header>
+					<Card.Title class="flex items-center gap-2">
+						<ShoppingCart class="size-5" />
+						购物清单
+					</Card.Title>
+					<Card.Description>
+						{#if data.shoppingList}
+							已生成 {data.shoppingList.items.length} 项，可继续勾选和调整。
+						{:else}
+							根据当前饭单菜品食材生成买菜清单。
+						{/if}
+					</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-3">
+					{#if data.shoppingList}
+						<Button href={`/app/shopping-lists/${data.shoppingList.id}`} class="w-full">
+							<ShoppingCart class="size-4" />
+							打开购物清单
+						</Button>
+					{/if}
+					<form method="post" action="?/generateShoppingList">
+						<Button type="submit" variant={data.shoppingList ? 'outline' : 'default'} class="w-full">
+							<ShoppingCart class="size-4" />
+							{data.shoppingList ? '重新生成清单' : '生成购物清单'}
+						</Button>
+					</form>
+				</Card.Content>
+			</Card.Root>
+
 			<Card.Root class="rounded-lg">
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2">

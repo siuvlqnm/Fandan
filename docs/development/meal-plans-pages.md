@@ -24,11 +24,13 @@ LES-90 adds creator-side pages for listing meal plans and creating the first dra
 - Item move and remove actions auto-save the meal plan by replacing the full item list through `updateMealPlan`.
 - Detail status actions support draft, pending confirmation, confirmed, completed and archived.
 - Archived meal plans are shown read-only in the detail workspace.
+- The detail page can generate or open the meal plan's default shopping list.
 
 ## Implementation Notes
 
 - Page actions call `src/lib/server/meal-plans.ts` directly instead of calling JSON route handlers.
 - Quick target creation reuses `src/lib/server/targets.ts`.
 - Quick dish creation on the detail page reuses `src/lib/server/dishes.ts`.
+- Shopping-list generation on the detail page reuses `src/lib/server/shopping-lists.ts`.
 - Detail item actions keep the LES-89 API contract: item changes are persisted as a complete replacement list on the parent meal plan.
 - The item list uses current item IDs only to compute remove and move actions; saved replacement rows receive fresh IDs from the service layer.

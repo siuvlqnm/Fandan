@@ -292,6 +292,22 @@ export const getShoppingList = async (context: AuthenticatedContext, id: string)
 	return serializeShoppingList(shoppingList, itemsByList.get(shoppingList.id) ?? []);
 };
 
+export const getMealPlanShoppingList = async (context: AuthenticatedContext, mealPlanId: string) => {
+	const mealPlan = await getMealPlan(context, mealPlanId);
+	const [shoppingList] = await context.db
+		.select()
+		.from(shoppingLists)
+		.where(eq(shoppingLists.mealPlanId, mealPlan.id))
+		.orderBy(desc(shoppingLists.updatedAt), desc(shoppingLists.createdAt))
+		.limit(1);
+
+	if (!shoppingList) {
+		return null;
+	}
+
+	return getShoppingList(context, shoppingList.id);
+};
+
 export const generateShoppingList = async (context: AuthenticatedContext, mealPlanId: string) => {
 	const mealPlan = await getMealPlan(context, mealPlanId);
 	const generatedItems = await buildGeneratedItems(context, mealPlanId);

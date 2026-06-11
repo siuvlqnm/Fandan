@@ -4,6 +4,7 @@ import { ApiError } from '$lib/server/api/errors';
 import { requireUserSpace } from '$lib/server/context';
 import { createDish, createDishSchema, listDishes } from '$lib/server/dishes';
 import { archiveMealPlan, getMealPlan, updateMealPlan } from '$lib/server/meal-plans';
+import { generateShoppingList, getMealPlanShoppingList } from '$lib/server/shopping-lists';
 import { listTargets } from '$lib/server/targets';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
@@ -60,7 +61,14 @@ const statusFormSchema = z.object({
 
 type MealPlan = Awaited<ReturnType<typeof getMealPlan>>;
 type MealPlanItem = MealPlan['items'][number];
-type FormAction = 'updateMeta' | 'addDish' | 'quickAddDish' | 'removeItem' | 'moveItem' | 'setStatus';
+type FormAction =
+	| 'updateMeta'
+	| 'addDish'
+	| 'quickAddDish'
+	| 'removeItem'
+	| 'moveItem'
+	| 'setStatus'
+	| 'generateShoppingList';
 
 const requireContext = async (event: RequestEvent) => {
 	if (!event.locals.user || !event.locals.session) {
@@ -187,7 +195,12 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	try {
-		const [mealPlan, targets, dishes] = await Promise.all([getMealPlan(context, id), listTargets(context), listDishes(context)]);
+		const [mealPlan, targets, dishes, shoppingList] = await Promise.all([
+			getMealPlan(context, id),
+			listTargets(context),
+			listDishes(context),
+			getMealPlanShoppingList(context, id)
+		]);
 		const targetById = new Map(targets.map((target) => [target.id, target]));
 		const dishById = new Map(dishes.map((dish) => [dish.id, dish]));
 		const enrichedItems = orderedItems(mealPlan).map((item, index, allItems) => {
@@ -235,6 +248,7 @@ export const load: PageServerLoad = async (event) => {
 			target: mealPlan.targetId ? (targetById.get(mealPlan.targetId) ?? null) : null,
 			targets,
 			dishes,
+			shoppingList,
 			groups,
 			mealSlotOptions,
 			typeOptions: Object.entries(typeLabels).map(([value, label]) => ({ value, label })),
@@ -388,6 +402,18 @@ export const actions: Actions = {
 			redirectBack(event);
 		} catch (cause) {
 			return actionError('setStatus', cause, values);
+		}
+	},
+
+	generateShoppingList: async (event) => {
+		const context = await requireContext(event);
+
+		try {
+			const shoppingList = await generateShoppingList(context, event.params.id);
+
+			return redirect(303, `/app/shopping-lists/${shoppingList.id}`);
+		} catch (cause) {
+			return actionError('generateShoppingList', cause);
 		}
 	}
 };

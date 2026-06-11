@@ -75,6 +75,7 @@ npm run dev
 饭单 API 说明见 [docs/development/meal-plans-api.md](docs/development/meal-plans-api.md)。
 饭单页面说明见 [docs/development/meal-plans-pages.md](docs/development/meal-plans-pages.md)。
 购物清单 API 说明见 [docs/development/shopping-lists-api.md](docs/development/shopping-lists-api.md)。
+购物清单页面说明见 [docs/development/shopping-lists-pages.md](docs/development/shopping-lists-pages.md)。
 每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 
 ## 验证

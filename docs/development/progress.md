@@ -2,6 +2,37 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-93 - Shopping List Page
+
+Status: implemented.
+
+Commit: see Git history entry `Add shopping list page`.
+
+What changed:
+
+- Added `/app/shopping-lists/:id` creator-side shopping-list workspace.
+- Added shopping-list entry actions to `/app/meal-plans/:id` for generating or opening the meal plan's default list.
+- Shopping-list page shows the source meal plan, pending/purchased counts and category-grouped items.
+- Added large toggle controls for purchased state.
+- Added inline editing for item name, quantity, unit, category and notes.
+- Added custom item creation and item deletion.
+- Added explicit regenerate action that replaces current items from meal-plan ingredients.
+- Added empty-list guidance for returning to the meal plan or adding a manual item.
+- Added `docs/development/shopping-lists-pages.md` and linked it from the README.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Authenticated smoke test: create dishes with ingredients, create meal plan, generate shopping list from meal-plan detail page action, open shopping-list page, toggle checked state, add custom item, edit item fields, delete item and regenerate.
+- Browser mobile viewport check for `/app/shopping-lists/:id` with no horizontal overflow and visible one-handed toggle controls.
+
+Notes for next threads:
+
+- Use `docs/development/shopping-lists-pages.md` for shopping-list page behavior.
+- LES-94 starts the share-link and guest feedback API; the shopping-list page does not expose public sharing.
+- There is still no standalone `/app/shopping-lists` index; entry is currently through meal-plan detail generation/open actions.
+
 ## LES-92 - Shopping List Generation API
 
 Status: implemented.
