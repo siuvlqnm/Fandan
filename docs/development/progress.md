@@ -2,6 +2,34 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-95 - Guest Share Confirmation Page
+
+Status: implemented.
+
+Commit: see Git history entry `Add guest share confirmation page`.
+
+What changed:
+
+- Added public `/share/:token` page with no login requirement.
+- Page shows meal-plan title, date range, status, target summary, target preferences and grouped dishes.
+- Guests can submit per-dish feedback with `like`, `dislike`, `replace` or note reactions.
+- Guests can submit a global dietary note.
+- Guests can confirm a meal plan and optionally include a confirmation note.
+- Expired, missing or disabled links render a readable unavailable state.
+- Added `docs/development/share-pages.md` and linked it from the README.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Local D1 HTTP/browser smoke with temporary `smoke_les95_*` records: open `/share/:token` without login, submit feedback, confirm the meal plan, verify success messages and persisted feedback/status.
+- Browser desktop and mobile viewport checks for `/share/:token` and an expired token.
+
+Notes for next threads:
+
+- LES-96 can aggregate feedback rows in the creator meal-plan detail page.
+- The creator detail page still does not expose a share-link creation panel; future polish can add a small share card that calls the LES-94 endpoint.
+
 ## LES-94 - Share Link And Guest Feedback API
 
 Status: implemented.
