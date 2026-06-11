@@ -12,9 +12,9 @@
 </svelte:head>
 
 <main class="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 md:py-10">
-	<Button href="/app/targets" variant="ghost" size="sm" class="self-start px-0">
+	<Button href={data.dish ? '/app/dishes' : '/app/targets'} variant="ghost" size="sm" class="self-start px-0">
 		<ArrowLeft class="size-4" />
-		返回对象列表
+		返回{data.dish ? '菜品库' : '对象列表'}
 	</Button>
 
 	<Card.Root class="rounded-lg">
@@ -24,7 +24,7 @@
 				新建饭单
 			</Card.Title>
 			<Card.Description>
-				饭单新建流程会在 LES-90 接入。当前入口先保留对象上下文，避免从对象卡片进入时丢失目标。
+				饭单新建流程会在 LES-90 接入。当前入口先保留对象和菜品上下文，避免从卡片进入时丢失选择。
 			</Card.Description>
 		</Card.Header>
 		<Card.Content class="space-y-4">
@@ -35,7 +35,16 @@
 					<p class="text-sm text-muted-foreground">{data.target.peopleCount} 人 · {data.target.type}</p>
 				</div>
 			{/if}
-			<Button href="/app/targets" variant="outline">先返回管理对象</Button>
+			{#if data.dish}
+				<div class="rounded-md border p-4">
+					<p class="text-sm text-muted-foreground">已选择菜品</p>
+					<p class="text-lg font-semibold">{data.dish.name}</p>
+					<p class="text-sm text-muted-foreground">{data.dish.category || '未分类'} · {data.dish.ingredients.length} 种食材</p>
+				</div>
+			{/if}
+			<Button href={data.dish ? '/app/dishes' : '/app/targets'} variant="outline">
+				先返回管理{data.dish ? '菜品' : '对象'}
+			</Button>
 		</Card.Content>
 	</Card.Root>
 </main>

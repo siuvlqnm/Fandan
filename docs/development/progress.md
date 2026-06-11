@@ -2,6 +2,36 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-88 - Dish List And Edit Pages
+
+Status: implemented.
+
+Commit: see Git history entry `Add dish management pages`.
+
+What changed:
+
+- Added `/app/dishes` list page with search, category filter, dish cards, tags/ingredient summary and delete action.
+- Added `/app/dishes/new` create page.
+- Added `/app/dishes/:id` edit page with ingredient summary, add-to-meal-plan entry and delete action.
+- Added shared `DishForm` component for create/edit forms with comma-separated tags and editable ingredient rows.
+- Added page form helpers in `src/lib/server/dishes.ts` so page actions reuse LES-87 validation and serialization boundaries.
+- Updated the dashboard dish entry to point to `/app/dishes`.
+- Updated `/app/meal-plans/new?dishId=:id` placeholder to preserve selected dish context before LES-90/LES-91 replace the meal-plan flow.
+- Added `docs/development/dishes-pages.md` and linked it from the README.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Browser smoke: sign up, open `/app/dishes`, create name-only dish, create dish with ingredients/tags, filter/search, edit, open meal-plan placeholder, delete dish.
+- Mobile viewport browser check for `/app/dishes` and `/app/dishes/new`.
+
+Notes for next threads:
+
+- Use `docs/development/dishes-pages.md` for page behavior and route boundaries.
+- Meal-plan placeholder routes are intentionally minimal and should be replaced by LES-90 and LES-91.
+- Dish page actions reuse `src/lib/server/dishes.ts`; keep future page/API behavior aligned there.
+
 ## LES-87 - Dish And Ingredient CRUD API
 
 Status: implemented.

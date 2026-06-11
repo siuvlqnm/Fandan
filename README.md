@@ -71,6 +71,7 @@ npm run dev
 用餐对象 API 说明见 [docs/development/targets-api.md](docs/development/targets-api.md)。
 用餐对象页面说明见 [docs/development/targets-pages.md](docs/development/targets-pages.md)。
 菜品与食材 API 说明见 [docs/development/dishes-api.md](docs/development/dishes-api.md)。
+菜品库页面说明见 [docs/development/dishes-pages.md](docs/development/dishes-pages.md)。
 每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 
 ## 验证

@@ -1,6 +1,7 @@
 import { redirect, error as kitError } from '@sveltejs/kit';
 import { ApiError } from '$lib/server/api/errors';
 import { requireUserSpace } from '$lib/server/context';
+import { getDish } from '$lib/server/dishes';
 import { getTarget } from '$lib/server/targets';
 import type { PageServerLoad } from './$types';
 
@@ -11,16 +12,19 @@ export const load: PageServerLoad = async (event) => {
 
 	const context = await requireUserSpace(event);
 	const targetId = event.url.searchParams.get('targetId');
+	const dishId = event.url.searchParams.get('dishId');
 
-	if (!targetId) {
+	if (!targetId && !dishId) {
 		return {
-			target: null
+			target: null,
+			dish: null
 		};
 	}
 
 	try {
 		return {
-			target: await getTarget(context, targetId)
+			target: targetId ? await getTarget(context, targetId) : null,
+			dish: dishId ? await getDish(context, dishId) : null
 		};
 	} catch (cause) {
 		if (cause instanceof ApiError) {

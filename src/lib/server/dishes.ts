@@ -14,6 +14,9 @@ import type { AuthenticatedContext } from './context';
 const dishVisibilitySchema = z.enum(['space', 'private']);
 
 const nullableTextSchema = (maxLength: number) => z.string().trim().max(maxLength).nullable().optional();
+const emptyStringToNull = (value: unknown) => (value === '' ? null : value);
+const formNullableTextSchema = (maxLength: number) =>
+	z.preprocess(emptyStringToNull, z.string().trim().max(maxLength).nullable().optional());
 
 const tagsSchema = z
 	.array(z.string().trim().min(1).max(24))
@@ -48,14 +51,45 @@ export const updateDishSchema = dishFieldsSchema
 	.partial()
 	.refine((value) => Object.keys(value).length > 0, { message: 'At least one field is required' });
 
+export const dishFormSchema = z.object({
+	name: z.string().trim().min(1, '请输入菜品名称').max(80),
+	category: formNullableTextSchema(40),
+	instructions: formNullableTextSchema(4000),
+	tagsText: z.string().trim().max(500).optional(),
+	visibility: dishVisibilitySchema.default('space'),
+	ingredients: z.array(ingredientSchema).max(100).default([])
+});
+
 type CreateDishInput = z.infer<typeof createDishSchema>;
 type UpdateDishInput = z.infer<typeof updateDishSchema>;
 type IngredientInput = z.infer<typeof ingredientSchema>;
+export type DishFormInput = z.infer<typeof dishFormSchema>;
 
 type SerializedIngredient = ReturnType<typeof serializeIngredient>;
 type SerializedDish = ReturnType<typeof serializeDish>;
 
 const normalizeSearch = (value: string | null | undefined) => value?.trim().toLowerCase() ?? '';
+
+export const parseDishTagsText = (value: string | null | undefined) =>
+	Array.from(
+		new Set(
+			(value ?? '')
+				.split(/[,，]/)
+				.map((tag) => tag.trim())
+				.filter(Boolean)
+		)
+	);
+
+export const dishFormToCreateInput = (input: DishFormInput): CreateDishInput => ({
+	name: input.name,
+	category: input.category,
+	instructions: input.instructions,
+	tags: parseDishTagsText(input.tagsText),
+	visibility: input.visibility,
+	ingredients: input.ingredients
+});
+
+export const dishFormToUpdateInput = (input: DishFormInput): UpdateDishInput => dishFormToCreateInput(input);
 
 const serializeIngredient = (ingredient: DishIngredient) => ({
 	id: ingredient.id,
