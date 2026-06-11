@@ -2,6 +2,36 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-94 - Share Link And Guest Feedback API
+
+Status: implemented.
+
+Commit: see Git history entry `Add share link feedback API`.
+
+What changed:
+
+- Added protected `POST /api/meal-plans/:id/share-links` for creator-side share-link creation.
+- Added public `GET /api/share/:token` for visitor-safe meal-plan reads without login.
+- Added public `POST /api/share/:token/feedback` for item-level reactions and global dietary notes.
+- Added public `POST /api/share/:token/confirm` for guest confirmation and feedback persistence.
+- Added `src/lib/server/share-links.ts` with token generation, expiry checks, permission checks and meal-plan item ownership validation.
+- Confirmation writes a `confirm` feedback row and moves draft or pending-confirmation meal plans to `confirmed`.
+- Added `docs/development/share-links-api.md` and linked it from the README.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Local D1 HTTP smoke test with temporary `smoke_les94_*` records: read the public share without login, submit item feedback, confirm the share, and verify persisted feedback rows and confirmed meal-plan status.
+- Protected-route smoke test: logged-out `POST /api/meal-plans/:id/share-links` returns the unified 401 envelope.
+- Expired-link smoke test: expired `GET /api/share/:token` returns the unified 403 envelope.
+
+Notes for next threads:
+
+- LES-95 can build `/share/:token` as a public page on top of the `/api/share/:token` payload.
+- LES-96 can aggregate rows from `feedback` by `share_link_id`, `meal_plan_item_id` and `reaction`.
+- Public routes intentionally expose no `space_id`, user or session fields.
+
 ## LES-93 - Shopping List Page
 
 Status: implemented.
