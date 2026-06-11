@@ -2,6 +2,36 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-89 - Meal Plan CRUD API And Status Flow
+
+Status: implemented.
+
+Commit: see Git history entry `Add meal plan CRUD API`.
+
+What changed:
+
+- Added protected `/api/meal-plans` list and create endpoints.
+- Added protected `/api/meal-plans/:id` detail, patch and delete endpoints.
+- Added protected `/api/meal-plans/:id/duplicate` endpoint that copies a meal plan and items into a new draft.
+- Added protected `/api/meal-plans/:id/archive` endpoint that marks a meal plan archived.
+- Added `src/lib/server/meal-plans.ts` with Zod validation, serialization, space-scoped Drizzle operations, target/dish reference checks and archived edit protection.
+- Meal-plan create supports `single_meal`, `day`, `week` and `gathering`, defaults status to `draft`, and accepts optional items for future detail-page reuse.
+- `PATCH /api/meal-plans/:id` rejects archived meal plans with `409 CONFLICT`.
+- Added `docs/development/meal-plans-api.md` and linked it from the README/server docs.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Authenticated smoke test creates single-meal, day, week and gathering meal plans, creates plan items with dishes, filters list, patches status, duplicates to draft, archives, verifies archived patch conflict, reads detail, and deletes test plans.
+- Logged-out `GET /api/meal-plans` returns the unified 401 envelope.
+
+Notes for next threads:
+
+- Use `docs/development/meal-plans-api.md` as the contract for LES-90 page work.
+- Meal-plan item creation/update is currently full-list replacement through the parent payload; LES-91 can add narrower item actions if the detail workspace needs more granular autosave.
+- Archived meal plans are immutable through `PATCH`; duplicate archived history before editing.
+
 ## LES-88 - Dish List And Edit Pages
 
 Status: implemented.
