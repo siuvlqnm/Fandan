@@ -2,6 +2,38 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-91 - Meal Plan Detail Workspace
+
+Status: implemented.
+
+Commit: see Git history entry `Add meal plan detail workspace`.
+
+What changed:
+
+- Replaced `/app/meal-plans/:id` placeholder with the meal-plan detail workspace.
+- Added base information editing for title, target, type, date range and notes.
+- Added target preference context with people count, taste notes, dietary restrictions and budget notes.
+- Added existing-dish insertion with date, meal slot, servings and item notes.
+- Added quick dish creation that immediately adds the new dish to the current meal plan.
+- Added grouped item display by planned date and meal slot.
+- Added item removal and item up/down ordering actions with automatic persistence.
+- Added detail status actions for draft, pending confirmation, confirmed, completed and archived.
+- Archived meal plans now render as read-only in the detail workspace.
+- Updated `docs/development/meal-plans-pages.md` with the LES-91 detail workspace behavior.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Authenticated smoke test: create target, create dish, create meal plan, update detail metadata, add existing dish, quick-create-and-add dish, move item, remove item, step status through pending confirmation, confirmed and completed, then archive.
+- Browser mobile viewport check for `/app/meal-plans/:id`.
+
+Notes for next threads:
+
+- Detail item actions still use full-list replacement through `updateMealPlan`, which matches the LES-89 API contract.
+- Archived meal plans are intentionally immutable; duplicate archived history before editing.
+- The next MVP slice can build shopping-list generation from the saved meal-plan items and dish ingredients.
+
 ## LES-90 - Meal Plan List And Create Flow
 
 Status: implemented.

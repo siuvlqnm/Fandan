@@ -226,7 +226,7 @@
 						<CalendarDays class="size-5" />
 						创建后
 					</Card.Title>
-					<Card.Description>饭单详情工作台会在 LES-91 接入。</Card.Description>
+					<Card.Description>创建完成后进入详情工作台继续添加菜品、排序和确认状态。</Card.Description>
 				</Card.Header>
 			</Card.Root>
 		</div>
