@@ -15,10 +15,13 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:migrate:local": "wrangler d1 migrations apply fandan --local",
+		"db:migrate:remote": "wrangler d1 migrations apply fandan --remote",
 		"db:seed:local": "wrangler d1 execute fandan --local --file=scripts/db/seed.local.sql",
 		"db:setup:local": "npm run db:migrate:local && npm run db:seed:local",
 		"db:studio": "drizzle-kit studio",
-		"auth:schema": "better-auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes"
+		"auth:schema": "better-auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes",
+		"deploy:dry-run": "npm run build && wrangler deploy --dry-run",
+		"deploy": "npm run build && wrangler deploy"
 	},
 	"devDependencies": {
 		"@better-auth/cli": "~1.4.21",

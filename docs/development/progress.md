@@ -2,6 +2,38 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-99 - MVP Deployment Preparation
+
+Status: blocked on Cloudflare authentication and production D1 id.
+
+Commit: see Git history entry `Add deployment runbook`.
+
+What changed:
+
+- Added deployment scripts: `npm run deploy:dry-run`, `npm run deploy` and `npm run db:migrate:remote`.
+- Added `CLOUDFLARE_API_TOKEN` to `.env.example` because Wrangler requires it in non-interactive environments.
+- Added `docs/development/deployment.md` with production D1 setup, deployment commands, trial data and production smoke checklist.
+- Linked the deployment runbook from the README.
+
+Verification checklist:
+
+- `npx wrangler --version` returns `4.99.0`.
+- `npm run check`
+- `npm run build`
+- `npx wrangler deploy --dry-run`
+- `npx wrangler whoami` fails with `Not logged in`.
+- `npx wrangler d1 list` fails because no `CLOUDFLARE_API_TOKEN` is set.
+
+Blocker:
+
+- `wrangler.jsonc` still contains the placeholder D1 `database_id`.
+- A valid Cloudflare login/API token and real production D1 database id are required before remote migration or deploy.
+
+Notes for next threads:
+
+- Once Cloudflare auth is available, run `npx wrangler d1 list`, create or identify the production `fandan` D1 database, update `wrangler.jsonc`, run `npm run gen`, `npm run db:migrate:remote`, `npm run deploy:dry-run` and then `npm run deploy`.
+- Do not run `scripts/db/seed.local.sql` against production; create trial data through the production UI after signing in with a test creator account.
+
 ## LES-98 - Mobile Polish And Error-State Readiness
 
 Status: implemented.
