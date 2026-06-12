@@ -4,7 +4,7 @@ This file records completed implementation slices so other Codex threads can qui
 
 ## LES-99 - MVP Deployment Preparation
 
-Status: blocked on Cloudflare authentication and production D1 id.
+Status: blocked on Wrangler authentication/API token and production deploy secrets.
 
 Commit: see Git history entry `Add deployment runbook`.
 
@@ -20,18 +20,20 @@ Verification checklist:
 - `npx wrangler --version` returns `4.99.0`.
 - `npm run check`
 - `npm run build`
-- `npx wrangler deploy --dry-run`
-- `npx wrangler whoami` fails with `Not logged in`.
-- `npx wrangler d1 list` fails because no `CLOUDFLARE_API_TOKEN` is set.
+- `npx wrangler deploy --dry-run` succeeds and reports `env.DB (fandan)` bound to D1.
+- `npx wrangler whoami` fails with `Failed to fetch auth token: 400 Bad Request` and `Not logged in`.
+- Cloudflare API connector confirmed account access and created production D1 database `fandan` with id `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`.
+- `wrangler.jsonc` now points `DB` at the production D1 database id.
+- `npx wrangler d1 list` fails because no local `CLOUDFLARE_API_TOKEN` is set.
 
 Blocker:
 
-- `wrangler.jsonc` still contains the placeholder D1 `database_id`.
-- A valid Cloudflare login/API token and real production D1 database id are required before remote migration or deploy.
+- A valid local Wrangler login or `CLOUDFLARE_API_TOKEN` is required before remote migration or deploy.
+- Production secrets still need to be configured before deploying: `BETTER_AUTH_SECRET`, `ORIGIN`, and any account-specific environment values.
 
 Notes for next threads:
 
-- Once Cloudflare auth is available, run `npx wrangler d1 list`, create or identify the production `fandan` D1 database, update `wrangler.jsonc`, run `npm run gen`, `npm run db:migrate:remote`, `npm run deploy:dry-run` and then `npm run deploy`.
+- Once local Wrangler auth or `CLOUDFLARE_API_TOKEN` is available, run `npm run gen`, `npm run db:migrate:remote`, `npm run deploy:dry-run` and then `npm run deploy`.
 - Do not run `scripts/db/seed.local.sql` against production; create trial data through the production UI after signing in with a test creator account.
 
 ## LES-98 - Mobile Polish And Error-State Readiness

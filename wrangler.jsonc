@@ -14,7 +14,7 @@
 		{
 			"binding": "DB",
 			"database_name": "fandan",
-			"database_id": "00000000-0000-0000-0000-000000000000",
+			"database_id": "a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a",
 			"migrations_dir": "drizzle"
 		}
 	],

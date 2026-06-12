@@ -4,14 +4,19 @@ LES-99 covers the first production deployment and real-user trial setup.
 
 ## Current Blocker
 
-This checkout is not currently authenticated with Cloudflare Wrangler:
+The production D1 database has been created through the Cloudflare API connector:
+
+- Database name: `fandan`
+- Database id: `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`
+
+This checkout still needs local Wrangler authentication or a deploy-scoped API token:
 
 ```bash
 npx wrangler whoami
 npx wrangler d1 list
 ```
 
-Both commands require a valid Wrangler login or `CLOUDFLARE_API_TOKEN`. Do not deploy while `wrangler.jsonc` still contains the placeholder D1 `database_id`.
+Both commands require a valid Wrangler login or `CLOUDFLARE_API_TOKEN`. Do not deploy until production secrets are configured and remote migrations have been applied.
 
 ## Required Production Values
 
@@ -19,7 +24,7 @@ Set these before deploying:
 
 - `CLOUDFLARE_API_TOKEN`: Wrangler API token with permission to deploy Workers and manage D1 for this account.
 - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account id.
-- `CLOUDFLARE_DATABASE_ID`: real production D1 database id.
+- `CLOUDFLARE_DATABASE_ID`: `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`.
 - `ORIGIN`: deployed Worker URL or custom domain, for example `https://fandan.example.com`.
 - `BETTER_AUTH_SECRET`: high-entropy production secret, different from local development.
 
@@ -28,15 +33,14 @@ Use Wrangler secrets or dashboard variables for production secrets. Do not commi
 ## Production D1 Setup
 
 1. Authenticate Wrangler.
-2. Create or identify the production D1 database named `fandan`.
-3. Replace the placeholder `database_id` in `wrangler.jsonc`.
-4. Generate bindings after config changes:
+2. Confirm the production D1 database named `fandan` is reachable.
+3. Generate bindings after config changes:
 
 ```bash
 npm run gen
 ```
 
-5. Apply remote migrations:
+4. Apply remote migrations:
 
 ```bash
 npm run db:migrate:remote
