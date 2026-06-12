@@ -4,7 +4,7 @@ This file records completed implementation slices so other Codex threads can qui
 
 ## LES-99 - MVP Deployment Preparation
 
-Status: blocked on Wrangler authentication/API token and production deploy secrets.
+Status: production D1 migrated; blocked on Wrangler authentication/API token and production deploy secrets.
 
 Commit: see Git history entry `Add deployment runbook`.
 
@@ -24,16 +24,19 @@ Verification checklist:
 - `npx wrangler whoami` fails with `Failed to fetch auth token: 400 Bad Request` and `Not logged in`.
 - Cloudflare API connector confirmed account access and created production D1 database `fandan` with id `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`.
 - `wrangler.jsonc` now points `DB` at the production D1 database id.
+- Cloudflare API connector applied `drizzle/0000_panoramic_carnage.sql` and `drizzle/0001_groovy_wilson_fisk.sql` to the production D1 database.
+- Production D1 verification: business tables exist, 30 named indexes exist, `d1_migrations` contains both migration filenames, and `SELECT COUNT(*) FROM user` returns 0 on the fresh database.
 - `npx wrangler d1 list` fails because no local `CLOUDFLARE_API_TOKEN` is set.
 
 Blocker:
 
-- A valid local Wrangler login or `CLOUDFLARE_API_TOKEN` is required before remote migration or deploy.
+- A valid local Wrangler login or `CLOUDFLARE_API_TOKEN` is required before deploy.
 - Production secrets still need to be configured before deploying: `BETTER_AUTH_SECRET`, `ORIGIN`, and any account-specific environment values.
 
 Notes for next threads:
 
-- Once local Wrangler auth or `CLOUDFLARE_API_TOKEN` is available, run `npm run gen`, `npm run db:migrate:remote`, `npm run deploy:dry-run` and then `npm run deploy`.
+- Current migrations were applied through the Cloudflare API connector and recorded in `d1_migrations`; do not re-run them manually.
+- Once local Wrangler auth or `CLOUDFLARE_API_TOKEN` is available, run `npm run gen`, `npm run deploy:dry-run` and then `npm run deploy`.
 - Do not run `scripts/db/seed.local.sql` against production; create trial data through the production UI after signing in with a test creator account.
 
 ## LES-98 - Mobile Polish And Error-State Readiness

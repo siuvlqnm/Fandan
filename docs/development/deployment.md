@@ -8,6 +8,7 @@ The production D1 database has been created through the Cloudflare API connector
 
 - Database name: `fandan`
 - Database id: `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`
+- Migration status: `drizzle/0000_panoramic_carnage.sql` and `drizzle/0001_groovy_wilson_fisk.sql` have been applied through the Cloudflare API connector and recorded in `d1_migrations`.
 
 This checkout still needs local Wrangler authentication or a deploy-scoped API token:
 
@@ -16,7 +17,7 @@ npx wrangler whoami
 npx wrangler d1 list
 ```
 
-Both commands require a valid Wrangler login or `CLOUDFLARE_API_TOKEN`. Do not deploy until production secrets are configured and remote migrations have been applied.
+Both commands require a valid Wrangler login or `CLOUDFLARE_API_TOKEN`. Do not deploy until production secrets are configured.
 
 ## Required Production Values
 
@@ -40,11 +41,7 @@ Use Wrangler secrets or dashboard variables for production secrets. Do not commi
 npm run gen
 ```
 
-4. Apply remote migrations:
-
-```bash
-npm run db:migrate:remote
-```
+Remote migrations for the current schema have already been applied. When future migration files are added, use `npm run db:migrate:remote` after Wrangler authentication is available.
 
 The local demo seed file deletes and recreates demo data for local development. Do not run `scripts/db/seed.local.sql` against production.
 
