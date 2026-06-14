@@ -1,6 +1,6 @@
 <script lang="ts">
+	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
@@ -8,6 +8,7 @@
 		Archive,
 		ArrowDown,
 		ArrowLeft,
+		ArrowRight,
 		ArrowUp,
 		CalendarDays,
 		CheckCircle2,
@@ -26,419 +27,287 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
+	type Panel = 'menu' | 'confirm' | 'shopping' | 'edit';
+
+	let activePanel = $state<Panel>('menu');
+
 	const errors = $derived((form?.errors ?? {}) as Record<string, string[]>);
 	const isArchived = $derived(data.mealPlan.status === 'archived');
 	const defaultDate = $derived(data.mealPlan.startDate ?? '');
-	const selectClass =
-		'dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full min-w-0 rounded-md border bg-transparent px-2.5 py-1 text-base shadow-xs outline-none transition-[color,box-shadow] focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm';
-	const textAreaClass =
-		'dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 min-h-20 w-full min-w-0 rounded-md border bg-transparent px-2.5 py-2 text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm';
 	const feedbackTotals = $derived(data.feedbackSummary.totals);
+	const dishCount = $derived(data.mealPlan.items.length);
+	const shoppingCount = $derived(data.shoppingList?.items.length ?? 0);
+	const selectClass = 'app-input h-11 text-sm';
+	const textAreaClass = 'app-input min-h-24 py-3';
+	const panels = $derived<{ id: Panel; label: string; helper: string }[]>([
+		{ id: 'menu', label: '菜单', helper: `${dishCount} 道菜` },
+		{ id: 'confirm', label: '确认', helper: `${data.feedbackSummary.total} 条反馈` },
+		{ id: 'shopping', label: '清单', helper: shoppingCount ? `${shoppingCount} 项` : '待生成' },
+		{ id: 'edit', label: '编辑', helper: '信息和加菜' }
+	]);
 </script>
 
 <svelte:head>
 	<title>{data.mealPlan.title} / 饭单</title>
 </svelte:head>
 
-<main class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
-	<section class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-		<div class="min-w-0 space-y-2">
-			<Button href="/app/meal-plans" variant="ghost" size="sm" class="px-0">
-				<ArrowLeft class="size-4" />
-				返回饭单列表
-			</Button>
-			<p class="text-sm text-muted-foreground">饭单详情</p>
-			<h1 class="break-words text-3xl font-semibold tracking-normal md:text-4xl">{data.mealPlan.title}</h1>
-			<p class="max-w-2xl text-muted-foreground">
-				{data.mealPlan.typeLabel} · {data.mealPlan.statusLabel} · {data.mealPlan.targetName}
-			</p>
-		</div>
+<main class="app-page app-bottom-safe">
+	<section class="space-y-4">
+		<Button href="/app/meal-plans" variant="ghost" size="sm" class="h-9 justify-start px-0 text-muted-foreground">
+			<ArrowLeft class="size-4" />
+			返回饭单列表
+		</Button>
 
-		<div class="flex flex-wrap gap-2">
-			{#each data.statusOptions as option}
-				<form method="post" action="?/setStatus" use:enhanceWithFeedback>
-					<input type="hidden" name="status" value={option.value} />
-					<Button
-						type="submit"
-						variant={data.mealPlan.status === option.value ? 'secondary' : 'outline'}
-						size="sm"
-						disabled={isArchived || data.mealPlan.status === option.value}
-						data-confirm={option.value === 'archived' ? '归档后详情页会保持只读，确认归档这份饭单？' : undefined}
-						data-pending-label="更新中..."
-					>
-						{#if option.value === 'archived'}
-							<Archive class="size-4" />
-						{:else if option.value === 'completed'}
-							<CheckCircle2 class="size-4" />
-						{:else}
-							<ClipboardList class="size-4" />
-						{/if}
-						{option.label}
+		<section class="app-panel overflow-hidden">
+			<div class="space-y-4 bg-[linear-gradient(135deg,oklch(1_0_0),oklch(0.975_0.025_151))] p-5">
+				<div class="flex items-start justify-between gap-3">
+					<div class="min-w-0 space-y-2">
+						<p class="app-chip {data.mealPlan.status === 'pending_confirmation' ? 'bg-destructive/10 text-destructive' : 'bg-secondary text-primary'}">
+							{data.mealPlan.statusLabel}
+						</p>
+						<h1 class="break-words text-3xl font-semibold leading-tight">{data.mealPlan.title}</h1>
+						<p class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+							<span class="inline-flex items-center gap-1.5"><UsersRound class="size-4" />{data.mealPlan.targetName}</span>
+							<span class="inline-flex items-center gap-1.5"><CalendarDays class="size-4" />{data.mealPlan.startDate || '未设置日期'}</span>
+						</p>
+					</div>
+					<Button href="/app/meal-plans" variant="outline" size="icon-lg" class="rounded-full bg-white" aria-label="返回列表">
+						<ArrowRight class="size-5 rotate-180" />
 					</Button>
-				</form>
-			{/each}
-		</div>
+				</div>
+
+				<div class="grid grid-cols-3 divide-x divide-border/70 rounded-2xl bg-white p-3 text-center text-sm">
+					<p><span class="block text-2xl font-semibold">{dishCount}</span><span class="text-xs text-muted-foreground">菜品</span></p>
+					<p><span class="block text-2xl font-semibold">{data.feedbackSummary.total}</span><span class="text-xs text-muted-foreground">反馈</span></p>
+					<p><span class="block text-2xl font-semibold">{shoppingCount}</span><span class="text-xs text-muted-foreground">清单项</span></p>
+				</div>
+
+				<div class="grid grid-cols-2 gap-3">
+					<Button onclick={() => (activePanel = 'confirm')} variant="outline" class="h-12 rounded-2xl bg-white">
+						<MessageSquareText class="size-4" />
+						确认反馈
+					</Button>
+					{#if data.shoppingList}
+						<Button href={`/app/shopping-lists/${data.shoppingList.id}`} class="h-12 rounded-2xl">
+							<ShoppingCart class="size-4" />
+							打开清单
+						</Button>
+					{:else}
+						<Button onclick={() => (activePanel = 'shopping')} class="h-12 rounded-2xl">
+							<ShoppingCart class="size-4" />
+							生成清单
+						</Button>
+					{/if}
+				</div>
+			</div>
+		</section>
 	</section>
 
 	{#if form?.message}
-		<p class="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
+		<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
 	{/if}
 
 	{#if isArchived}
-		<p class="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+		<p class="rounded-2xl border bg-muted/40 p-3 text-sm text-muted-foreground">
 			这份饭单已归档，当前详情页保持只读。
 		</p>
 	{/if}
 
-	<div class="grid gap-6 lg:grid-cols-[1fr_340px]">
-		<div class="space-y-6">
-			<Card.Root class="rounded-lg">
-				<Card.Header>
-					<Card.Title class="flex items-center gap-2">
-						<ClipboardList class="size-5" />
-						基础信息
-					</Card.Title>
-				</Card.Header>
-				<Card.Content>
-					<form method="post" action="?/updateMeta" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-5">
-						<div class="space-y-2">
-							<Label for="meal-plan-title">饭单标题</Label>
-							<Input
-								id="meal-plan-title"
-								name="title"
-								value={data.mealPlan.title}
-								placeholder="例如：周三晚餐"
-								required
-								disabled={isArchived}
-							/>
-							{#if form?.action === 'updateMeta' && errors.title?.[0]}
-								<p class="text-sm text-destructive">{errors.title[0]}</p>
-							{/if}
-						</div>
-
-						<div class="grid gap-4 md:grid-cols-2">
-							<div class="space-y-2">
-								<Label for="meal-plan-type">饭单类型</Label>
-								<select id="meal-plan-type" name="type" class={selectClass} disabled={isArchived}>
-									{#each data.typeOptions as option}
-										<option value={option.value} selected={data.mealPlan.type === option.value}>{option.label}</option>
-									{/each}
-								</select>
-							</div>
-
-							<div class="space-y-2">
-								<Label for="meal-plan-target">用餐对象</Label>
-								<select id="meal-plan-target" name="targetId" class={selectClass} disabled={isArchived}>
-									<option value="" selected={!data.mealPlan.targetId}>未选择对象</option>
-									{#each data.targets as target}
-										<option value={target.id} selected={data.mealPlan.targetId === target.id}>{target.name}</option>
-									{/each}
-								</select>
-								{#if form?.action === 'updateMeta' && errors.targetId?.[0]}
-									<p class="text-sm text-destructive">{errors.targetId[0]}</p>
-								{/if}
-							</div>
-						</div>
-
-						<div class="grid gap-4 md:grid-cols-2">
-							<div class="space-y-2">
-								<Label for="start-date">开始日期</Label>
-								<Input id="start-date" name="startDate" type="date" value={data.mealPlan.startDate ?? ''} disabled={isArchived} />
-							</div>
-							<div class="space-y-2">
-								<Label for="end-date">结束日期</Label>
-								<Input id="end-date" name="endDate" type="date" value={data.mealPlan.endDate ?? ''} disabled={isArchived} />
-							</div>
-						</div>
-
-						<div class="space-y-2">
-							<Label for="meal-plan-notes">备注</Label>
-							<textarea id="meal-plan-notes" name="notes" class={textAreaClass} disabled={isArchived}>{data.mealPlan.notes ?? ''}</textarea>
-						</div>
-
-						<div class="flex justify-end">
-							<Button type="submit" disabled={isArchived} data-pending-label="保存中...">
-								<CheckCircle2 class="size-4" />
-								保存基础信息
-							</Button>
-						</div>
-					</form>
-				</Card.Content>
-			</Card.Root>
-
-			<Card.Root class="rounded-lg" data-testid="meal-plan-items">
-				<Card.Header>
-					<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-						<div>
-							<Card.Title class="flex items-center gap-2">
-								<ChefHat class="size-5" />
-								菜品安排
-							</Card.Title>
-							<Card.Description>{data.mealPlan.items.length} 道菜品</Card.Description>
-						</div>
-					</div>
-				</Card.Header>
-				<Card.Content class="space-y-5">
-					{#if data.groups.length === 0}
-						<div class="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-							还没有菜品。可以从右侧添加已有菜品，或快速新建一道菜。
-						</div>
-					{:else}
-						{#each data.groups as group}
-							<section class="space-y-3">
-								<div class="flex flex-wrap items-center gap-2 text-sm font-medium">
-									<span class="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-secondary-foreground">
-										<CalendarDays class="size-4" />
-										{group.dateLabel}
-									</span>
-									<span class="rounded-md border px-2 py-1">{group.slotLabel}</span>
-								</div>
-
-								<div class="space-y-3">
-									{#each group.items as item}
-										<article class="grid gap-3 rounded-md border p-3 md:grid-cols-[1fr_auto] md:items-start" data-testid={`meal-plan-item-${item.id}`}>
-											<div class="min-w-0 space-y-2">
-												<div class="flex min-w-0 flex-wrap items-center gap-2">
-													<h3 class="break-words font-medium">{item.dishName}</h3>
-													{#if item.dishCategory}
-														<span class="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">{item.dishCategory}</span>
-													{/if}
-												</div>
-												<p class="text-sm text-muted-foreground">
-													{item.servings} 份 · {item.dishIngredientCount} 种食材
-												</p>
-												{#if item.notes}
-													<p class="break-words rounded-md bg-muted/50 p-2 text-sm">{item.notes}</p>
-												{/if}
-											</div>
-
-											<div class="flex flex-wrap gap-2 md:justify-end">
-												<form method="post" action="?/moveItem">
-													<input type="hidden" name="itemId" value={item.id} />
-													<input type="hidden" name="direction" value="up" />
-													<Button type="submit" variant="outline" size="icon-sm" disabled={isArchived || !item.canMoveUp} aria-label="上移">
-														<ArrowUp class="size-4" />
-													</Button>
-												</form>
-												<form method="post" action="?/moveItem">
-													<input type="hidden" name="itemId" value={item.id} />
-													<input type="hidden" name="direction" value="down" />
-													<Button type="submit" variant="outline" size="icon-sm" disabled={isArchived || !item.canMoveDown} aria-label="下移">
-														<ArrowDown class="size-4" />
-													</Button>
-												</form>
-												{#if item.dishId}
-													<Button href={`/app/dishes/${item.dishId}`} variant="ghost" size="sm">打开菜品</Button>
-												{/if}
-												<form method="post" action="?/removeItem" use:enhanceWithFeedback>
-													<input type="hidden" name="itemId" value={item.id} />
-													<Button
-														type="submit"
-														variant="destructive"
-														size="icon-sm"
-														disabled={isArchived}
-														aria-label="移除"
-														data-confirm={`从饭单中移除「${item.dishName}」？`}
-													>
-														<Trash2 class="size-4" />
-													</Button>
-												</form>
-											</div>
-										</article>
-									{/each}
-								</div>
-							</section>
-						{/each}
-					{/if}
-				</Card.Content>
-			</Card.Root>
-
-			<Card.Root class="rounded-lg" data-testid="meal-plan-feedback">
-				<Card.Header>
-					<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-						<div>
-							<Card.Title class="flex items-center gap-2">
-								<MessageSquareText class="size-5" />
-								访客反馈
-							</Card.Title>
-							<Card.Description>
-								{#if data.feedbackSummary.total > 0}
-									{data.feedbackSummary.total} 条反馈 · {data.feedbackSummary.confirmations.length} 次确认
-								{:else}
-									分享后，访客的确认和菜品反馈会出现在这里。
-								{/if}
-							</Card.Description>
-						</div>
-						{#if data.feedbackSummary.latestConfirmation}
-							<span class="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-sm text-secondary-foreground">
-								<CheckCircle2 class="size-4" />
-								{data.feedbackSummary.latestConfirmation.guestName} 已确认
-							</span>
-						{/if}
-					</div>
-				</Card.Header>
-				<Card.Content class="space-y-5">
-					{#if data.feedbackSummary.total === 0}
-						<div class="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-							暂无访客反馈。创建分享链接并发给家人或客户后，这里会聚合确认状态、忌口和每道菜的意见。
-						</div>
-					{:else}
-						<section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-							<div class="rounded-md border p-3">
-								<p class="flex items-center gap-1.5 text-sm text-muted-foreground">
-									<Heart class="size-4" />
-									喜欢
-								</p>
-								<p class="mt-1 text-2xl font-semibold">{feedbackTotals.like}</p>
-							</div>
-							<div class="rounded-md border p-3">
-								<p class="flex items-center gap-1.5 text-sm text-muted-foreground">
-									<ThumbsDown class="size-4" />
-									不喜欢
-								</p>
-								<p class="mt-1 text-2xl font-semibold">{feedbackTotals.dislike}</p>
-							</div>
-							<div class="rounded-md border p-3">
-								<p class="flex items-center gap-1.5 text-sm text-muted-foreground">
-									<RefreshCw class="size-4" />
-									想替换
-								</p>
-								<p class="mt-1 text-2xl font-semibold">{feedbackTotals.replace}</p>
-							</div>
-							<div class="rounded-md border p-3">
-								<p class="flex items-center gap-1.5 text-sm text-muted-foreground">
-									<CheckCircle2 class="size-4" />
-									确认
-								</p>
-								<p class="mt-1 text-2xl font-semibold">{feedbackTotals.confirm}</p>
-							</div>
-						</section>
-
-						{#if data.feedbackSummary.dietaryNotes.length > 0 || data.feedbackSummary.globalNotes.length > 0}
-							<section class="space-y-3">
-								<h3 class="text-sm font-medium">全局备注</h3>
-								<div class="grid gap-3 md:grid-cols-2">
-									{#each data.feedbackSummary.dietaryNotes as note}
-										<article class="rounded-md border bg-muted/30 p-3 text-sm">
-											<p class="font-medium">{note.guestName} 的忌口备注</p>
-											<p class="mt-1 break-words text-muted-foreground">{note.dietaryNote}</p>
-										</article>
-									{/each}
-									{#each data.feedbackSummary.globalNotes as note}
-										<article class="rounded-md border bg-muted/30 p-3 text-sm">
-											<p class="font-medium">{note.guestName} · {note.reactionLabel}</p>
-											<p class="mt-1 break-words text-muted-foreground">{note.note}</p>
-										</article>
-									{/each}
-								</div>
-							</section>
-						{/if}
-
-						<section class="space-y-4">
-							<h3 class="text-sm font-medium">按菜品查看</h3>
-							{#each data.groups as group}
-								<div class="space-y-3">
-									<div class="flex flex-wrap items-center gap-2 text-sm font-medium">
-										<span class="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-secondary-foreground">
-											<CalendarDays class="size-4" />
-											{group.dateLabel}
-										</span>
-										<span class="rounded-md border px-2 py-1">{group.slotLabel}</span>
-									</div>
-									<div class="space-y-3">
-										{#each group.items as item}
-											<article class="rounded-md border p-3" data-testid={`feedback-item-${item.id}`}>
-												<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-													<div class="min-w-0">
-														<h4 class="break-words font-medium">{item.dishName}</h4>
-														<p class="text-sm text-muted-foreground">{item.servings} 份</p>
-													</div>
-													<div class="grid grid-cols-3 gap-2 text-center text-sm">
-														<span class="rounded-md bg-muted px-2 py-1">喜欢 {item.feedback.counts.like}</span>
-														<span class="rounded-md bg-muted px-2 py-1">不喜欢 {item.feedback.counts.dislike}</span>
-														<span class="rounded-md bg-muted px-2 py-1">替换 {item.feedback.counts.replace}</span>
-													</div>
-												</div>
-
-												{#if item.feedback.notes.length > 0 || item.feedback.dietaryNotes.length > 0}
-													<div class="mt-3 space-y-2">
-														{#each item.feedback.notes as note}
-															<p class="rounded-md bg-muted/40 p-2 text-sm">
-																<span class="font-medium">{note.guestName} · {note.reactionLabel}</span>
-																<span class="break-words text-muted-foreground">：{note.note}</span>
-															</p>
-														{/each}
-														{#each item.feedback.dietaryNotes as note}
-															<p class="rounded-md bg-muted/40 p-2 text-sm">
-																<span class="font-medium">{note.guestName} · 忌口</span>
-																<span class="break-words text-muted-foreground">：{note.dietaryNote}</span>
-															</p>
-														{/each}
-													</div>
-												{:else}
-													<p class="mt-3 text-sm text-muted-foreground">暂无这道菜的文字备注。</p>
-												{/if}
-											</article>
-										{/each}
-									</div>
-								</div>
-							{/each}
-						</section>
-					{/if}
-				</Card.Content>
-			</Card.Root>
+	<section class="sticky top-0 z-20 -mx-4 bg-background/90 px-4 py-2 backdrop-blur md:static md:mx-0 md:px-0">
+		<div class="grid grid-cols-4 gap-2 rounded-2xl border border-border/80 bg-white p-1 shadow-sm">
+			{#each panels as panel}
+				<button
+					type="button"
+					class="rounded-xl px-2 py-2 text-center transition {activePanel === panel.id ? 'bg-secondary text-primary' : 'text-muted-foreground'}"
+					aria-pressed={activePanel === panel.id}
+					onclick={() => (activePanel = panel.id)}
+				>
+					<span class="block text-sm font-semibold">{panel.label}</span>
+					<span class="block truncate text-[11px]">{panel.helper}</span>
+				</button>
+			{/each}
 		</div>
+	</section>
 
-		<aside class="space-y-4">
-			<Card.Root class="rounded-lg">
-				<Card.Header>
-					<Card.Title class="flex items-center gap-2">
-						<MessageSquareText class="size-5" />
-						反馈状态
-					</Card.Title>
-					<Card.Description>
-						{#if data.feedbackSummary.latestFeedback}
-							最近反馈：{data.feedbackSummary.latestFeedback.guestName} · {data.feedbackSummary.latestFeedback.reactionLabel}
-						{:else}
-							暂无访客反馈。
-						{/if}
-					</Card.Description>
-				</Card.Header>
-				<Card.Content class="space-y-3 text-sm">
-					<p class="rounded-md border p-3">
-						<span class="block text-muted-foreground">确认状态</span>
-						{#if data.feedbackSummary.latestConfirmation}
+	{#if activePanel === 'menu'}
+		<section class="space-y-4" data-testid="meal-plan-items">
+			<div class="flex items-center justify-between">
+				<div>
+					<h2 class="text-xl font-semibold">菜单安排</h2>
+					<p class="text-sm text-muted-foreground">先看这顿饭吃什么，排序和删除也在这里。</p>
+				</div>
+				<Button onclick={() => (activePanel = 'edit')} variant="outline" size="sm" class="rounded-xl bg-white">
+					<Plus class="size-4" />
+					加菜
+				</Button>
+			</div>
+
+			{#if data.groups.length === 0}
+				<div class="app-panel space-y-4 p-5 text-center">
+					<ChefHat class="mx-auto size-8 text-primary" />
+					<div class="space-y-1">
+						<h3 class="text-xl font-semibold">还没有菜品</h3>
+						<p class="text-sm leading-6 text-muted-foreground">先去编辑区添加已有菜品，或快速新建一道菜。</p>
+					</div>
+					<Button onclick={() => (activePanel = 'edit')} class="h-12 rounded-2xl">去加菜</Button>
+				</div>
+			{:else}
+				{#each data.groups as group}
+					<section class="app-panel overflow-hidden">
+						<div class="flex flex-wrap items-center gap-2 border-b border-border/70 bg-secondary/40 px-4 py-3 text-sm font-medium">
+							<span class="inline-flex items-center gap-1.5 text-primary">
+								<CalendarDays class="size-4" />
+								{group.dateLabel}
+							</span>
+							<span class="rounded-full bg-white px-2.5 py-1 text-muted-foreground">{group.slotLabel}</span>
+						</div>
+						<div class="divide-y divide-border/70">
+							{#each group.items as item, index}
+								<article class="p-4" data-testid={`meal-plan-item-${item.id}`}>
+									<div class="flex items-start gap-3">
+										<span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">{index + 1}</span>
+										<div class="min-w-0 flex-1 space-y-1">
+											<div class="flex min-w-0 flex-wrap items-center gap-2">
+												<h3 class="break-words text-lg font-semibold">{item.dishName}</h3>
+												{#if item.dishCategory}
+													<span class="rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">{item.dishCategory}</span>
+												{/if}
+											</div>
+											<p class="text-sm text-muted-foreground">{item.servings} 份 · {item.dishIngredientCount} 种食材</p>
+											{#if item.notes}
+												<p class="rounded-xl bg-muted/60 p-2 text-sm text-muted-foreground">{item.notes}</p>
+											{/if}
+										</div>
+									</div>
+									<div class="mt-3 flex flex-wrap justify-end gap-2">
+										<form method="post" action="?/moveItem">
+											<input type="hidden" name="itemId" value={item.id} />
+											<input type="hidden" name="direction" value="up" />
+											<Button type="submit" variant="outline" size="icon-sm" class="rounded-xl bg-white" disabled={isArchived || !item.canMoveUp} aria-label="上移">
+												<ArrowUp class="size-4" />
+											</Button>
+										</form>
+										<form method="post" action="?/moveItem">
+											<input type="hidden" name="itemId" value={item.id} />
+											<input type="hidden" name="direction" value="down" />
+											<Button type="submit" variant="outline" size="icon-sm" class="rounded-xl bg-white" disabled={isArchived || !item.canMoveDown} aria-label="下移">
+												<ArrowDown class="size-4" />
+											</Button>
+										</form>
+										{#if item.dishId}
+											<Button href={`/app/dishes/${item.dishId}`} variant="ghost" size="sm">菜品</Button>
+										{/if}
+										<form method="post" action="?/removeItem" use:enhanceWithFeedback>
+											<input type="hidden" name="itemId" value={item.id} />
+											<Button
+												type="submit"
+												variant="destructive"
+												size="icon-sm"
+												disabled={isArchived}
+												aria-label="移除"
+												data-confirm={`从饭单中移除「${item.dishName}」？`}
+											>
+												<Trash2 class="size-4" />
+											</Button>
+										</form>
+									</div>
+								</article>
+							{/each}
+						</div>
+					</section>
+				{/each}
+			{/if}
+		</section>
+	{:else if activePanel === 'confirm'}
+		<section class="space-y-4" data-testid="meal-plan-feedback">
+			<div class="app-panel p-4">
+				<div class="mb-4 flex items-center justify-between gap-3">
+					<div>
+						<h2 class="text-xl font-semibold">确认状态</h2>
+						<p class="text-sm text-muted-foreground">切换饭单状态，查看访客反馈。</p>
+					</div>
+					{#if data.feedbackSummary.latestConfirmation}
+						<span class="app-chip bg-secondary text-primary">
+							<CheckCircle2 class="size-4" />
 							{data.feedbackSummary.latestConfirmation.guestName} 已确认
-						{:else if data.mealPlan.status === 'confirmed'}
-							饭单状态已确认
-						{:else}
-							等待确认
-						{/if}
-					</p>
-					<p class="rounded-md border p-3">
-						<span class="block text-muted-foreground">反馈汇总</span>
-						喜欢 {feedbackTotals.like} · 不喜欢 {feedbackTotals.dislike} · 想替换 {feedbackTotals.replace}
-					</p>
-				</Card.Content>
-			</Card.Root>
+						</span>
+					{/if}
+				</div>
+				<div class="flex gap-2 overflow-x-auto pb-1">
+					{#each data.statusOptions as option}
+						<form method="post" action="?/setStatus" use:enhanceWithFeedback class="shrink-0">
+							<input type="hidden" name="status" value={option.value} />
+							<Button
+								type="submit"
+								variant={data.mealPlan.status === option.value ? 'secondary' : 'outline'}
+								size="sm"
+								class="rounded-xl bg-white"
+								disabled={isArchived || data.mealPlan.status === option.value}
+								data-confirm={option.value === 'archived' ? '归档后详情页会保持只读，确认归档这份饭单？' : undefined}
+								data-pending-label="更新中..."
+							>
+								{#if option.value === 'archived'}
+									<Archive class="size-4" />
+								{:else if option.value === 'completed'}
+									<CheckCircle2 class="size-4" />
+								{:else}
+									<ClipboardList class="size-4" />
+								{/if}
+								{option.label}
+							</Button>
+						</form>
+					{/each}
+				</div>
+			</div>
 
-			<Card.Root class="rounded-lg">
-				<Card.Header>
-					<Card.Title class="flex items-center gap-2">
-						<ShoppingCart class="size-5" />
-						购物清单
-					</Card.Title>
-					<Card.Description>
-						{#if data.shoppingList}
-							已生成 {data.shoppingList.items.length} 项，可继续勾选和调整。
-						{:else}
-							根据当前饭单菜品食材生成买菜清单。
-						{/if}
-					</Card.Description>
-				</Card.Header>
-				<Card.Content class="space-y-3">
+			<div class="app-soft-panel grid grid-cols-4 divide-x divide-border/70 p-3 text-center">
+				<p><Heart class="mx-auto mb-1 size-5 text-primary" /><span class="block text-2xl font-semibold">{feedbackTotals.like}</span><span class="text-xs text-muted-foreground">喜欢</span></p>
+				<p><ThumbsDown class="mx-auto mb-1 size-5 text-primary" /><span class="block text-2xl font-semibold">{feedbackTotals.dislike}</span><span class="text-xs text-muted-foreground">不喜欢</span></p>
+				<p><RefreshCw class="mx-auto mb-1 size-5 text-primary" /><span class="block text-2xl font-semibold">{feedbackTotals.replace}</span><span class="text-xs text-muted-foreground">替换</span></p>
+				<p><CheckCircle2 class="mx-auto mb-1 size-5 text-primary" /><span class="block text-2xl font-semibold">{feedbackTotals.confirm}</span><span class="text-xs text-muted-foreground">确认</span></p>
+			</div>
+
+			{#if data.feedbackSummary.total === 0}
+				<div class="app-panel p-5 text-sm leading-6 text-muted-foreground">
+					暂无访客反馈。创建分享链接并发给家人或客户后，这里会聚合确认状态、忌口和每道菜的意见。
+				</div>
+			{:else}
+				{#if data.feedbackSummary.dietaryNotes.length > 0 || data.feedbackSummary.globalNotes.length > 0}
+					<section class="space-y-3">
+						<h3 class="text-lg font-semibold">全局备注</h3>
+						{#each data.feedbackSummary.dietaryNotes as note}
+							<article class="app-panel p-4 text-sm">
+								<p class="font-semibold">{note.guestName} 的忌口备注</p>
+								<p class="mt-1 break-words text-muted-foreground">{note.dietaryNote}</p>
+							</article>
+						{/each}
+						{#each data.feedbackSummary.globalNotes as note}
+							<article class="app-panel p-4 text-sm">
+								<p class="font-semibold">{note.guestName} · {note.reactionLabel}</p>
+								<p class="mt-1 break-words text-muted-foreground">{note.note}</p>
+							</article>
+						{/each}
+					</section>
+				{/if}
+			{/if}
+		</section>
+	{:else if activePanel === 'shopping'}
+		<section class="space-y-4">
+			<div class="app-panel p-5">
+				<div class="mb-4 flex items-center gap-2">
+					<ShoppingCart class="size-5 text-primary" />
+					<h2 class="text-xl font-semibold">购物清单</h2>
+				</div>
+				<p class="mb-4 text-sm leading-6 text-muted-foreground">
 					{#if data.shoppingList}
-						<Button href={`/app/shopping-lists/${data.shoppingList.id}`} class="w-full">
+						已生成 {data.shoppingList.items.length} 项，可继续勾选和调整。
+					{:else}
+						根据当前饭单菜品食材生成买菜清单。
+					{/if}
+				</p>
+				<div class="grid gap-3">
+					{#if data.shoppingList}
+						<Button href={`/app/shopping-lists/${data.shoppingList.id}`} class="h-12 rounded-2xl">
 							<ShoppingCart class="size-4" />
 							打开购物清单
 						</Button>
@@ -447,7 +316,7 @@
 						<Button
 							type="submit"
 							variant={data.shoppingList ? 'outline' : 'default'}
-							class="w-full"
+							class="h-12 w-full rounded-2xl bg-white"
 							data-confirm={data.shoppingList ? '重新生成会替换当前购物清单项目，确认继续？' : undefined}
 							data-pending-label={data.shoppingList ? '重新生成中...' : '生成中...'}
 						>
@@ -455,155 +324,193 @@
 							{data.shoppingList ? '重新生成清单' : '生成购物清单'}
 						</Button>
 					</form>
-				</Card.Content>
-			</Card.Root>
+				</div>
+			</div>
 
-			<Card.Root class="rounded-lg">
-				<Card.Header>
-					<Card.Title class="flex items-center gap-2">
-						<UsersRound class="size-5" />
-						对象偏好
-					</Card.Title>
-				</Card.Header>
-				<Card.Content class="space-y-3 text-sm">
-					{#if data.target}
-						<p class="rounded-md border p-3">
-							<span class="block text-muted-foreground">人数</span>
-							{data.target.peopleCount} 人
-						</p>
-						<p class="rounded-md border p-3">
-							<span class="block text-muted-foreground">口味</span>
-							{data.target.tasteNotes || '未记录'}
-						</p>
-						<p class="rounded-md border p-3">
-							<span class="block text-muted-foreground">忌口</span>
-							{data.target.dietaryRestrictions || '未记录'}
-						</p>
-						<p class="rounded-md border p-3">
-							<span class="block text-muted-foreground">预算备注</span>
-							{data.target.budgetNotes || '未记录'}
-						</p>
-						<Button href={`/app/targets/${data.target.id}`} variant="outline" class="w-full">打开对象</Button>
-					{:else}
-						<p class="rounded-md border p-3 text-muted-foreground">未选择用餐对象。</p>
-					{/if}
-				</Card.Content>
-			</Card.Root>
+			<div class="app-soft-panel space-y-3 p-5 text-sm">
+				<div class="flex items-center gap-2">
+					<UsersRound class="size-5 text-primary" />
+					<h2 class="text-xl font-semibold">对象偏好</h2>
+				</div>
+				{#if data.target}
+					<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">人数</span>{data.target.peopleCount} 人</p>
+					<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">口味</span>{data.target.tasteNotes || '未记录'}</p>
+					<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">忌口</span>{data.target.dietaryRestrictions || '未记录'}</p>
+					<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">预算备注</span>{data.target.budgetNotes || '未记录'}</p>
+					<Button href={`/app/targets/${data.target.id}`} variant="outline" class="h-11 rounded-2xl bg-white">打开对象</Button>
+				{:else}
+					<p class="rounded-2xl bg-white p-3 text-muted-foreground">未选择用餐对象。</p>
+				{/if}
+			</div>
+		</section>
+	{:else}
+		<section class="space-y-4">
+			<details class="app-panel overflow-hidden" open>
+				<summary class="cursor-pointer border-b border-border/70 bg-secondary/40 px-5 py-4 text-lg font-semibold">
+					基础信息
+				</summary>
+				<form method="post" action="?/updateMeta" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-4 p-5">
+					<div class="space-y-2">
+						<Label for="meal-plan-title">饭单标题</Label>
+						<Input id="meal-plan-title" name="title" value={data.mealPlan.title} placeholder="例如：周三晚餐" required disabled={isArchived} class="app-input" />
+						{#if form?.action === 'updateMeta' && errors.title?.[0]}
+							<p class="text-sm text-destructive">{errors.title[0]}</p>
+						{/if}
+					</div>
 
-			<Card.Root class="rounded-lg">
-				<Card.Header>
-					<Card.Title class="flex items-center gap-2">
-						<Plus class="size-5" />
-						添加已有菜品
-					</Card.Title>
-				</Card.Header>
-				<Card.Content>
-					<form method="post" action="?/addDish" use:enhanceWithFeedback={{ pendingLabel: '添加中...' }} class="space-y-4">
+					<div class="grid gap-3">
 						<div class="space-y-2">
-							<Label for="dish-id">菜品</Label>
-							<select id="dish-id" name="dishId" class={selectClass} disabled={isArchived || data.dishes.length === 0} required>
-								<option value="" selected>选择菜品</option>
-								{#each data.dishes as dish}
-									<option value={dish.id}>{dish.name}</option>
+							<Label for="meal-plan-type">饭单类型</Label>
+							<select id="meal-plan-type" name="type" class={selectClass} disabled={isArchived}>
+								{#each data.typeOptions as option}
+									<option value={option.value} selected={data.mealPlan.type === option.value}>{option.label}</option>
 								{/each}
 							</select>
-							{#if form?.action === 'addDish' && errors.dishId?.[0]}
-								<p class="text-sm text-destructive">{errors.dishId[0]}</p>
+						</div>
+
+						<div class="space-y-2">
+							<Label for="meal-plan-target">用餐对象</Label>
+							<select id="meal-plan-target" name="targetId" class={selectClass} disabled={isArchived}>
+								<option value="" selected={!data.mealPlan.targetId}>未选择对象</option>
+								{#each data.targets as target}
+									<option value={target.id} selected={data.mealPlan.targetId === target.id}>{target.name}</option>
+								{/each}
+							</select>
+							{#if form?.action === 'updateMeta' && errors.targetId?.[0]}
+								<p class="text-sm text-destructive">{errors.targetId[0]}</p>
 							{/if}
 						</div>
+					</div>
 
-						<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-							<div class="space-y-2">
-								<Label for="add-planned-date">日期</Label>
-								<Input id="add-planned-date" name="plannedDate" type="date" value={defaultDate} disabled={isArchived} />
-							</div>
-							<div class="space-y-2">
-								<Label for="add-meal-slot">餐别</Label>
-								<select id="add-meal-slot" name="mealSlot" class={selectClass} disabled={isArchived}>
-									<option value="" selected>未设置</option>
-									{#each data.mealSlotOptions as option}
-										<option value={option}>{option}</option>
-									{/each}
-								</select>
-							</div>
-						</div>
-
+					<div class="grid grid-cols-2 gap-3">
 						<div class="space-y-2">
-							<Label for="add-servings">份数</Label>
-							<Input id="add-servings" name="servings" type="number" min="1" max="999" value="1" disabled={isArchived} />
-							{#if form?.action === 'addDish' && errors.servings?.[0]}
-								<p class="text-sm text-destructive">{errors.servings[0]}</p>
-							{/if}
+							<Label for="start-date">开始日期</Label>
+							<Input id="start-date" name="startDate" type="date" value={data.mealPlan.startDate ?? ''} disabled={isArchived} class="app-input" />
 						</div>
-
 						<div class="space-y-2">
-							<Label for="add-notes">条目备注</Label>
-							<textarea id="add-notes" name="notes" class={textAreaClass} disabled={isArchived}></textarea>
+							<Label for="end-date">结束日期</Label>
+							<Input id="end-date" name="endDate" type="date" value={data.mealPlan.endDate ?? ''} disabled={isArchived} class="app-input" />
 						</div>
+					</div>
 
-						<Button type="submit" class="w-full" disabled={isArchived || data.dishes.length === 0} data-pending-label="添加中...">
-							<Plus class="size-4" />
-							添加菜品
-						</Button>
-					</form>
-				</Card.Content>
-			</Card.Root>
+					<div class="space-y-2">
+						<Label for="meal-plan-notes">备注</Label>
+						<textarea id="meal-plan-notes" name="notes" class={textAreaClass} disabled={isArchived}>{data.mealPlan.notes ?? ''}</textarea>
+					</div>
 
-			<Card.Root class="rounded-lg">
-				<Card.Header>
-					<Card.Title class="flex items-center gap-2">
-						<ChefHat class="size-5" />
-						快速新建菜品
-					</Card.Title>
-				</Card.Header>
-				<Card.Content>
-					<form method="post" action="?/quickAddDish" use:enhanceWithFeedback={{ pendingLabel: '新建中...' }} class="space-y-4">
+					<Button type="submit" class="h-12 w-full rounded-2xl" disabled={isArchived} data-pending-label="保存中...">
+						<CheckCircle2 class="size-4" />
+						保存基础信息
+					</Button>
+				</form>
+			</details>
+
+			<details class="app-panel overflow-hidden">
+				<summary class="cursor-pointer border-b border-border/70 bg-secondary/40 px-5 py-4 text-lg font-semibold">
+					添加已有菜品
+				</summary>
+				<form method="post" action="?/addDish" use:enhanceWithFeedback={{ pendingLabel: '添加中...' }} class="space-y-4 p-5">
+					<div class="space-y-2">
+						<Label for="dish-id">菜品</Label>
+						<select id="dish-id" name="dishId" class={selectClass} disabled={isArchived || data.dishes.length === 0} required>
+							<option value="" selected>选择菜品</option>
+							{#each data.dishes as dish}
+								<option value={dish.id}>{dish.name}</option>
+							{/each}
+						</select>
+						{#if form?.action === 'addDish' && errors.dishId?.[0]}
+							<p class="text-sm text-destructive">{errors.dishId[0]}</p>
+						{/if}
+					</div>
+
+					<div class="grid grid-cols-2 gap-3">
 						<div class="space-y-2">
-							<Label for="quick-dish-name">菜品名称</Label>
-							<Input id="quick-dish-name" name="name" placeholder="例如：番茄炒蛋" disabled={isArchived} required />
-							{#if form?.action === 'quickAddDish' && errors.name?.[0]}
-								<p class="text-sm text-destructive">{errors.name[0]}</p>
-							{/if}
+							<Label for="add-planned-date">日期</Label>
+							<Input id="add-planned-date" name="plannedDate" type="date" value={defaultDate} disabled={isArchived} class="app-input" />
 						</div>
-
 						<div class="space-y-2">
-							<Label for="quick-dish-category">分类</Label>
-							<Input id="quick-dish-category" name="category" placeholder="家常菜" disabled={isArchived} />
+							<Label for="add-meal-slot">餐别</Label>
+							<select id="add-meal-slot" name="mealSlot" class={selectClass} disabled={isArchived}>
+								<option value="" selected>未设置</option>
+								{#each data.mealSlotOptions as option}
+									<option value={option}>{option}</option>
+								{/each}
+							</select>
 						</div>
+					</div>
 
-						<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-							<div class="space-y-2">
-								<Label for="quick-planned-date">日期</Label>
-								<Input id="quick-planned-date" name="plannedDate" type="date" value={defaultDate} disabled={isArchived} />
-							</div>
-							<div class="space-y-2">
-								<Label for="quick-meal-slot">餐别</Label>
-								<select id="quick-meal-slot" name="mealSlot" class={selectClass} disabled={isArchived}>
-									<option value="" selected>未设置</option>
-									{#each data.mealSlotOptions as option}
-										<option value={option}>{option}</option>
-									{/each}
-								</select>
-							</div>
-						</div>
+					<div class="space-y-2">
+						<Label for="add-servings">份数</Label>
+						<Input id="add-servings" name="servings" type="number" min="1" max="999" value="1" disabled={isArchived} class="app-input" />
+						{#if form?.action === 'addDish' && errors.servings?.[0]}
+							<p class="text-sm text-destructive">{errors.servings[0]}</p>
+						{/if}
+					</div>
 
+					<div class="space-y-2">
+						<Label for="add-notes">条目备注</Label>
+						<textarea id="add-notes" name="notes" class={textAreaClass} disabled={isArchived}></textarea>
+					</div>
+
+					<Button type="submit" class="h-12 w-full rounded-2xl" disabled={isArchived || data.dishes.length === 0} data-pending-label="添加中...">
+						<Plus class="size-4" />
+						添加菜品
+					</Button>
+				</form>
+			</details>
+
+			<details class="app-panel overflow-hidden">
+				<summary class="cursor-pointer border-b border-border/70 bg-secondary/40 px-5 py-4 text-lg font-semibold">
+					快速新建菜品
+				</summary>
+				<form method="post" action="?/quickAddDish" use:enhanceWithFeedback={{ pendingLabel: '新建中...' }} class="space-y-4 p-5">
+					<div class="space-y-2">
+						<Label for="quick-dish-name">菜品名称</Label>
+						<Input id="quick-dish-name" name="name" placeholder="例如：番茄炒蛋" disabled={isArchived} required class="app-input" />
+						{#if form?.action === 'quickAddDish' && errors.name?.[0]}
+							<p class="text-sm text-destructive">{errors.name[0]}</p>
+						{/if}
+					</div>
+
+					<div class="space-y-2">
+						<Label for="quick-dish-category">分类</Label>
+						<Input id="quick-dish-category" name="category" placeholder="家常菜" disabled={isArchived} class="app-input" />
+					</div>
+
+					<div class="grid grid-cols-2 gap-3">
 						<div class="space-y-2">
-							<Label for="quick-servings">份数</Label>
-							<Input id="quick-servings" name="servings" type="number" min="1" max="999" value="1" disabled={isArchived} />
+							<Label for="quick-planned-date">日期</Label>
+							<Input id="quick-planned-date" name="plannedDate" type="date" value={defaultDate} disabled={isArchived} class="app-input" />
 						</div>
-
 						<div class="space-y-2">
-							<Label for="quick-notes">条目备注</Label>
-							<textarea id="quick-notes" name="notes" class={textAreaClass} disabled={isArchived}></textarea>
+							<Label for="quick-meal-slot">餐别</Label>
+							<select id="quick-meal-slot" name="mealSlot" class={selectClass} disabled={isArchived}>
+								<option value="" selected>未设置</option>
+								{#each data.mealSlotOptions as option}
+									<option value={option}>{option}</option>
+								{/each}
+							</select>
 						</div>
+					</div>
 
-						<Button type="submit" class="w-full" disabled={isArchived} data-pending-label="新建中...">
-							<Plus class="size-4" />
-							新建并加入
-						</Button>
-					</form>
-				</Card.Content>
-			</Card.Root>
-		</aside>
-	</div>
+					<div class="space-y-2">
+						<Label for="quick-servings">份数</Label>
+						<Input id="quick-servings" name="servings" type="number" min="1" max="999" value="1" disabled={isArchived} class="app-input" />
+					</div>
+
+					<div class="space-y-2">
+						<Label for="quick-notes">条目备注</Label>
+						<textarea id="quick-notes" name="notes" class={textAreaClass} disabled={isArchived}></textarea>
+					</div>
+
+					<Button type="submit" class="h-12 w-full rounded-2xl" disabled={isArchived} data-pending-label="新建中...">
+						<Plus class="size-4" />
+						新建并加入
+					</Button>
+				</form>
+			</details>
+		</section>
+	{/if}
 </main>
+
+<MobileBottomNav />

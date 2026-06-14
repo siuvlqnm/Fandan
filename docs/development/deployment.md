@@ -2,64 +2,67 @@
 
 LES-99 covers the first production deployment and real-user trial setup.
 
-## Current Blocker
+## Current Production Deployment
 
 The production D1 database has been created through the Cloudflare API connector:
 
 - Database name: `fandan`
 - Database id: `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`
 - Migration status: `drizzle/0000_panoramic_carnage.sql` and `drizzle/0001_groovy_wilson_fisk.sql` have been applied through the Cloudflare API connector and recorded in `d1_migrations`.
+- Production URL: `https://fandan.siuvlqnm.workers.dev/`
+- Deployment path: Cloudflare dashboard is authorized to read the GitHub project and automatically deploy updates from GitHub.
 
-This checkout still needs local Wrangler authentication or a deploy-scoped API token:
+The first production Worker deployment is live. Local Wrangler authentication or a deploy-scoped API token is still useful for manual deploys, `wrangler tail`, and remote D1 commands:
 
 ```bash
 npx wrangler whoami
 npx wrangler d1 list
 ```
 
-Both commands require a valid Wrangler login or `CLOUDFLARE_API_TOKEN`. Do not deploy until production secrets are configured.
+Both commands require a valid Wrangler login or `CLOUDFLARE_API_TOKEN`, but routine deploys are now handled through Cloudflare's GitHub integration.
 
 ## Required Production Values
 
-Set these before deploying:
+Set or verify these in Cloudflare before relying on production:
 
 - `CLOUDFLARE_API_TOKEN`: Wrangler API token with permission to deploy Workers and manage D1 for this account.
 - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account id.
 - `CLOUDFLARE_DATABASE_ID`: `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`.
-- `ORIGIN`: deployed Worker URL or custom domain, for example `https://fandan.example.com`.
+- `ORIGIN`: deployed Worker URL, currently `https://fandan.siuvlqnm.workers.dev/`, or the future custom domain.
 - `BETTER_AUTH_SECRET`: high-entropy production secret, different from local development.
 
 Use Wrangler secrets or dashboard variables for production secrets. Do not commit real values.
 
 ## Production D1 Setup
 
-1. Authenticate Wrangler.
-2. Confirm the production D1 database named `fandan` is reachable.
-3. Generate bindings after config changes:
+1. Use Cloudflare dashboard deployment for normal GitHub-driven updates.
+2. Authenticate Wrangler only when manual remote commands are needed.
+3. Confirm the production D1 database named `fandan` is reachable.
+4. Generate bindings after config changes:
 
 ```bash
 npm run gen
 ```
 
-Remote migrations for the current schema have already been applied. When future migration files are added, use `npm run db:migrate:remote` after Wrangler authentication is available.
+Remote migrations for the current schema have already been applied. When future migration files are added, apply them through the Cloudflare dashboard/connector path or use `npm run db:migrate:remote` after Wrangler authentication is available.
 
 The local demo seed file deletes and recreates demo data for local development. Do not run `scripts/db/seed.local.sql` against production.
 
 ## Deploy Commands
 
-Dry run:
+Manual dry run:
 
 ```bash
 npm run deploy:dry-run
 ```
 
-Deploy:
+Manual deploy:
 
 ```bash
 npm run deploy
 ```
 
-These commands build the SvelteKit Cloudflare worker output before calling Wrangler.
+These commands build the SvelteKit Cloudflare worker output before calling Wrangler. Routine production updates are expected to deploy automatically after GitHub updates are picked up by Cloudflare.
 
 ## Trial Data
 
@@ -77,7 +80,7 @@ Keep this data owned by the test creator account's default space so it exercises
 
 After deploy:
 
-- Open `/api/health` and confirm D1 is available with `queryOk: true`.
+- Open `https://fandan.siuvlqnm.workers.dev/api/health` and confirm D1 is available with `queryOk: true`.
 - Sign up or sign in with the test creator account.
 - Create a meal target, dish, meal plan and shopping list.
 - Create a share link and open `/share/:token` without login.

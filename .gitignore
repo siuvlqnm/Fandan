@@ -5,6 +5,7 @@ node_modules
 .vercel
 .netlify
 .wrangler
+.codex-screenshots
 /.svelte-kit
 /build
 
