@@ -79,9 +79,8 @@
 	};
 
 	const textAreaClass =
-		'dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 aria-invalid:border-destructive min-h-28 w-full min-w-0 rounded-md border bg-transparent px-2.5 py-2 text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:ring-3 aria-invalid:ring-3 md:text-sm';
-	const selectClass =
-		'dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full min-w-0 rounded-md border bg-transparent px-2.5 py-1 text-base shadow-xs outline-none transition-[color,box-shadow] focus-visible:ring-3 md:text-sm';
+		'app-input min-h-28 py-3 aria-invalid:ring-destructive/20 aria-invalid:border-destructive aria-invalid:ring-3';
+	const selectClass = 'app-input h-12 text-sm';
 
 	const tagsText = $derived(values.tagsText ?? values.tags?.join(', ') ?? '');
 </script>
@@ -90,7 +89,7 @@
 	<div class="grid gap-4 md:grid-cols-[1fr_180px_160px]">
 		<div class="space-y-2">
 			<Label for="dish-name">菜品名称</Label>
-			<Input id="dish-name" name="name" value={values.name ?? ''} placeholder="例如：番茄炒蛋" required />
+			<Input id="dish-name" name="name" value={values.name ?? ''} placeholder="例如：番茄炒蛋" required class="app-input" />
 			{#if errors.name?.[0]}
 				<p class="text-sm text-destructive">{errors.name[0]}</p>
 			{/if}
@@ -98,7 +97,7 @@
 
 		<div class="space-y-2">
 			<Label for="dish-category">分类</Label>
-			<Input id="dish-category" name="category" value={values.category ?? ''} placeholder="家常菜" />
+			<Input id="dish-category" name="category" value={values.category ?? ''} placeholder="家常菜" class="app-input" />
 			{#if errors.category?.[0]}
 				<p class="text-sm text-destructive">{errors.category[0]}</p>
 			{/if}
@@ -118,7 +117,7 @@
 
 	<div class="space-y-2">
 		<Label for="dish-tags">标签</Label>
-		<Input id="dish-tags" name="tagsText" value={tagsText} placeholder="快手, 下饭, 儿童友好" />
+		<Input id="dish-tags" name="tagsText" value={tagsText} placeholder="快手, 下饭, 儿童友好" class="app-input" />
 		<p class="text-sm text-muted-foreground">用逗号分隔，列表页会展示并支持搜索。</p>
 		{#if errors.tagsText?.[0]}
 			<p class="text-sm text-destructive">{errors.tagsText[0]}</p>
@@ -144,7 +143,7 @@
 				<h2 class="text-base font-medium">食材</h2>
 				<p class="text-sm text-muted-foreground">食材可以稍后再补；空白行不会保存。</p>
 			</div>
-			<Button type="button" variant="outline" size="sm" onclick={addIngredient}>
+			<Button type="button" variant="outline" size="sm" class="h-10 rounded-xl bg-white" onclick={addIngredient}>
 				<Plus class="size-4" />
 				添加食材
 			</Button>
@@ -156,7 +155,7 @@
 
 		<div class="space-y-3">
 			{#each ingredientRows as ingredient, index}
-				<div class="rounded-md border p-3">
+				<div class="rounded-2xl border border-border/80 bg-white p-3">
 					<div class="mb-3 flex items-center justify-between gap-3">
 						<p class="text-sm font-medium">食材 {index + 1}</p>
 						<Button type="button" variant="ghost" size="sm" onclick={() => removeIngredient(index)} aria-label="删除食材">
@@ -172,6 +171,7 @@
 								name="ingredientName"
 								value={ingredient.name ?? ''}
 								placeholder="鸡蛋"
+								class="app-input"
 							/>
 						</div>
 						<div class="space-y-2">
@@ -181,11 +181,12 @@
 								name="ingredientQuantity"
 								value={ingredient.quantity ?? ''}
 								placeholder="3"
+								class="app-input"
 							/>
 						</div>
 						<div class="space-y-2">
 							<Label for={`ingredient-unit-${index}`}>单位</Label>
-							<Input id={`ingredient-unit-${index}`} name="ingredientUnit" value={ingredient.unit ?? ''} placeholder="个" />
+							<Input id={`ingredient-unit-${index}`} name="ingredientUnit" value={ingredient.unit ?? ''} placeholder="个" class="app-input" />
 						</div>
 						<div class="space-y-2">
 							<Label for={`ingredient-category-${index}`}>分类</Label>
@@ -194,6 +195,7 @@
 								name="ingredientCategory"
 								value={ingredient.category ?? ''}
 								placeholder="蛋奶"
+								class="app-input"
 							/>
 						</div>
 					</div>
@@ -204,6 +206,7 @@
 							name="ingredientNotes"
 							value={ingredient.notes ?? ''}
 							placeholder="例如：常温蛋更好打散"
+							class="app-input"
 						/>
 					</div>
 				</div>
@@ -212,11 +215,11 @@
 	</section>
 
 	{#if message}
-		<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{message}</p>
+		<p class="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">{message}</p>
 	{/if}
 
 	<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-		<Button href={cancelHref} variant="outline">取消</Button>
-		<Button type="submit" data-pending-label="保存中...">{submitLabel}</Button>
+		<Button href={cancelHref} variant="outline" class="h-12 rounded-2xl bg-white">取消</Button>
+		<Button type="submit" class="h-12 rounded-2xl" data-pending-label="保存中...">{submitLabel}</Button>
 	</div>
 </form>

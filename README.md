@@ -81,6 +81,7 @@ npm run dev
 反馈聚合说明见 [docs/development/feedback-aggregation.md](docs/development/feedback-aggregation.md)。
 首页工作台说明见 [docs/development/dashboard.md](docs/development/dashboard.md)。
 移动端打磨和表单交互说明见 [docs/development/mobile-polish.md](docs/development/mobile-polish.md)。
+移动端重设计方向见 [docs/development/mobile-redesign.md](docs/development/mobile-redesign.md)。
 MVP 部署说明见 [docs/development/deployment.md](docs/development/deployment.md)。
 每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 

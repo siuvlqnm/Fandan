@@ -41,16 +41,15 @@
 	];
 
 	const fieldClass =
-		'dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 aria-invalid:border-destructive min-h-24 w-full min-w-0 rounded-md border bg-transparent px-2.5 py-2 text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:ring-3 aria-invalid:ring-3 md:text-sm';
-	const selectClass =
-		'dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 aria-invalid:border-destructive h-9 w-full min-w-0 rounded-md border bg-transparent px-2.5 py-1 text-base shadow-xs outline-none transition-[color,box-shadow] focus-visible:ring-3 aria-invalid:ring-3 md:text-sm';
+		'app-input min-h-24 py-3 aria-invalid:ring-destructive/20 aria-invalid:border-destructive aria-invalid:ring-3';
+	const selectClass = 'app-input h-12 text-sm aria-invalid:ring-destructive/20 aria-invalid:border-destructive aria-invalid:ring-3';
 </script>
 
 <form method="post" {action} use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-5">
 	<div class="grid gap-4 md:grid-cols-[1fr_180px_160px]">
 		<div class="space-y-2">
 			<Label for="target-name">对象名称</Label>
-			<Input id="target-name" name="name" value={values.name ?? ''} placeholder="例如：张女士家" required />
+			<Input id="target-name" name="name" value={values.name ?? ''} placeholder="例如：张女士家" required class="app-input" />
 			{#if errors.name?.[0]}
 				<p class="text-sm text-destructive">{errors.name[0]}</p>
 			{/if}
@@ -77,6 +76,7 @@
 				min="1"
 				max="999"
 				value={values.peopleCount ?? 1}
+				class="app-input"
 			/>
 			{#if errors.peopleCount?.[0]}
 				<p class="text-sm text-destructive">{errors.peopleCount[0]}</p>
@@ -139,11 +139,11 @@
 	</div>
 
 	{#if message}
-		<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{message}</p>
+		<p class="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">{message}</p>
 	{/if}
 
 	<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-		<Button href={cancelHref} variant="outline">取消</Button>
-		<Button type="submit" data-pending-label="保存中...">{submitLabel}</Button>
+		<Button href={cancelHref} variant="outline" class="h-12 rounded-2xl bg-white">取消</Button>
+		<Button type="submit" class="h-12 rounded-2xl" data-pending-label="保存中...">{submitLabel}</Button>
 	</div>
 </form>

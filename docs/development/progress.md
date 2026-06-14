@@ -2,9 +2,77 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## 2026-06-14 - Mobile-First Product Redesign
+
+Status: implemented.
+
+What changed:
+
+- Replaced the default black/white shadcn visual baseline with a mobile-first green service-product system.
+- Added a fixed mobile bottom navigation for authenticated app routes.
+- Reworked the public home page, login page, creator dashboard, meal-plan list, shopping-list page and public share page around the selected `Shared Meal Room` direction.
+- Added generated participant avatar imagery and compressed the runtime asset to `128KB`.
+- Hid the global logged-in header on share links so visitor confirmation pages feel standalone.
+- Added `docs/development/mobile-redesign.md` and `design-qa.md`.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- Browser mobile viewport checks at `390 x 844` for `/`, `/login`, `/app`, `/app/meal-plans`, `/app/shopping-lists/:id` and `/share/:token`.
+- Horizontal overflow check across the same core mobile pages.
+- Product Design comparison evidence saved at `.codex-screenshots/fandan-dashboard-design-comparison.png`.
+- `design-qa.md` final result: `passed`.
+
+Notes for next threads:
+
+- Treat mobile browser as the design source of truth. PC is compatibility only.
+- Continue the same visual language into form-heavy pages: meal-plan detail internals, new/edit meal plan, target forms and dish forms.
+- Do not reintroduce admin-dashboard card stacks unless a route is explicitly PC-only.
+
+## 2026-06-14 - Meal Plan Detail Split
+
+Status: implemented.
+
+What changed:
+
+- Split `/app/meal-plans/:id` into four mobile sections: menu, confirmation, shopping list and editing.
+- Made the detail page open on the meal workspace instead of the large base-information form.
+- Kept status updates, feedback aggregation, shopping-list generation, target preferences, existing-dish add, quick dish creation and base-info editing in separate focused panels.
+- Added quick actions from the page summary into confirmation and shopping-list work.
+
+Verification checklist:
+
+- `npm run check`
+- `npm run build`
+- `git diff --check`
+- Browser mobile viewport check at `390 x 844` for `/app/meal-plans/design_meal_family`.
+- Browser tab-click smoke for menu, confirmation, shopping list and editing sections.
+
+Notes for next threads:
+
+- Continue splitting form-heavy routes in the same pattern: primary task first, advanced edit surfaces behind explicit section controls.
+- The detail page is now the shopping-list CTA anchor; keep generated/open list actions easy to reach from the summary and the list section.
+
+## 2026-06-14 - Dish And Target Back Navigation
+
+Status: implemented.
+
+What changed:
+
+- Added `返回工作台` navigation to the dish library and target list pages.
+- Added `返回菜品库` and `返回对象列表` navigation to the new dish and new target pages.
+- Reworked dish and target list, create and edit surfaces into the same mobile-first `app-page` / `app-panel` pattern as the redesigned meal-plan pages.
+- Updated shared dish and target forms with larger mobile input controls and rounded touch-friendly actions.
+
+Verification checklist:
+
+- `npm run check`
+- Browser mobile viewport smoke for `/app/dishes`, `/app/dishes/new`, `/app/dishes/:id`, `/app/targets`, `/app/targets/new` and `/app/targets/:id`.
+
 ## LES-99 - MVP Deployment Preparation
 
-Status: production D1 migrated; blocked on Wrangler authentication/API token and production deploy secrets.
+Status: first production Worker deployment is live through Cloudflare's GitHub integration; production D1 is migrated and reachable.
 
 Commit: see Git history entry `Add deployment runbook`.
 
@@ -27,16 +95,19 @@ Verification checklist:
 - Cloudflare API connector applied `drizzle/0000_panoramic_carnage.sql` and `drizzle/0001_groovy_wilson_fisk.sql` to the production D1 database.
 - Production D1 verification: business tables exist, 30 named indexes exist, `d1_migrations` contains both migration filenames, and `SELECT COUNT(*) FROM user` returns 0 on the fresh database.
 - `npx wrangler d1 list` fails because no local `CLOUDFLARE_API_TOKEN` is set.
+- 2026-06-14: Cloudflare dashboard was authorized to read the GitHub project and auto-deploy updates.
+- 2026-06-14: Production URL is `https://fandan.siuvlqnm.workers.dev/`.
+- 2026-06-14: Production smoke check returned `HTTP 200` for `/` and `/api/health` returned `queryOk: true` for D1.
 
-Blocker:
+Remaining setup:
 
-- A valid local Wrangler login or `CLOUDFLARE_API_TOKEN` is required before deploy.
-- Production secrets still need to be configured before deploying: `BETTER_AUTH_SECRET`, `ORIGIN`, and any account-specific environment values.
+- A valid local Wrangler login or `CLOUDFLARE_API_TOKEN` is still required for manual Wrangler deploys, `wrangler tail`, or remote D1 commands from this checkout.
+- Confirm production dashboard variables/secrets are set as expected: `BETTER_AUTH_SECRET`, `ORIGIN`, and any account-specific environment values.
 
 Notes for next threads:
 
 - Current migrations were applied through the Cloudflare API connector and recorded in `d1_migrations`; do not re-run them manually.
-- Once local Wrangler auth or `CLOUDFLARE_API_TOKEN` is available, run `npm run gen`, `npm run deploy:dry-run` and then `npm run deploy`.
+- Routine production updates are deployed by Cloudflare after it reads updates from GitHub; use Wrangler deploy commands only for manual deploy fallback.
 - Do not run `scripts/db/seed.local.sql` against production; create trial data through the production UI after signing in with a test creator account.
 
 ## LES-98 - Mobile Polish And Error-State Readiness
