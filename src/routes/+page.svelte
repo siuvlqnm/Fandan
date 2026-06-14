@@ -21,6 +21,7 @@
 
 <svelte:head>
 	<title>饭单 / Fandan</title>
+	<meta name="fandan-deploy-check" content="direct-main-push-2026-06-14-1738" />
 </svelte:head>
 
 <main class="mx-auto flex min-h-[calc(100svh-4rem)] max-w-md flex-col gap-6 px-4 py-6 md:max-w-6xl md:px-6 md:py-12">
