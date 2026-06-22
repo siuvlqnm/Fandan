@@ -26,9 +26,9 @@
 	const guestNameValue = $derived(String(formValues.guestName ?? ''));
 	const dietaryNoteValue = $derived(String(formValues.dietaryNote ?? ''));
 	const confirmNoteValue = $derived(String(formValues.note ?? ''));
-	const canFeedback = $derived(Boolean(data.share?.shareLink.canFeedback));
-	const canConfirm = $derived(Boolean(data.share?.shareLink.canConfirm));
 	const disabledByConfirmed = $derived(data.share?.mealPlan.status === 'confirmed' || data.share?.mealPlan.status === 'completed');
+	const canFeedback = $derived(Boolean(data.share?.shareLink.canFeedback) && !disabledByConfirmed);
+	const canConfirm = $derived(Boolean(data.share?.shareLink.canConfirm));
 	const reactionOptions = [
 		{ value: 'like', label: '喜欢', icon: Heart },
 		{ value: 'dislike', label: '不喜欢', icon: ThumbsDown },
@@ -96,6 +96,9 @@
 				{form.message}
 			</p>
 		{/if}
+		{#if data.confirmedNow}
+			<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">已确认这份饭单，创建者会收到确认结果。</p>
+		{/if}
 		{#if errors.form?.[0]}
 			<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{errors.form[0]}</p>
 		{/if}
@@ -122,6 +125,11 @@
 				</div>
 				<p class="text-sm text-muted-foreground">只填写有意见的菜；没有意见时，直接底部确认。</p>
 			</div>
+			{#if disabledByConfirmed}
+				<div class="rounded-2xl bg-secondary/60 p-4 text-sm leading-6 text-secondary-foreground">
+					这份饭单已经确认，反馈已停止收集。如需调整，请联系饭单创建者重新发起确认。
+				</div>
+			{:else}
 			<form method="post" action="?/feedback" use:enhanceWithFeedback={{ pendingLabel: '提交中...' }} class="space-y-5">
 				<div class="grid gap-4 md:grid-cols-2">
 					<div class="space-y-2">
@@ -218,11 +226,25 @@
 					提交反馈
 				</Button>
 			</form>
+			{/if}
 		</section>
 
 		{#if canConfirm}
 			<section class="app-panel space-y-4 border-primary/20 p-4">
+				{#if disabledByConfirmed}
+					<div class="flex items-center gap-3 rounded-2xl bg-secondary p-4 text-secondary-foreground">
+						<CheckCircle2 class="size-6 shrink-0 text-primary" />
+						<div>
+							<p class="font-semibold">这份饭单已确认</p>
+							<p class="text-sm opacity-80">创建者已经收到确认结果。</p>
+						</div>
+					</div>
+				{:else}
 				<form method="post" action="?/confirm" use:enhanceWithFeedback={{ pendingLabel: '确认中...' }} class="space-y-3">
+					<div class="space-y-2">
+						<Label for="confirm-guest-name">你的称呼</Label>
+						<Input id="confirm-guest-name" name="guestName" placeholder="例如：张女士" autocomplete="name" class="app-input" />
+					</div>
 					<div class="space-y-2">
 						<Label for="confirm-note">确认备注</Label>
 						<textarea
@@ -230,17 +252,17 @@
 							name="note"
 							class={textAreaClass}
 							placeholder="例如：都可以，孩子那份少盐"
-							disabled={disabledByConfirmed}
 						>{confirmNoteValue}</textarea>
 						{#if errors.note?.[0]}
 							<p class="text-sm text-destructive">{errors.note[0]}</p>
 						{/if}
 					</div>
-					<Button type="submit" class="h-12 w-full rounded-2xl text-base" disabled={disabledByConfirmed} data-pending-label="确认中...">
+					<Button type="submit" class="h-12 w-full rounded-2xl text-base" data-pending-label="确认中...">
 						<CheckCircle2 class="size-4" />
-						{disabledByConfirmed ? '已确认' : '确认这份饭单'}
+						确认这份饭单
 					</Button>
 				</form>
+				{/if}
 			</section>
 		{/if}
 	{/if}

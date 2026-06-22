@@ -4,6 +4,7 @@ import type { SubmitFunction } from '@sveltejs/kit';
 type EnhanceWithFeedbackOptions = {
 	confirmMessage?: string;
 	pendingLabel?: string;
+	resetOnSuccess?: boolean;
 };
 
 const submitButtons = (form: HTMLFormElement) =>
@@ -51,9 +52,9 @@ export const enhanceWithFeedback = (
 			button.textContent = pendingLabel;
 		}
 
-		return async ({ update }) => {
+		return async ({ result, update }) => {
 			try {
-				await update();
+				await update({ reset: Boolean(currentOptions.resetOnSuccess && result.type === 'success') });
 			} finally {
 				for (const [submitButton, state] of buttonStates) {
 					submitButton.disabled = state.disabled;

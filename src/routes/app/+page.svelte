@@ -1,11 +1,9 @@
 <script lang="ts">
 	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import participantGrid from '$lib/assets/avatars/participant-grid-small.png';
 	import {
 		ArrowRight,
 		CalendarDays,
-		CheckCircle2,
 		ChefHat,
 		ClipboardList,
 		MessageCircle,
@@ -31,17 +29,10 @@
 		(data.todayMealPlans.length > 0 ? data.todayMealPlans : data.recentMealPlans).slice(0, 3)
 	);
 	const selectedDishCount = $derived(heroMealPlan?.items.length ?? data.stats.dishes);
-	const shoppingEstimate = $derived(Math.max(selectedDishCount * 4, selectedDishCount > 0 ? 6 : 0));
-	const participants = $derived([
-		{ name: '我', position: '0% 0%', done: true },
-		{ name: '家人', position: '100% 0%', done: true },
-		{ name: '客户', position: '0% 100%', done: heroMealPlan?.status !== 'pending_confirmation' },
-		{ name: '邀请', position: '100% 100%', done: false }
-	]);
 	const flow = $derived([
-		{ label: '菜品', detail: '搭配菜单', icon: ChefHat, active: true },
-		{ label: '确认', detail: '收集反馈', icon: UsersRound, active: heroMealPlan?.status === 'pending_confirmation' },
-		{ label: '清单', detail: '采购准备', icon: ClipboardList, active: false }
+		{ label: '菜品', detail: '搭配菜单', icon: ChefHat, active: selectedDishCount > 0 },
+		{ label: '确认', detail: '收集反馈', icon: UsersRound, active: heroMealPlan?.status === 'pending_confirmation' || heroMealPlan?.status === 'confirmed' },
+		{ label: '清单', detail: '采购准备', icon: ClipboardList, active: Boolean(heroMealPlan && selectedDishCount > 0) }
 	]);
 	const stats = $derived([
 		{ label: '饭单总数', value: data.stats.mealPlans, icon: ClipboardList },
@@ -78,7 +69,7 @@
 
 	<section class="space-y-1">
 		<p class="text-xs text-muted-foreground">{data.todayKey}</p>
-		<h1 class="text-2xl font-semibold leading-tight">下午好，{displayName}</h1>
+		<h1 class="text-2xl font-semibold leading-tight">你好，{displayName}</h1>
 	</section>
 
 	{#if data.isNewUser}
@@ -86,7 +77,7 @@
 			<div class="space-y-4 bg-secondary/70 p-5">
 				<p class="app-chip bg-white text-primary">第一份饭单</p>
 				<div class="space-y-2">
-					<h2 class="text-2xl font-semibold">先从今晚吃什么开始</h2>
+					<h2 class="text-2xl font-semibold">先从下一顿吃什么开始</h2>
 					<p class="text-sm leading-6 text-muted-foreground">
 						创建饭单时可以顺手补对象和菜品，后面再分享给家人或客户确认。
 					</p>
@@ -123,37 +114,18 @@
 					</a>
 				</div>
 
-					<div class="space-y-2.5">
-					<div class="flex items-center justify-between text-sm">
-						<span class="font-medium">已确认 3/5</span>
-						<span class="text-destructive">2 人待反馈</span>
-					</div>
-					<div class="h-2 overflow-hidden rounded-full bg-white">
-						<div class="h-full w-3/5 rounded-full bg-destructive"></div>
-					</div>
-					<div class="flex items-end justify-between gap-2">
-						{#each participants as person}
-							<div class="flex flex-col items-center gap-1.5 text-xs text-muted-foreground">
-								<span
-									class="participant-avatar"
-									style={`--avatar-image: url(${participantGrid}); --avatar-position: ${person.position};`}
-									aria-label={person.name}
-								></span>
-								<span class="inline-flex items-center gap-1">
-									{#if person.done}<CheckCircle2 class="size-3 text-primary" />{/if}
-									{person.name}
-								</span>
-							</div>
-						{/each}
-					</div>
+				<div class="grid grid-cols-3 divide-x divide-border/70 rounded-2xl bg-white p-3 text-center text-sm">
+					<p><span class="block text-2xl font-semibold">{heroMealPlan.items.length}</span><span class="text-xs text-muted-foreground">菜品</span></p>
+					<p><span class="block font-semibold">{heroMealPlan.typeLabel}</span><span class="text-xs text-muted-foreground">类型</span></p>
+					<p><span class="block font-semibold">{heroMealPlan.statusLabel}</span><span class="text-xs text-muted-foreground">状态</span></p>
 				</div>
 
 				<div class="grid grid-cols-[1fr_1.25fr] gap-3">
-					<Button href={`/app/meal-plans/${heroMealPlan.id}`} variant="outline" class="h-12 rounded-2xl bg-white">
+					<Button href={`/app/meal-plans/${heroMealPlan.id}?panel=confirm`} variant="outline" class="h-12 rounded-2xl bg-white">
 						<MessageCircle class="size-4" />
-						忌口备注
+						查看反馈
 					</Button>
-					<Button href={`/app/meal-plans/${heroMealPlan.id}`} class="h-12 rounded-2xl bg-destructive text-base text-white hover:bg-destructive/90">
+					<Button href={`/app/meal-plans/${heroMealPlan.id}?panel=confirm`} class="h-12 rounded-2xl bg-destructive text-base text-white hover:bg-destructive/90">
 						<Send class="size-4" />
 						分享确认
 					</Button>
@@ -196,7 +168,7 @@
 							<span class="block truncate text-lg font-semibold">{mealPlan.title}</span>
 							<span class="block truncate text-sm text-muted-foreground">{mealPlan.targetName} · {mealPlan.dateRangeLabel}</span>
 							<span class="block text-sm {mealPlan.status === 'pending_confirmation' ? 'text-destructive' : 'text-primary'}">
-								{mealPlan.status === 'pending_confirmation' ? '3 人未确认' : mealPlan.statusLabel}
+								{mealPlan.statusLabel}
 							</span>
 						</span>
 						<ArrowRight class="size-5 shrink-0 text-muted-foreground" />
@@ -222,8 +194,8 @@
 
 	<section class="app-panel flex items-center justify-between gap-3 bg-[oklch(0.98_0.025_88)] p-5">
 		<div class="space-y-1">
-			<p class="text-lg font-semibold">食材准备就绪</p>
-			<p class="text-sm text-muted-foreground">根据当前菜单可生成 {shoppingEstimate} 种食材</p>
+			<p class="text-lg font-semibold">准备购物清单</p>
+			<p class="text-sm text-muted-foreground">{heroMealPlan ? `当前饭单有 ${selectedDishCount} 道菜` : '先创建饭单并添加带食材的菜品'}</p>
 		</div>
 		<Button href={heroMealPlan ? `/app/meal-plans/${heroMealPlan.id}` : '/app/meal-plans/new'} class="h-11 rounded-2xl">
 			生成清单

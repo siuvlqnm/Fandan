@@ -40,4 +40,6 @@ Writes confirmation through `confirmShare`. Confirmation also moves `draft` or `
 ## Handoff Notes
 
 - LES-96 can build creator-side aggregation by reading the `feedback` rows created here.
-- A future creator-side share panel can link directly to the `shareLink.path` returned by `POST /api/meal-plans/:id/share-links`.
+- The creator meal-plan confirmation panel creates, copies, opens and disables the current share link.
+- Creating a new link disables older links for the same meal plan so only one visitor URL remains active.
+- Confirmed or completed meal plans render a completed state and stop accepting additional visitor feedback or duplicate confirmations.

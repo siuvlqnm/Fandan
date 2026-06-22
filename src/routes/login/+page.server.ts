@@ -45,7 +45,7 @@ export const actions: Actions = {
 			return fail(503, {
 				signInForm: {
 					...form,
-					message: 'D1 binding is not available. Start the app with Cloudflare bindings enabled.'
+					message: '服务暂时不可用，请稍后重试'
 				}
 			});
 		}
@@ -81,7 +81,7 @@ export const actions: Actions = {
 			return fail(503, {
 				signUpForm: {
 					...form,
-					message: 'D1 binding is not available. Start the app with Cloudflare bindings enabled.'
+					message: '服务暂时不可用，请稍后重试'
 				}
 			});
 		}

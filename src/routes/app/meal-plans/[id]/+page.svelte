@@ -14,11 +14,15 @@
 		CheckCircle2,
 		ChefHat,
 		ClipboardList,
+		Copy,
+		ExternalLink,
 		Heart,
+		Link2,
 		MessageSquareText,
 		Plus,
 		RefreshCw,
 		ShoppingCart,
+		ShieldOff,
 		ThumbsDown,
 		Trash2,
 		UsersRound
@@ -30,6 +34,11 @@
 	type Panel = 'menu' | 'confirm' | 'shopping' | 'edit';
 
 	let activePanel = $state<Panel>('menu');
+	let copiedShareId = $state<string | null>(null);
+
+	$effect(() => {
+		activePanel = data.initialPanel as Panel;
+	});
 
 	const errors = $derived((form?.errors ?? {}) as Record<string, string[]>);
 	const isArchived = $derived(data.mealPlan.status === 'archived');
@@ -37,6 +46,8 @@
 	const feedbackTotals = $derived(data.feedbackSummary.totals);
 	const dishCount = $derived(data.mealPlan.items.length);
 	const shoppingCount = $derived(data.shoppingList?.items.length ?? 0);
+	const activeShare = $derived(data.shareLinks.find((shareLink) => shareLink.active) ?? null);
+	const activeShareUrl = $derived(activeShare ? `${data.origin}${activeShare.path}` : '');
 	const selectClass = 'app-input h-11 text-sm';
 	const textAreaClass = 'app-input min-h-24 py-3';
 	const panels = $derived<{ id: Panel; label: string; helper: string }[]>([
@@ -45,6 +56,14 @@
 		{ id: 'shopping', label: '清单', helper: shoppingCount ? `${shoppingCount} 项` : '待生成' },
 		{ id: 'edit', label: '编辑', helper: '信息和加菜' }
 	]);
+
+	const copyShareLink = async (shareLinkId: string, url: string) => {
+		await navigator.clipboard.writeText(url);
+		copiedShareId = shareLinkId;
+		window.setTimeout(() => {
+			if (copiedShareId === shareLinkId) copiedShareId = null;
+		}, 1800);
+	};
 </script>
 
 <svelte:head>
@@ -93,10 +112,12 @@
 							打开清单
 						</Button>
 					{:else}
-						<Button onclick={() => (activePanel = 'shopping')} class="h-12 rounded-2xl">
-							<ShoppingCart class="size-4" />
-							生成清单
-						</Button>
+						<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback>
+							<Button type="submit" class="h-12 w-full rounded-2xl" data-pending-label="生成中...">
+								<ShoppingCart class="size-4" />
+								生成清单
+							</Button>
+						</form>
 					{/if}
 				</div>
 			</div>
@@ -220,6 +241,52 @@
 		</section>
 	{:else if activePanel === 'confirm'}
 		<section class="space-y-4" data-testid="meal-plan-feedback">
+			<section class="app-panel space-y-4 p-4" data-testid="meal-plan-share">
+				<div class="flex items-start justify-between gap-3">
+					<div>
+						<h2 class="flex items-center gap-2 text-xl font-semibold"><Link2 class="size-5 text-primary" />分享确认</h2>
+						<p class="mt-1 text-sm leading-6 text-muted-foreground">把链接发给用餐对象，收集菜品意见、忌口和最终确认。</p>
+					</div>
+				</div>
+
+				{#if activeShare}
+					<div class="space-y-3 rounded-2xl bg-secondary/45 p-3">
+						<Label for="active-share-link">当前分享链接</Label>
+						<Input id="active-share-link" value={activeShareUrl} readonly class="app-input bg-white text-sm" />
+						<div class="grid grid-cols-2 gap-2">
+							<Button type="button" onclick={() => copyShareLink(activeShare.id, activeShareUrl)} class="h-11 rounded-2xl">
+								<Copy class="size-4" />
+								{copiedShareId === activeShare.id ? '已复制' : '复制链接'}
+							</Button>
+							<Button href={activeShare.path} variant="outline" class="h-11 rounded-2xl bg-white" target="_blank">
+								<ExternalLink class="size-4" />
+								打开访客页
+							</Button>
+						</div>
+						<form method="post" action="?/revokeShareLink" use:enhanceWithFeedback>
+							<input type="hidden" name="shareLinkId" value={activeShare.id} />
+							<Button
+								type="submit"
+								variant="ghost"
+								class="h-10 w-full rounded-xl text-muted-foreground"
+								data-confirm="停止分享后，当前链接将立即失效。确认继续？"
+								data-pending-label="停止中..."
+							>
+								<ShieldOff class="size-4" />
+								停止分享
+							</Button>
+						</form>
+					</div>
+				{:else}
+					<form method="post" action="?/createShareLink" use:enhanceWithFeedback>
+						<Button type="submit" class="h-12 w-full rounded-2xl text-base" disabled={isArchived} data-pending-label="创建中...">
+							<Link2 class="size-4" />
+							创建分享链接
+						</Button>
+					</form>
+				{/if}
+			</section>
+
 			<div class="app-panel p-4">
 				<div class="mb-4 flex items-center justify-between gap-3">
 					<div>
@@ -286,6 +353,36 @@
 								<p class="font-semibold">{note.guestName} · {note.reactionLabel}</p>
 								<p class="mt-1 break-words text-muted-foreground">{note.note}</p>
 							</article>
+						{/each}
+					</section>
+				{/if}
+
+				{#if data.feedbackSummary.itemTotal > 0}
+					<section class="space-y-3">
+						<h3 class="text-lg font-semibold">菜品反馈</h3>
+						{#each data.groups as group}
+							{#each group.items as item}
+								{#if item.feedbackTotal > 0}
+									<article class="app-panel space-y-3 p-4">
+										<div class="flex items-start justify-between gap-3">
+											<div>
+												<h4 class="font-semibold">{item.dishName}</h4>
+												<p class="text-sm text-muted-foreground">{group.dateLabel} · {group.slotLabel}</p>
+											</div>
+											<span class="app-chip bg-secondary text-primary">{item.feedbackTotal} 条</span>
+										</div>
+										<div class="flex flex-wrap gap-2 text-xs">
+											{#if item.feedback.counts.like}<span class="app-chip bg-secondary text-primary">喜欢 {item.feedback.counts.like}</span>{/if}
+											{#if item.feedback.counts.dislike}<span class="app-chip bg-destructive/10 text-destructive">不喜欢 {item.feedback.counts.dislike}</span>{/if}
+											{#if item.feedback.counts.replace}<span class="app-chip bg-accent text-accent-foreground">想替换 {item.feedback.counts.replace}</span>{/if}
+											{#if item.feedback.counts.note}<span class="app-chip bg-muted text-muted-foreground">备注 {item.feedback.counts.note}</span>{/if}
+										</div>
+										{#each item.feedback.notes as note}
+											<p class="rounded-xl bg-muted/55 p-3 text-sm"><span class="font-semibold">{note.guestName}：</span><span class="break-words text-muted-foreground">{note.note}</span></p>
+										{/each}
+									</article>
+								{/if}
+							{/each}
 						{/each}
 					</section>
 				{/if}

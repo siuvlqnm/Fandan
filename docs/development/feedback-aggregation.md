@@ -17,11 +17,11 @@ The page reads rows written by the public share flow and shows them in the prote
 
 `/app/meal-plans/:id`
 
-- Shows a `访客反馈` card below the dish workspace.
+- Shows feedback in the dedicated confirmation workspace.
 - Shows totals for `喜欢`, `不喜欢`, `想替换` and `确认`.
 - Shows global dietary notes and freeform visitor notes.
-- Shows per-dish counts and text notes without changing the dish editing controls.
-- Shows a compact sidebar summary for confirmation state and latest feedback.
+- Shows per-dish counts and text notes with the dish name, date and meal slot so feedback cannot lose its context.
+- Shows the latest confirmation next to the current meal-plan status.
 
 ## Deferred
 

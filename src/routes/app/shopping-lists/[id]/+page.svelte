@@ -49,7 +49,11 @@
 	</section>
 
 	{#if form?.message}
-		<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
+		<p
+			class:!bg-secondary={form?.success}
+			class:!text-secondary-foreground={form?.success}
+			class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive"
+		>{form.message}</p>
 	{/if}
 
 	<section class="app-soft-panel space-y-4 p-5">
@@ -185,7 +189,7 @@
 			<Plus class="size-5 text-primary" />
 			<h2 class="text-xl font-semibold">添加购物项</h2>
 		</div>
-		<form method="post" action="?/addItem" use:enhanceWithFeedback={{ pendingLabel: '添加中...' }} class="space-y-4">
+		<form method="post" action="?/addItem" use:enhanceWithFeedback={{ pendingLabel: '添加中...', resetOnSuccess: true }} class="space-y-4">
 			<div class="space-y-2">
 				<Label for="new-item-name">名称</Label>
 				<Input id="new-item-name" name="name" value={String(addValues.name ?? '')} placeholder="例如：葱" required class="app-input" />

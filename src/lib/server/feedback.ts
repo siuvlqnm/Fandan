@@ -77,12 +77,14 @@ export const getMealPlanFeedbackSummary = async (context: AuthenticatedContext, 
 	const dietaryNotes: ReturnType<typeof serializeFeedback>[] = [];
 	const confirmations: ReturnType<typeof serializeFeedback>[] = [];
 	const totals = emptyCounts();
+	let itemTotal = 0;
 
 	for (const row of rows) {
 		const item = serializeFeedback(row);
 		totals[item.reaction] += 1;
 
 		if (item.mealPlanItemId) {
+			itemTotal += 1;
 			const itemSummary = byItem.get(item.mealPlanItemId) ?? emptyItemFeedback(item.mealPlanItemId);
 			itemSummary.counts[item.reaction] += 1;
 
@@ -114,6 +116,7 @@ export const getMealPlanFeedbackSummary = async (context: AuthenticatedContext, 
 		total: rows.length,
 		totals,
 		byItem: Object.fromEntries(byItem.entries()),
+		itemTotal,
 		globalNotes,
 		dietaryNotes,
 		confirmations,

@@ -5,6 +5,12 @@ import { requireUserSpace } from '$lib/server/context';
 import { createDish, createDishSchema, listDishes } from '$lib/server/dishes';
 import { emptyItemFeedback, getMealPlanFeedbackSummary } from '$lib/server/feedback';
 import { archiveMealPlan, getMealPlan, updateMealPlan } from '$lib/server/meal-plans';
+import {
+	createMealPlanShareLink,
+	createShareLinkSchema,
+	listMealPlanShareLinks,
+	revokeMealPlanShareLink
+} from '$lib/server/share-links';
 import { generateShoppingList, getMealPlanShoppingList } from '$lib/server/shopping-lists';
 import { listTargets } from '$lib/server/targets';
 import type { RequestEvent } from '@sveltejs/kit';
@@ -69,7 +75,9 @@ type FormAction =
 	| 'removeItem'
 	| 'moveItem'
 	| 'setStatus'
-	| 'generateShoppingList';
+	| 'generateShoppingList'
+	| 'createShareLink'
+	| 'revokeShareLink';
 
 const requireContext = async (event: RequestEvent) => {
 	if (!event.locals.user || !event.locals.session) {
@@ -184,6 +192,10 @@ const redirectBack = (event: RequestEvent): never => {
 	throw redirect(303, event.url.pathname);
 };
 
+const redirectToPanel = (event: RequestEvent, panel: 'confirm' | 'shopping'): never => {
+	throw redirect(303, `${event.url.pathname}?panel=${panel}`);
+};
+
 const groupKey = (item: { plannedDate: string | null; mealSlot: string | null }) =>
 	`${item.plannedDate ?? 'no-date'}::${item.mealSlot ?? 'no-slot'}`;
 
@@ -196,12 +208,13 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	try {
-		const [mealPlan, targets, dishes, shoppingList, feedbackSummary] = await Promise.all([
+		const [mealPlan, targets, dishes, shoppingList, feedbackSummary, shareLinkList] = await Promise.all([
 			getMealPlan(context, id),
 			listTargets(context),
 			listDishes(context),
 			getMealPlanShoppingList(context, id),
-			getMealPlanFeedbackSummary(context, id)
+			getMealPlanFeedbackSummary(context, id),
+			listMealPlanShareLinks(context, id)
 		]);
 		const targetById = new Map(targets.map((target) => [target.id, target]));
 		const dishById = new Map(dishes.map((dish) => [dish.id, dish]));
@@ -214,6 +227,10 @@ export const load: PageServerLoad = async (event) => {
 				dishCategory: dish?.category ?? null,
 				dishIngredientCount: dish?.ingredients.length ?? 0,
 				feedback: feedbackSummary.byItem[item.id] ?? emptyItemFeedback(item.id),
+				feedbackTotal: Object.values((feedbackSummary.byItem[item.id] ?? emptyItemFeedback(item.id)).counts).reduce(
+					(total, count) => total + count,
+					0
+				),
 				canMoveUp: index > 0,
 				canMoveDown: index < allItems.length - 1
 			};
@@ -253,6 +270,9 @@ export const load: PageServerLoad = async (event) => {
 			dishes,
 			shoppingList,
 			feedbackSummary,
+			shareLinks: shareLinkList,
+			origin: event.url.origin,
+			initialPanel: event.url.searchParams.get('panel') === 'confirm' ? 'confirm' : event.url.searchParams.get('panel') === 'shopping' ? 'shopping' : 'menu',
 			groups,
 			mealSlotOptions,
 			typeOptions: Object.entries(typeLabels).map(([value, label]) => ({ value, label })),
@@ -418,6 +438,34 @@ export const actions: Actions = {
 			return redirect(303, `/app/shopping-lists/${shoppingList.id}`);
 		} catch (cause) {
 			return actionError('generateShoppingList', cause);
+		}
+	},
+
+	createShareLink: async (event) => {
+		const context = await requireContext(event);
+
+		try {
+			await createMealPlanShareLink(context, event.params.id, createShareLinkSchema.parse({}));
+			redirectToPanel(event, 'confirm');
+		} catch (cause) {
+			return actionError('createShareLink', cause);
+		}
+	},
+
+	revokeShareLink: async (event) => {
+		const context = await requireContext(event);
+		const formData = await event.request.formData();
+		const shareLinkId = formData.get('shareLinkId');
+
+		if (typeof shareLinkId !== 'string' || !shareLinkId) {
+			return fail(400, { action: 'revokeShareLink', values: {}, errors: {}, message: '缺少分享链接 ID' });
+		}
+
+		try {
+			await revokeMealPlanShareLink(context, event.params.id, shareLinkId);
+			redirectToPanel(event, 'confirm');
+		} catch (cause) {
+			return actionError('revokeShareLink', cause, { shareLinkId });
 		}
 	}
 };

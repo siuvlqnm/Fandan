@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { apiError } from './api/errors';
 import {
@@ -79,6 +79,7 @@ const serializeShareLink = (shareLink: ShareLink) => ({
 	canFeedback: shareLink.canFeedback,
 	canConfirm: shareLink.canConfirm,
 	expiresAt: shareLink.expiresAt,
+	active: shareLink.canView && !isExpired(shareLink.expiresAt),
 	createdAt: shareLink.createdAt,
 	updatedAt: shareLink.updatedAt
 });
@@ -201,6 +202,10 @@ export const createMealPlanShareLink = async (
 	input: CreateShareLinkInput
 ) => {
 	const mealPlan = await getMealPlan(context, mealPlanId);
+
+	if (mealPlan.status === 'archived') {
+		throw apiError('CONFLICT', 'Archived meal plans cannot be shared');
+	}
 	let token = generateToken();
 
 	for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -224,11 +229,65 @@ export const createMealPlanShareLink = async (
 		expiresAt: input.expiresAt ?? null
 	} satisfies NewShareLink;
 
+	await context.db
+		.update(shareLinks)
+		.set({
+			canView: false,
+			canFeedback: false,
+			canConfirm: false,
+			updatedAt: sql`CURRENT_TIMESTAMP`
+		})
+		.where(and(eq(shareLinks.mealPlanId, mealPlan.id), eq(shareLinks.canView, true)));
 	await context.db.insert(shareLinks).values(values);
+	await context.db
+		.update(mealPlans)
+		.set({ status: 'pending_confirmation', updatedAt: sql`CURRENT_TIMESTAMP` })
+		.where(and(eq(mealPlans.id, mealPlan.id), eq(mealPlans.status, 'draft')));
 
 	const [shareLink] = await context.db.select().from(shareLinks).where(eq(shareLinks.id, id)).limit(1);
 
 	return serializeShareLink(shareLink);
+};
+
+export const listMealPlanShareLinks = async (context: AuthenticatedContext, mealPlanId: string) => {
+	const mealPlan = await getMealPlan(context, mealPlanId);
+	const rows = await context.db
+		.select()
+		.from(shareLinks)
+		.where(eq(shareLinks.mealPlanId, mealPlan.id))
+		.orderBy(desc(shareLinks.createdAt));
+
+	return rows.map(serializeShareLink);
+};
+
+export const revokeMealPlanShareLink = async (
+	context: AuthenticatedContext,
+	mealPlanId: string,
+	shareLinkId: string
+) => {
+	const mealPlan = await getMealPlan(context, mealPlanId);
+	const [shareLink] = await context.db
+		.select()
+		.from(shareLinks)
+		.where(and(eq(shareLinks.id, shareLinkId), eq(shareLinks.mealPlanId, mealPlan.id)))
+		.limit(1);
+
+	if (!shareLink) {
+		throw apiError('NOT_FOUND', 'Share link not found');
+	}
+
+	await context.db
+		.update(shareLinks)
+		.set({
+			canView: false,
+			canFeedback: false,
+			canConfirm: false,
+			updatedAt: sql`CURRENT_TIMESTAMP`
+		})
+		.where(eq(shareLinks.mealPlanId, mealPlan.id));
+
+	const [updated] = await context.db.select().from(shareLinks).where(eq(shareLinks.id, shareLink.id)).limit(1);
+	return serializeShareLink(updated);
 };
 
 export const getPublicShare = async (context: RequestContext, token: string) => {
@@ -267,6 +326,10 @@ export const createShareFeedback = async (context: RequestContext, token: string
 	const row = await loadShareLinkBundle(context, token);
 	assertPermission(row.shareLink.canFeedback, 'Share link does not allow feedback');
 
+	if (row.mealPlan.status === 'confirmed' || row.mealPlan.status === 'completed' || row.mealPlan.status === 'archived') {
+		throw apiError('CONFLICT', 'This meal plan is no longer accepting feedback');
+	}
+
 	const itemFeedback = input.items ?? [];
 	const referencedItemIds = [
 		...itemFeedback.map((item) => item.mealPlanItemId),
@@ -304,6 +367,14 @@ export const createShareFeedback = async (context: RequestContext, token: string
 export const confirmShare = async (context: RequestContext, token: string, input: ConfirmShareInput) => {
 	const row = await loadShareLinkBundle(context, token);
 	assertPermission(row.shareLink.canConfirm, 'Share link does not allow confirmation');
+
+	if (row.mealPlan.status === 'confirmed' || row.mealPlan.status === 'completed') {
+		return { confirmed: true, feedback: [] };
+	}
+
+	if (row.mealPlan.status === 'archived') {
+		throw apiError('CONFLICT', 'Archived meal plans cannot be confirmed');
+	}
 
 	const created = await insertFeedbackRows(context, [
 		{

@@ -2,7 +2,9 @@
 
 饭单是一个菜单协作工具，面向家庭和家庭餐饮服务者，帮助负责安排吃什么的人创建菜单、分享确认忌口与偏好，并生成可编辑的购物清单。
 
-## MVP 闭环
+当前发布版本：`1.0.0`。
+
+## 1.0 闭环
 
 1. 新建饭单
 2. 添加菜品
@@ -17,7 +19,7 @@
 - 普通家庭
 - 家宴或朋友聚餐组织者
 
-## 第一版范围
+## 1.0 范围
 
 - 主移动端体验，桌面端仅提供基本功能展示
 - 登录和默认工作空间
@@ -84,6 +86,7 @@ npm run dev
 移动端打磨和表单交互说明见 [docs/development/mobile-polish.md](docs/development/mobile-polish.md)。
 移动端重设计方向见 [docs/development/mobile-redesign.md](docs/development/mobile-redesign.md)。
 MVP 部署说明见 [docs/development/deployment.md](docs/development/deployment.md)。
+1.0 发布检查见 [docs/development/release-1.0.md](docs/development/release-1.0.md)。
 每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 
 ## 验证
@@ -91,6 +94,7 @@ MVP 部署说明见 [docs/development/deployment.md](docs/development/deployment
 ```bash
 npm run check
 npm run build
+npm run release:verify
 ```
 
 `npm run check` 会先生成 `worker-configuration.d.ts`，再执行 Svelte typecheck。

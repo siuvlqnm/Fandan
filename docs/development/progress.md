@@ -2,6 +2,27 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## 2026-06-22 - Version 1.0 Flow Closure
+
+Status: implemented.
+
+What changed:
+
+- Added creator-side share-link creation, copy, open and disable controls to meal-plan confirmation.
+- Enforced one active share link per meal plan and moved shared drafts to pending confirmation automatically.
+- Made visitor confirmation idempotent, stopped feedback after confirmation and replaced the stale submit button with a completed state.
+- Exposed item-level feedback under the matching dish with reaction counts and visitor notes.
+- Made the meal-plan summary generate a shopping list directly and cleared manual shopping-item forms after success.
+- Selected the only existing target by default when creating a meal plan.
+- Removed fabricated landing/dashboard dishes, participants, confirmation ratios, pending counts and shopping estimates.
+- Set package metadata to `1.0.0` and added `docs/development/release-1.0.md`.
+
+Verification checklist:
+
+- `npm run release:verify`
+- Authenticated browser flow from registration through share confirmation and creator feedback review.
+- Share-link disable smoke and mobile horizontal-overflow checks.
+
 ## 2026-06-14 - Mobile-First Product Redesign
 
 Status: implemented.

@@ -82,7 +82,8 @@ export const load: PageServerLoad = async (event) => {
 	const targetId = event.url.searchParams.get('targetId') ?? '';
 	const dishId = event.url.searchParams.get('dishId') ?? '';
 	const [targets, dishes] = await Promise.all([listTargets(context), listDishes(context)]);
-	const selectedTarget = targetId ? targets.find((target) => target.id === targetId) : null;
+	const defaultTargetId = targetId || (targets.length === 1 ? targets[0].id : '');
+	const selectedTarget = defaultTargetId ? targets.find((target) => target.id === defaultTargetId) : null;
 	const selectedDish = dishId ? dishes.find((dish) => dish.id === dishId) : null;
 	const today = new Date().toISOString().slice(0, 10);
 
@@ -90,7 +91,7 @@ export const load: PageServerLoad = async (event) => {
 		values: {
 			...emptyValues,
 			title: selectedTarget ? `${selectedTarget.name} 饭单` : selectedDish ? `${selectedDish.name} 饭单` : '',
-			targetId,
+			targetId: defaultTargetId,
 			dishId,
 			startDate: today,
 			mealSlot: '晚餐'

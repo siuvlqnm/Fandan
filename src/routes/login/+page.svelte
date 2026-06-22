@@ -68,7 +68,7 @@
 		<div class="app-panel p-5">
 			<div class="mb-5 space-y-1">
 				<h2 class="text-xl font-semibold">创建账号</h2>
-				<p class="text-sm text-muted-foreground">第一版使用邮箱密码，后续可切换 magic link。</p>
+				<p class="text-sm text-muted-foreground">使用邮箱和密码创建你的饭单账号。</p>
 			</div>
 			<form method="post" action="?/signUpEmail" use:enhance class="space-y-4">
 				<div class="space-y-2">

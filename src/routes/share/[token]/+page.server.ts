@@ -1,4 +1,4 @@
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import { ApiError } from '$lib/server/api/errors';
 import { getRequestContext } from '$lib/server/context';
@@ -129,12 +129,14 @@ export const load: PageServerLoad = async (event) => {
 				}
 			},
 			groups: groupItems(share.mealPlan.items),
+			confirmedNow: event.url.searchParams.get('confirmed') === '1',
 			pageError: null
 		};
 	} catch (cause) {
 		return {
 			share: null,
 			groups: [],
+			confirmedNow: false,
 			pageError: toPageError(cause)
 		};
 	}
@@ -224,12 +226,7 @@ export const actions: Actions = {
 		try {
 			const context = getRequestContext(event);
 			await confirmShare(context, getToken(event), result.data);
-
-			return {
-				action: 'confirm',
-				success: true,
-				message: '已确认这份饭单，创建者会收到确认结果。'
-			};
+			throw redirect(303, `${event.url.pathname}?confirmed=1`);
 		} catch (cause) {
 			return actionError('confirm', cause, values);
 		}

@@ -158,7 +158,14 @@ export const actions: Actions = {
 
 		try {
 			await createShoppingListItem(context, event.params.id, { ...result.data, checked: false });
-			redirectBack(event);
+
+			return {
+				action: 'addItem',
+				success: true,
+				values: {},
+				errors: {},
+				message: '购物项已添加'
+			};
 		} catch (cause) {
 			return actionError('addItem', cause, values);
 		}
