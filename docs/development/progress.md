@@ -4,7 +4,7 @@ This file records completed implementation slices so other Codex threads can qui
 
 ## LES-104 - Family Workspace Persistence Model
 
-Status: implemented locally; remote D1 migration has not been applied.
+Status: implemented; production D1 migration applied on 2026-06-23.
 
 What changed:
 
@@ -24,12 +24,15 @@ Verification completed:
 - Workspace deletion cascaded members/invitations and cleared `user_preferences.current_space_id`.
 - HTTP sign-up smoke returned 302 to `/app` and created matching space, owner membership and preference; temporary records were removed.
 - Local seed ran successfully against a database copy and produced matching owner membership and current-space preference.
+- Production D1 recorded `0002_rainy_mindworm.sql` as migration id 3; all 16 batch statements succeeded.
+- Production backfill verified 3 users, 3 spaces, 3 active owner memberships, 3 valid current-space preferences and 0 spaces missing an owner membership.
+- Production `/api/health` returned HTTP 200 with `queryOk: true` and 3 spaces after migration.
 
 Notes for next threads:
 
 - `getCurrentSpace` remains owner-based on purpose; LES-105 switches runtime authorization to active membership and validates stored current-space selection.
 - Do not regenerate or edit Better Auth's `auth.schema.ts` to store current space; use `user_preferences`.
-- Apply `0002_rainy_mindworm.sql` to production D1 before deploying code that requires the new tables.
+- Production D1 already contains `0002_rainy_mindworm.sql`; do not re-run it manually.
 
 ## 2026-06-23 - Version 1.1 Family Workspace Planning
 

@@ -53,6 +53,8 @@ For an existing owner space, the helper repairs missing membership or preference
 
 The migration intentionally keeps `spaces.owner_user_id` so 1.0 authorization continues working until LES-105 switches reads to `space_members`.
 
+Production D1 applied this migration on 2026-06-23. The backfill produced one active owner membership and one valid current-space preference for each of the 3 existing spaces.
+
 ## Security Invariants
 
 - Business records remain isolated by `space_id`.

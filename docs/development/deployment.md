@@ -8,7 +8,7 @@ The production D1 database has been created through the Cloudflare API connector
 
 - Database name: `fandan`
 - Database id: `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`
-- Migration status: `drizzle/0000_panoramic_carnage.sql` and `drizzle/0001_groovy_wilson_fisk.sql` have been applied through the Cloudflare API connector and recorded in `d1_migrations`.
+- Migration status: `drizzle/0000_panoramic_carnage.sql`, `drizzle/0001_groovy_wilson_fisk.sql` and `drizzle/0002_rainy_mindworm.sql` have been applied through the Cloudflare API connector and recorded in `d1_migrations`.
 - Production URL: `https://fandan.siuvlqnm.workers.dev/`
 - Deployment path: Cloudflare dashboard is authorized to read the GitHub project and automatically deploy updates from GitHub.
 
@@ -45,6 +45,8 @@ npm run gen
 ```
 
 Remote migrations for the current schema have already been applied. When future migration files are added, apply them through the Cloudflare dashboard/connector path or use `npm run db:migrate:remote` after Wrangler authentication is available.
+
+`0002_rainy_mindworm.sql` was applied on 2026-06-23. The pre-migration Time Travel bookmark is `00000018-00000000-00005093-e0309fb1ba77a32e14180e79e91b1f81`. Post-migration verification found 3 users, 3 spaces, 3 owner memberships, 3 current-space preferences and no spaces missing an active owner membership.
 
 The local demo seed file deletes and recreates demo data for local development. Do not run `scripts/db/seed.local.sql` against production.
 
