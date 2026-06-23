@@ -68,8 +68,11 @@ curl http://127.0.0.1:5173/api/health
 - `src/lib/server/db/schema.ts`: 应用核心 schema。
 - `src/lib/server/db/auth.schema.ts`: Better Auth 生成的认证 schema。
 - `drizzle/0000_panoramic_carnage.sql`: 初始 migration。
+- `drizzle/0001_groovy_wilson_fisk.sql`: MVP 查询索引 migration。
+- `drizzle/0002_rainy_mindworm.sql`: 家庭工作区成员、邀请、当前空间偏好和 owner 回填 migration。
 - `scripts/db/seed.local.sql`: 本地演示数据。
 - `docs/development/data-model.md`: MVP 数据模型和关系说明。
+- `docs/development/workspaces.md`: 1.1 家庭工作区数据模型和迁移边界。
 
 ## Remote D1
 

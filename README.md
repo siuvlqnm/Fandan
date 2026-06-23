@@ -71,6 +71,7 @@ npm run dev
 核心数据模型说明见 [docs/development/data-model.md](docs/development/data-model.md)。
 服务端 API 约定见 [docs/development/server.md](docs/development/server.md)。
 登录和默认工作空间说明见 [docs/development/auth.md](docs/development/auth.md)。
+家庭工作区数据模型说明见 [docs/development/workspaces.md](docs/development/workspaces.md)。
 用餐对象 API 说明见 [docs/development/targets-api.md](docs/development/targets-api.md)。
 用餐对象页面说明见 [docs/development/targets-pages.md](docs/development/targets-pages.md)。
 菜品与食材 API 说明见 [docs/development/dishes-api.md](docs/development/dishes-api.md)。
@@ -87,6 +88,7 @@ npm run dev
 移动端重设计方向见 [docs/development/mobile-redesign.md](docs/development/mobile-redesign.md)。
 MVP 部署说明见 [docs/development/deployment.md](docs/development/deployment.md)。
 1.0 发布检查见 [docs/development/release-1.0.md](docs/development/release-1.0.md)。
+1.1 家庭协作开发计划见 [outputs/饭单-1.1家庭协作开发计划.md](outputs/饭单-1.1家庭协作开发计划.md)。
 每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 
 ## 验证

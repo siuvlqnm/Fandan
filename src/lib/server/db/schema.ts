@@ -1,5 +1,6 @@
 import { relations, sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { check, index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { user } from './auth.schema';
 
 const id = () => text('id').primaryKey().$defaultFn(() => crypto.randomUUID());
 const createdAt = () => text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`);
@@ -12,6 +13,66 @@ export const spaces = sqliteTable('spaces', {
 	createdAt: createdAt(),
 	updatedAt: updatedAt()
 }, (table) => [index('spaces_owner_idx').on(table.ownerUserId)]);
+
+export const spaceMembers = sqliteTable(
+	'space_members',
+	{
+		id: id(),
+		spaceId: text('space_id').notNull().references(() => spaces.id, { onDelete: 'cascade' }),
+		userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+		role: text('role', { enum: ['owner', 'member'] }).notNull().default('member'),
+		status: text('status', { enum: ['active', 'left', 'removed'] }).notNull().default('active'),
+		joinedAt: text('joined_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+		createdAt: createdAt(),
+		updatedAt: updatedAt()
+	},
+	(table) => [
+		uniqueIndex('space_members_space_user_unique').on(table.spaceId, table.userId),
+		uniqueIndex('space_members_owner_unique').on(table.spaceId).where(sql`${table.role} = 'owner'`),
+		index('space_members_user_status_idx').on(table.userId, table.status),
+		index('space_members_space_status_idx').on(table.spaceId, table.status),
+		check('space_members_role_check', sql`${table.role} in ('owner', 'member')`),
+		check('space_members_status_check', sql`${table.status} in ('active', 'left', 'removed')`)
+	]
+);
+
+export const spaceInvitations = sqliteTable(
+	'space_invitations',
+	{
+		id: id(),
+		spaceId: text('space_id').notNull().references(() => spaces.id, { onDelete: 'cascade' }),
+		token: text('token').notNull(),
+		role: text('role', { enum: ['owner', 'member'] }).notNull().default('member'),
+		status: text('status', { enum: ['pending', 'accepted', 'revoked'] }).notNull().default('pending'),
+		invitedByUserId: text('invited_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+		acceptedByUserId: text('accepted_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+		expiresAt: text('expires_at').notNull(),
+		acceptedAt: text('accepted_at'),
+		revokedAt: text('revoked_at'),
+		createdAt: createdAt(),
+		updatedAt: updatedAt()
+	},
+	(table) => [
+		uniqueIndex('space_invitations_token_unique').on(table.token),
+		index('space_invitations_space_status_idx').on(table.spaceId, table.status),
+		index('space_invitations_invited_by_idx').on(table.invitedByUserId),
+		index('space_invitations_accepted_by_idx').on(table.acceptedByUserId),
+		index('space_invitations_expires_at_idx').on(table.expiresAt),
+		check('space_invitations_role_check', sql`${table.role} in ('owner', 'member')`),
+		check('space_invitations_status_check', sql`${table.status} in ('pending', 'accepted', 'revoked')`)
+	]
+);
+
+export const userPreferences = sqliteTable(
+	'user_preferences',
+	{
+		userId: text('user_id').primaryKey().references(() => user.id, { onDelete: 'cascade' }),
+		currentSpaceId: text('current_space_id').references(() => spaces.id, { onDelete: 'set null' }),
+		createdAt: createdAt(),
+		updatedAt: updatedAt()
+	},
+	(table) => [index('user_preferences_current_space_idx').on(table.currentSpaceId)]
+);
 
 export const mealTargets = sqliteTable(
 	'meal_targets',
@@ -191,9 +252,51 @@ export const feedback = sqliteTable(
 );
 
 export const spacesRelations = relations(spaces, ({ many }) => ({
+	members: many(spaceMembers),
+	invitations: many(spaceInvitations),
+	userPreferences: many(userPreferences),
 	mealTargets: many(mealTargets),
 	dishes: many(dishes),
 	mealPlans: many(mealPlans)
+}));
+
+export const spaceMembersRelations = relations(spaceMembers, ({ one }) => ({
+	space: one(spaces, {
+		fields: [spaceMembers.spaceId],
+		references: [spaces.id]
+	}),
+	user: one(user, {
+		fields: [spaceMembers.userId],
+		references: [user.id]
+	})
+}));
+
+export const spaceInvitationsRelations = relations(spaceInvitations, ({ one }) => ({
+	space: one(spaces, {
+		fields: [spaceInvitations.spaceId],
+		references: [spaces.id]
+	}),
+	invitedBy: one(user, {
+		fields: [spaceInvitations.invitedByUserId],
+		references: [user.id],
+		relationName: 'spaceInvitationInvitedBy'
+	}),
+	acceptedBy: one(user, {
+		fields: [spaceInvitations.acceptedByUserId],
+		references: [user.id],
+		relationName: 'spaceInvitationAcceptedBy'
+	})
+}));
+
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+	user: one(user, {
+		fields: [userPreferences.userId],
+		references: [user.id]
+	}),
+	currentSpace: one(spaces, {
+		fields: [userPreferences.currentSpaceId],
+		references: [spaces.id]
+	})
 }));
 
 export const mealTargetsRelations = relations(mealTargets, ({ one, many }) => ({
@@ -287,6 +390,12 @@ export const feedbackRelations = relations(feedback, ({ one }) => ({
 
 export type Space = typeof spaces.$inferSelect;
 export type NewSpace = typeof spaces.$inferInsert;
+export type SpaceMember = typeof spaceMembers.$inferSelect;
+export type NewSpaceMember = typeof spaceMembers.$inferInsert;
+export type SpaceInvitation = typeof spaceInvitations.$inferSelect;
+export type NewSpaceInvitation = typeof spaceInvitations.$inferInsert;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type NewUserPreferences = typeof userPreferences.$inferInsert;
 export type MealTarget = typeof mealTargets.$inferSelect;
 export type NewMealTarget = typeof mealTargets.$inferInsert;
 export type Dish = typeof dishes.$inferSelect;

@@ -2,6 +2,57 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-104 - Family Workspace Persistence Model
+
+Status: implemented locally; remote D1 migration has not been applied.
+
+What changed:
+
+- Added `space_members` with unique user-space membership, owner/member roles, active/left/removed states and a single-owner partial unique index.
+- Added `space_invitations` with unique token, role/status checks, inviter/acceptor audit fields, expiration and outcome timestamps.
+- Added `user_preferences.current_space_id` outside Better Auth's generated schema.
+- Updated `ensureDefaultSpace` so new accounts create a space, active owner membership and current-space preference in one D1 batch; existing owner spaces repair missing companion rows.
+- Added `drizzle/0002_rainy_mindworm.sql`, including backfill from valid `spaces.owner_user_id` rows.
+- Updated the local seed and added `docs/development/workspaces.md`.
+
+Verification completed:
+
+- `npm run check`
+- `npm run db:migrate:local`
+- Existing local data: 2 valid owned spaces produced 2 active owner memberships, 2 current-space preferences and 0 missing owner memberships.
+- SQLite constraint smoke rejected duplicate membership, a second owner, invalid member status, duplicate invitation token and invalid invitation status.
+- Workspace deletion cascaded members/invitations and cleared `user_preferences.current_space_id`.
+- HTTP sign-up smoke returned 302 to `/app` and created matching space, owner membership and preference; temporary records were removed.
+- Local seed ran successfully against a database copy and produced matching owner membership and current-space preference.
+
+Notes for next threads:
+
+- `getCurrentSpace` remains owner-based on purpose; LES-105 switches runtime authorization to active membership and validates stored current-space selection.
+- Do not regenerate or edit Better Auth's `auth.schema.ts` to store current space; use `user_preferences`.
+- Apply `0002_rainy_mindworm.sql` to production D1 before deploying code that requires the new tables.
+
+## 2026-06-23 - Version 1.1 Family Workspace Planning
+
+Status: planning completed in Linear and documented locally; implementation started with LES-104 above.
+
+What changed:
+
+- Created the Linear project `饭单 1.1 家庭协作` instead of reopening the completed `饭单 MVP` project.
+- Added four milestones: family workspace foundation, collaboration experience, product completion, and templates/customer value.
+- Added issues LES-100 through LES-119 with priorities, estimates, acceptance criteria and blocking relations.
+- Put family workspace membership, invitations, role-aware access, settings and workspace switching ahead of templates and later product expansion.
+- Added `outputs/饭单-1.1家庭协作开发计划.md` as the local execution and handoff source.
+
+Recommended next issue:
+
+- Start with LES-104, then LES-105 and LES-100. Do not begin member-facing pages before the membership migration and permission context are stable.
+
+Planning verification:
+
+- Existing `饭单 MVP` Linear project remains completed with LES-80 through LES-99 done.
+- New `饭单 1.1 家庭协作` project is Planned under team `Less`.
+- Phase 9 dependencies end at LES-102, the two-account collaboration and migration-protection gate.
+
 ## 2026-06-22 - Version 1.0 Flow Closure
 
 Status: implemented.

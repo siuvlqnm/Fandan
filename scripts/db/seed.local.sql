@@ -7,11 +7,39 @@ DELETE FROM meal_plans;
 DELETE FROM dish_ingredients;
 DELETE FROM dishes;
 DELETE FROM meal_targets;
+DELETE FROM space_invitations;
+DELETE FROM space_members;
+DELETE FROM user_preferences WHERE user_id = 'seed-user';
 DELETE FROM spaces;
+
+INSERT OR IGNORE INTO user (id, name, email, email_verified, created_at, updated_at)
+VALUES (
+	'seed-user',
+	'饭单演示用户',
+	'seed-user@fandan.local',
+	1,
+	cast(unixepoch('subsecond') * 1000 as integer),
+	cast(unixepoch('subsecond') * 1000 as integer)
+);
 
 INSERT INTO spaces (id, name, owner_user_id, created_at, updated_at)
 VALUES
 	('space_demo_home', '饭单演示空间', 'seed-user', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO space_members (id, space_id, user_id, role, status, joined_at, created_at, updated_at)
+VALUES (
+	'space_member_demo_owner',
+	'space_demo_home',
+	'seed-user',
+	'owner',
+	'active',
+	CURRENT_TIMESTAMP,
+	CURRENT_TIMESTAMP,
+	CURRENT_TIMESTAMP
+);
+
+INSERT INTO user_preferences (user_id, current_space_id, created_at, updated_at)
+VALUES ('seed-user', 'space_demo_home', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO meal_targets (
 	id,
