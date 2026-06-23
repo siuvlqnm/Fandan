@@ -2,6 +2,36 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-105 - Membership-Aware Workspace Context
+
+Status: implemented on 2026-06-23.
+
+What changed:
+
+- Switched current-space resolution from `spaces.owner_user_id` to active `space_members` records.
+- Validated stored current-space preferences and repaired stale, removed or inaccessible selections to another active membership, preferring an owner workspace.
+- Returned the current membership role from `requireUserSpace`, `/api/me` and the app dashboard loader.
+- Added reusable active-membership, role and owner authorization helpers for invitation/member-management routes.
+- Kept all business-resource lookups scoped to the selected `space_id`; public share-token access remains independent.
+- Made default-workspace repair restore the owner's active membership when legacy records are incomplete.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- Active member read shared dishes, targets, meal plans and shopping-list data.
+- Active member created a dish in the shared workspace and the owner read it.
+- A guessed resource ID from another workspace returned `404`.
+- Removing the selected membership caused `/api/me` to fall back to the user's remaining owner workspace and repair `user_preferences`.
+- Owner and member roles were returned correctly; the existing single-owner `/app` flow remained available.
+- Temporary two-account smoke-test records were removed.
+
+Notes for next threads:
+
+- Use `requireSpaceOwner` for invitation creation, member removal and other dangerous settings actions.
+- LES-100 can now implement invitation APIs on top of the stable membership-aware context.
+- LES-105 adds no schema migration, so no D1 migration action is required for this branch.
+
 ## LES-104 - Family Workspace Persistence Model
 
 Status: implemented; production D1 migration applied on 2026-06-23.
@@ -30,7 +60,7 @@ Verification completed:
 
 Notes for next threads:
 
-- `getCurrentSpace` remains owner-based on purpose; LES-105 switches runtime authorization to active membership and validates stored current-space selection.
+- At LES-104 completion `getCurrentSpace` remained owner-based; LES-105 has now replaced that compatibility path with active-membership resolution.
 - Do not regenerate or edit Better Auth's `auth.schema.ts` to store current space; use `user_preferences`.
 - Production D1 already contains `0002_rainy_mindworm.sql`; do not re-run it manually.
 
