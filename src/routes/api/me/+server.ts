@@ -3,7 +3,7 @@ import { apiOk } from '$lib/server/api/response';
 import { requireUserSpace } from '$lib/server/context';
 
 export const GET = apiRoute(async (event) => {
-	const { user, session, space } = await requireUserSpace(event);
+	const { user, session, space, membership } = await requireUserSpace(event);
 
 	return apiOk({
 		user: {
@@ -18,7 +18,8 @@ export const GET = apiRoute(async (event) => {
 		},
 		space: {
 			id: space.id,
-			name: space.name
+			name: space.name,
+			role: membership.role
 		}
 	});
 });

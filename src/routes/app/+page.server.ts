@@ -123,7 +123,8 @@ export const load: PageServerLoad = async (event) => {
 		},
 		space: {
 			id: context.space.id,
-			name: context.space.name
+			name: context.space.name,
+			role: context.membership.role
 		},
 		stats: {
 			targets: targets.length,

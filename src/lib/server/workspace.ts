@@ -30,7 +30,13 @@ const ensureOwnerWorkspaceRecords = async (db: Db, space: Space, userId: string)
 				status: 'active',
 				joinedAt: space.createdAt
 			})
-			.onConflictDoNothing({ target: [spaceMembers.spaceId, spaceMembers.userId] }),
+			.onConflictDoUpdate({
+				target: [spaceMembers.spaceId, spaceMembers.userId],
+				set: {
+					role: 'owner',
+					status: 'active'
+				}
+			}),
 		db
 			.insert(userPreferences)
 			.values({ userId, currentSpaceId: space.id })
