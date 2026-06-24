@@ -4,7 +4,7 @@ LES-88 adds creator-side pages for maintaining reusable dishes and ingredients. 
 
 ## Routes
 
-- `/app/dishes`: dish library list with search, category filter, dish cards and delete action.
+- `/app/dishes`: dish library list with adaptive search/filter density, dish cards and delete action.
 - `/app/dishes/new`: create dish page.
 - `/app/dishes/:id`: edit dish page with ingredient summary and delete action.
 
@@ -24,6 +24,8 @@ LES-88 adds creator-side pages for maintaining reusable dishes and ingredients. 
 - Blank ingredient rows are ignored on submit.
 - Search covers dish names, categories, tags and ingredient names through `src/lib/server/dishes.ts`.
 - Category filtering is derived from current-space dish categories.
+- Empty libraries hide search and category filters. Libraries with up to five dishes show one-line search only; larger libraries expose category filtering in a collapsed secondary control.
+- The dish library is reached from `我的 -> 菜品库`; it is intentionally not a fixed bottom-navigation destination.
 
 ## Implementation Notes
 

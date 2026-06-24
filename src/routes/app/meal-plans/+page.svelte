@@ -17,19 +17,23 @@
 	<section class="flex items-start justify-between gap-4">
 		<div class="space-y-2">
 			<p class="app-chip bg-secondary text-primary">饭单</p>
-			<h1 class="text-3xl font-semibold leading-tight">确认、复用和归档</h1>
-			<p class="text-sm leading-6 text-muted-foreground">按状态查看饭单，把待确认和采购准备优先处理。</p>
+			<h1 class="text-3xl font-semibold leading-tight">每一顿，都在这里</h1>
+			<p class="text-sm leading-6 text-muted-foreground">先处理最近的安排，需要时再展开筛选和管理操作。</p>
 		</div>
-		<Button href="/app/meal-plans/new" class="size-12 shrink-0 rounded-2xl" aria-label="新建饭单">
-			<Plus class="size-5" />
-		</Button>
+		{#if data.total > 0}
+			<Button href="/app/meal-plans/new" class="size-12 shrink-0 rounded-2xl" aria-label="安排一顿饭">
+				<Plus class="size-5" />
+			</Button>
+		{/if}
 	</section>
 
-	<form method="get" class="app-panel space-y-4 p-4">
-		<div class="flex items-center gap-2 text-sm font-semibold">
-			<Search class="size-4 text-primary" />
-			筛选饭单
-		</div>
+	{#if data.total > 5}
+	<details class="app-panel group overflow-hidden" open={data.filters.status !== 'all' || data.filters.type !== 'all' || Boolean(data.filters.targetId)}>
+		<summary class="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+			<Search class="size-4 text-primary" />筛选饭单
+			<span class="ml-auto text-xs text-muted-foreground group-open:hidden">按状态、类型或用餐档案</span>
+		</summary>
+	<form method="get" class="space-y-4 border-t border-border/70 p-4">
 		<div class="grid gap-3">
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-2">
@@ -61,6 +65,8 @@
 			<Button type="submit" variant="outline" class="h-11 rounded-2xl bg-white">应用筛选</Button>
 		</div>
 	</form>
+	</details>
+	{/if}
 
 	{#if form?.message}
 		<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
@@ -73,12 +79,12 @@
 					<ClipboardList class="size-6" />
 				</div>
 				<div class="space-y-1">
-					<h2 class="text-xl font-semibold">还没有匹配的饭单</h2>
-					<p class="text-sm leading-6 text-muted-foreground">先创建一份饭单，后续对象、菜品和清单都会围绕它展开。</p>
+					<h2 class="text-xl font-semibold">{data.total === 0 ? '还没有饭单' : '没有匹配的饭单'}</h2>
+					<p class="text-sm leading-6 text-muted-foreground">写下想吃的菜，就能开始安排并生成购物清单。</p>
 				</div>
 				<Button href="/app/meal-plans/new" class="h-12 rounded-2xl">
 					<Plus class="size-4" />
-					新建饭单
+					安排一顿饭
 				</Button>
 			</div>
 		{:else}
@@ -104,7 +110,7 @@
 					<div class="mt-3 flex items-center justify-end gap-2">
 						<form method="post" action="?/duplicate" use:enhanceWithFeedback={{ pendingLabel: '复制中...' }}>
 							<input type="hidden" name="id" value={mealPlan.id} />
-							<Button type="submit" variant="ghost" size="sm" data-pending-label="复制中...">
+							<Button type="submit" variant="ghost" size="sm" class="h-11" data-pending-label="复制中...">
 								<ClipboardCopy class="size-4" />
 								复制
 							</Button>
@@ -116,6 +122,7 @@
 									type="submit"
 									variant="ghost"
 									size="sm"
+									class="h-11"
 									data-confirm={`归档饭单「${mealPlan.title}」？归档后详情页会保持只读。`}
 									data-pending-label="归档中..."
 								>
@@ -129,6 +136,7 @@
 								type="submit"
 								variant="destructive"
 								size="sm"
+								class="h-11"
 								data-confirm={`删除饭单「${mealPlan.title}」？关联的饭单条目、购物清单和反馈会一并移除。`}
 								data-pending-label="删除中..."
 							>

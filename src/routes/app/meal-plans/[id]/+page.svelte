@@ -72,7 +72,7 @@
 
 <main class="app-page app-bottom-safe">
 	<section class="space-y-4">
-		<Button href="/app/meal-plans" variant="ghost" size="sm" class="h-9 justify-start px-0 text-muted-foreground">
+		<Button href="/app/meal-plans" variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
 			<ArrowLeft class="size-4" />
 			返回饭单列表
 		</Button>
@@ -90,9 +90,6 @@
 							<span class="inline-flex items-center gap-1.5"><CalendarDays class="size-4" />{data.mealPlan.startDate || '未设置日期'}</span>
 						</p>
 					</div>
-					<Button href="/app/meal-plans" variant="outline" size="icon-lg" class="rounded-full bg-white" aria-label="返回列表">
-						<ArrowRight class="size-5 rotate-180" />
-					</Button>
 				</div>
 
 				<div class="grid grid-cols-3 divide-x divide-border/70 rounded-2xl bg-white p-3 text-center text-sm">
@@ -101,18 +98,18 @@
 					<p><span class="block text-2xl font-semibold">{shoppingCount}</span><span class="text-xs text-muted-foreground">清单项</span></p>
 				</div>
 
-				<div class="grid grid-cols-2 gap-3">
-					<Button onclick={() => (activePanel = 'confirm')} variant="outline" class="h-12 rounded-2xl bg-white">
+				<div class="flex items-center gap-3">
+					<Button onclick={() => (activePanel = 'confirm')} variant="ghost" class="h-11 rounded-2xl">
 						<MessageSquareText class="size-4" />
 						确认反馈
 					</Button>
 					{#if data.shoppingList}
-						<Button href={`/app/shopping-lists/${data.shoppingList.id}`} class="h-12 rounded-2xl">
+						<Button href={`/app/shopping-lists/${data.shoppingList.id}`} class="h-12 flex-1 rounded-2xl">
 							<ShoppingCart class="size-4" />
 							打开清单
 						</Button>
 					{:else}
-						<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback>
+						<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback class="flex-1">
 							<Button type="submit" class="h-12 w-full rounded-2xl" data-pending-label="生成中...">
 								<ShoppingCart class="size-4" />
 								生成清单
@@ -157,7 +154,7 @@
 					<h2 class="text-xl font-semibold">菜单安排</h2>
 					<p class="text-sm text-muted-foreground">先看这顿饭吃什么，排序和删除也在这里。</p>
 				</div>
-				<Button onclick={() => (activePanel = 'edit')} variant="outline" size="sm" class="rounded-xl bg-white">
+				<Button onclick={() => (activePanel = 'edit')} variant="outline" size="sm" class="h-11 rounded-xl bg-white">
 					<Plus class="size-4" />
 					加菜
 				</Button>
@@ -204,19 +201,19 @@
 										<form method="post" action="?/moveItem">
 											<input type="hidden" name="itemId" value={item.id} />
 											<input type="hidden" name="direction" value="up" />
-											<Button type="submit" variant="outline" size="icon-sm" class="rounded-xl bg-white" disabled={isArchived || !item.canMoveUp} aria-label="上移">
+											<Button type="submit" variant="outline" size="icon-sm" class="size-11 rounded-xl bg-white" disabled={isArchived || !item.canMoveUp} aria-label="上移">
 												<ArrowUp class="size-4" />
 											</Button>
 										</form>
 										<form method="post" action="?/moveItem">
 											<input type="hidden" name="itemId" value={item.id} />
 											<input type="hidden" name="direction" value="down" />
-											<Button type="submit" variant="outline" size="icon-sm" class="rounded-xl bg-white" disabled={isArchived || !item.canMoveDown} aria-label="下移">
+											<Button type="submit" variant="outline" size="icon-sm" class="size-11 rounded-xl bg-white" disabled={isArchived || !item.canMoveDown} aria-label="下移">
 												<ArrowDown class="size-4" />
 											</Button>
 										</form>
 										{#if item.dishId}
-											<Button href={`/app/dishes/${item.dishId}`} variant="ghost" size="sm">菜品</Button>
+											<Button href={`/app/dishes/${item.dishId}`} variant="ghost" size="sm" class="h-11">菜品</Button>
 										{/if}
 										<form method="post" action="?/removeItem" use:enhanceWithFeedback>
 											<input type="hidden" name="itemId" value={item.id} />
@@ -224,6 +221,7 @@
 												type="submit"
 												variant="destructive"
 												size="icon-sm"
+												class="size-11"
 												disabled={isArchived}
 												aria-label="移除"
 												data-confirm={`从饭单中移除「${item.dishName}」？`}

@@ -6,6 +6,8 @@ LES-101 turns the mobile `我的` navigation item into a real family and account
 
 `/app/settings` is available to every active workspace member.
 
+- The page is organized as `个人账号`, `常用功能` and `当前家庭`, so account actions and family permissions do not read as one settings object.
+- `常用功能` is the secondary navigation home for the dish library, meal profiles and family invitation/member management.
 - Owners see workspace rename, active members, invitation controls and member removal.
 - Members see the workspace and active member list plus their own leave action.
 - Owner-only controls are not rendered for members.

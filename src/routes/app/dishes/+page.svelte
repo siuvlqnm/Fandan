@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -16,7 +17,7 @@
 <main class="app-page app-bottom-safe">
 	<section class="space-y-4">
 		<div class="space-y-2">
-			<Button href="/app" variant="ghost" size="sm" class="h-9 justify-start px-0 text-muted-foreground">
+			<Button href="/app" variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
 				<ArrowLeft class="size-4" />
 				返回工作台
 			</Button>
@@ -26,16 +27,16 @@
 				保存常做菜、食材和简单做法。之后创建饭单和购物清单时会直接复用这些菜品。
 			</p>
 		</div>
-		<Button href="/app/dishes/new" class="h-12 rounded-2xl">
+		{#if data.total > 0}<Button href="/app/dishes/new" class="h-12 rounded-2xl">
 			<Plus class="size-4" />
 			新建菜品
-		</Button>
+		</Button>{/if}
 	</section>
 
-	<form method="get" class="app-panel space-y-4 p-4">
-		<div class="space-y-2">
-			<Label for="dish-search">搜索</Label>
-			<div class="relative">
+	{#if data.total > 0}
+	<form method="get" class="app-panel space-y-3 p-3">
+		<div class="flex gap-2">
+			<div class="relative min-w-0 flex-1">
 				<Search class="pointer-events-none absolute left-3 top-3.5 size-4 text-muted-foreground" />
 				<Input
 					id="dish-search"
@@ -45,8 +46,12 @@
 					class="app-input pl-9"
 				/>
 			</div>
+			<Button type="submit" variant="outline" class="size-12 shrink-0 rounded-xl bg-white" aria-label="搜索菜品"><Search class="size-4" /></Button>
 		</div>
-		<div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+		{#if data.total > 5}
+		<details class="group rounded-xl bg-muted/50" open={data.filters.category !== 'all'}>
+			<summary class="flex min-h-11 cursor-pointer list-none items-center px-3 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">更多筛选 <span class="ml-auto group-open:hidden">按分类</span></summary>
+		<div class="grid gap-3 border-t border-border/70 p-3 md:grid-cols-[1fr_auto] md:items-end">
 			<div class="space-y-2">
 				<Label for="dish-category">分类</Label>
 				<select id="dish-category" name="category" class="app-input h-11 text-sm">
@@ -57,7 +62,10 @@
 			</div>
 			<Button type="submit" variant="outline" class="h-11 rounded-xl bg-white">筛选</Button>
 		</div>
+		</details>
+		{/if}
 	</form>
+	{/if}
 
 	{#if form?.message}
 		<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
@@ -75,12 +83,12 @@
 			<div class="app-panel space-y-4 p-5 text-center">
 				<ChefHat class="mx-auto size-8 text-primary" />
 				<div class="space-y-1">
-					<h3 class="text-xl font-semibold">还没有匹配的菜品</h3>
-					<p class="text-sm leading-6 text-muted-foreground">可以先创建只有菜名的菜品，食材和做法之后再慢慢补。</p>
+					<h3 class="text-xl font-semibold">{data.total === 0 ? '还没有菜品' : '没有匹配的菜品'}</h3>
+					<p class="text-sm leading-6 text-muted-foreground">{data.total === 0 ? '先记下一道常做菜，食材和做法之后再慢慢补。' : '换个关键词，或清除筛选后再看看。'}</p>
 				</div>
-				<Button href="/app/dishes/new" class="h-12 rounded-2xl">
+				<Button href={data.total === 0 ? '/app/dishes/new' : '/app/dishes'} class="h-12 rounded-2xl">
 					<Plus class="size-4" />
-					新建菜品
+					{data.total === 0 ? '新建菜品' : '清除筛选'}
 				</Button>
 			</div>
 		{:else}
@@ -121,8 +129,8 @@
 						</p>
 
 						<div class="grid grid-cols-[1fr_1fr_auto] gap-2">
-							<Button href={`/app/dishes/${dish.id}`} variant="outline" size="sm" class="rounded-xl bg-white">编辑</Button>
-							<Button href={`/app/meal-plans/new?dishId=${dish.id}`} variant="ghost" size="sm" class="rounded-xl">
+							<Button href={`/app/dishes/${dish.id}`} variant="outline" size="sm" class="h-11 rounded-xl bg-white">编辑</Button>
+							<Button href={`/app/meal-plans/new?dishId=${dish.id}`} variant="ghost" size="sm" class="h-11 rounded-xl">
 								<ClipboardPlus class="size-4" />
 								加入饭单
 							</Button>
@@ -132,7 +140,7 @@
 									type="submit"
 									variant="destructive"
 									size="icon-sm"
-									class="rounded-xl"
+									class="size-11 rounded-xl"
 									aria-label={`删除菜品「${dish.name}」`}
 									data-confirm={`删除菜品「${dish.name}」？它会从菜品库移除。`}
 									data-pending-label="删除中..."
@@ -147,3 +155,5 @@
 		{/if}
 	</section>
 </main>
+
+<MobileBottomNav />

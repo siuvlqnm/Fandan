@@ -24,7 +24,7 @@ Existing users see a priority panel:
 2. Today's meal plans, when no pending-confirmation plans exist.
 3. Recently updated meal plans as the fallback.
 
-The primary `安排一顿饭` action stays visible in the page header on desktop and mobile.
+New users see only the first-meal panel beneath the greeting; later dashboard summaries stay hidden until the first meal exists. Existing users keep one primary action in the priority panel, while the lower shopping-list entry is secondary when a priority meal is already available.
 
 ## Sections
 

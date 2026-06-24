@@ -44,14 +44,16 @@ export const load: PageServerLoad = async (event) => {
 	const status = event.url.searchParams.get('status') ?? 'all';
 	const type = event.url.searchParams.get('type') ?? 'all';
 	const targetId = event.url.searchParams.get('targetId');
-	const [mealPlans, targets] = await Promise.all([
+	const [mealPlans, allMealPlans, targets] = await Promise.all([
 		listMealPlans(context, { status, type, targetId }),
+		listMealPlans(context),
 		listTargets(context)
 	]);
 	const targetById = new Map(targets.map((target) => [target.id, target]));
 
 	return {
 		filters: { status, type, targetId: targetId ?? '' },
+		total: allMealPlans.length,
 		mealPlans: mealPlans.map((mealPlan) => ({
 			...mealPlan,
 			typeLabel: typeLabels[mealPlan.type],

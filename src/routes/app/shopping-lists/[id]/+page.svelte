@@ -23,7 +23,7 @@
 
 <main class="app-page app-bottom-safe">
 	<section class="space-y-4">
-		<Button href={`/app/meal-plans/${data.mealPlan.id}`} variant="ghost" size="sm" class="h-9 justify-start px-0 text-muted-foreground">
+		<Button href={`/app/meal-plans/${data.mealPlan.id}`} variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
 			<ArrowLeft class="size-4" />
 			返回饭单
 		</Button>
@@ -206,7 +206,7 @@
 		<form method="post" action="?/addItem" use:enhanceWithFeedback={{ pendingLabel: '添加中...', resetOnSuccess: true }} class="space-y-4">
 			<div class="space-y-2">
 				<Label for="new-item-name">名称</Label>
-				<Input id="new-item-name" name="name" value={String(addValues.name ?? '')} placeholder="例如：葱" required class="app-input" />
+				<Input id="new-item-name" name="name" value={String(addValues.name ?? '')} placeholder="例如：葱" required class="app-input h-11" />
 				{#if form?.action === 'addItem' && errors.name?.[0]}
 					<p class="text-sm text-destructive">{errors.name[0]}</p>
 				{/if}
@@ -214,16 +214,16 @@
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-2">
 					<Label for="new-item-quantity">数量</Label>
-					<Input id="new-item-quantity" name="quantity" value={String(addValues.quantity ?? '')} placeholder="1" class="app-input" />
+					<Input id="new-item-quantity" name="quantity" value={String(addValues.quantity ?? '')} placeholder="1" class="app-input h-11" />
 				</div>
 				<div class="space-y-2">
 					<Label for="new-item-unit">单位</Label>
-					<Input id="new-item-unit" name="unit" value={String(addValues.unit ?? '')} placeholder="把" class="app-input" />
+					<Input id="new-item-unit" name="unit" value={String(addValues.unit ?? '')} placeholder="把" class="app-input h-11" />
 				</div>
 			</div>
 			<div class="space-y-2">
 				<Label for="new-item-category">分类</Label>
-				<Input id="new-item-category" name="category" value={String(addValues.category ?? '')} placeholder="蔬菜" class="app-input" />
+				<Input id="new-item-category" name="category" value={String(addValues.category ?? '')} placeholder="蔬菜" class="app-input h-11" />
 			</div>
 			<div class="space-y-2">
 				<Label for="new-item-notes">备注</Label>

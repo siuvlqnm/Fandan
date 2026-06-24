@@ -64,11 +64,8 @@
 					<UserPlus class="size-5" />
 				</a>
 			{/if}
-			<a href="/app/meal-plans/new" class="flex size-11 items-center justify-center rounded-full bg-white text-primary shadow-sm" aria-label="安排一顿饭">
-				<Plus class="size-5" />
-			</a>
 			<form method="post" action="/logout">
-				<button type="submit" class="rounded-full border border-border bg-white px-3 py-2 text-sm text-muted-foreground">退出</button>
+				<button type="submit" class="min-h-11 rounded-full border border-border bg-white px-3 py-2 text-sm text-muted-foreground">退出</button>
 			</form>
 		</div>
 	</section>
@@ -151,10 +148,11 @@
 		</section>
 	{/if}
 
-	<section class="space-y-3">
+	{#if !data.isNewUser}
+		<section class="space-y-3">
 		<div class="flex items-center justify-between">
 			<h2 class="text-xl font-semibold">今日饭单</h2>
-			<a href="/app/meal-plans" class="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground">
+			<a href="/app/meal-plans" class="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-muted-foreground">
 				全部 <ArrowRight class="size-4" />
 			</a>
 		</div>
@@ -177,9 +175,9 @@
 				{/each}
 			{/if}
 		</div>
-	</section>
+		</section>
 
-	<section class="space-y-3">
+		<section class="space-y-3">
 		<h2 class="text-xl font-semibold">本周概览</h2>
 		<div class="app-soft-panel grid grid-cols-4 divide-x divide-border/70 p-3 text-center">
 			{#each stats as item}
@@ -191,18 +189,23 @@
 				</div>
 			{/each}
 		</div>
-	</section>
+		</section>
 
-	<section class="app-panel flex items-center justify-between gap-3 bg-[oklch(0.98_0.025_88)] p-5">
+		<section class="app-panel flex items-center justify-between gap-3 bg-[oklch(0.98_0.025_88)] p-5">
 		<div class="space-y-1">
 			<p class="text-lg font-semibold">准备购物清单</p>
 			<p class="text-sm text-muted-foreground">{heroMealPlan ? `当前饭单有 ${selectedDishCount} 道菜` : '先创建饭单并添加带食材的菜品'}</p>
 		</div>
-		<Button href={heroMealPlan ? `/app/meal-plans/${heroMealPlan.id}` : '/app/meal-plans/new'} class="h-11 rounded-2xl">
+		<Button
+			href={heroMealPlan ? `/app/meal-plans/${heroMealPlan.id}` : '/app/meal-plans/new'}
+			variant={heroMealPlan ? 'outline' : 'default'}
+			class="h-11 rounded-2xl {heroMealPlan ? 'bg-white' : ''}"
+		>
 			生成清单
 			<ShoppingBag class="size-4" />
 		</Button>
-	</section>
+		</section>
+	{/if}
 </main>
 
 <MobileBottomNav />

@@ -2,6 +2,31 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-125 - Mobile Navigation And First-Screen Density
+
+Status: implemented on 2026-06-25.
+
+What changed:
+
+- Reduced the fixed mobile navigation to three destinations: `首页`, `饭单` and `我的`.
+- Moved dishes, meal profiles, invitations and family management into the `我的` secondary layer without removing their routes or capabilities.
+- Kept empty lists action-first, used one-line search for small collections, and moved multi-dimensional filters behind a collapsed `details` control once collections exceed five records.
+- Separated personal-account, common-feature and current-family groups on `/app/settings`.
+- Removed duplicate first-use and empty-state calls to action so each first screen has one clear primary next step.
+- Raised visible mobile links, form controls and card actions in the covered routes to a minimum 44px touch height and added a global keyboard focus-visible outline.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- In-app mobile browser verification at the product viewport for empty, three-record and seven-record dish states; empty and six-record meal-plan states; settings hierarchy; meal creation; meal detail; and the generated shopping list.
+- Verified the three-item navigation, collapsed high-density filters, no horizontal overflow and no visible controls below 44px on the inspected routes.
+
+Notes for next threads:
+
+- LES-124 is the next unblocked Phase 9.5 task.
+- Keep new secondary creator tools reachable from `我的`; do not grow the fixed mobile navigation without a new information-architecture decision.
+
 ## LES-123 - Arrange A Meal Manual Core Flow
 
 Status: implemented on 2026-06-24.

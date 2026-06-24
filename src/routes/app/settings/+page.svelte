@@ -8,6 +8,7 @@
 		ArrowLeft,
 		ArrowRightLeft,
 		Check,
+		ChefHat,
 		ChevronDown,
 		CircleCheck,
 		Copy,
@@ -19,6 +20,7 @@
 		Plus,
 		HousePlus,
 		ShieldCheck,
+		Target,
 		UserMinus,
 		UserPlus,
 		UserRound,
@@ -64,13 +66,13 @@
 	</section>
 
 	{#if data.feedback.saved}
-		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">家庭空间名称已更新。</p>
+		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">家庭名称已更新。</p>
 	{/if}
 	{#if data.feedback.workspaceCreated}
-		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">新工作区已创建并切换，接下来新增的内容都会保存在这里。</p>
+		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">新家庭已创建并切换，接下来新增的内容都会保存在这里。</p>
 	{/if}
 	{#if data.feedback.workspaceSwitched}
-		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">工作区已切换，页面数据已刷新。</p>
+		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">家庭已切换，页面数据已刷新。</p>
 	{/if}
 	{#if data.feedback.created}
 		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">邀请链接已创建，可以复制给家人。</p>
@@ -88,24 +90,38 @@
 		<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
 	{/if}
 
-	<section class="app-soft-panel overflow-hidden">
-		<div class="flex items-center gap-4 p-5">
-			<span class="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white text-primary shadow-sm"><UserRound class="size-7" /></span>
-			<div class="min-w-0 flex-1">
-				<p class="truncate text-xl font-semibold">{data.user.name}</p>
-				<p class="truncate text-sm text-muted-foreground">{data.user.email}</p>
+	<section class="space-y-3">
+		<div><p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">账号设置</p><h2 class="text-xl font-semibold">个人账号</h2></div>
+		<div class="app-soft-panel overflow-hidden">
+			<div class="flex items-center gap-4 p-5">
+				<span class="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white text-primary shadow-sm"><UserRound class="size-7" /></span>
+				<div class="min-w-0 flex-1">
+					<p class="truncate text-xl font-semibold">{data.user.name}</p>
+					<p class="truncate text-sm text-muted-foreground">{data.user.email}</p>
+				</div>
+				<span class="app-chip bg-white text-primary">{roleLabels[data.space.role]}</span>
 			</div>
-			<span class="app-chip bg-white text-primary">{roleLabels[data.space.role]}</span>
-		</div>
-		<div class="border-t border-border/70 bg-white px-5 py-3 text-sm text-muted-foreground">
-			当前空间：<span class="font-medium text-foreground">{data.space.name}</span>
+			<div class="border-t border-border/70 bg-white px-5 py-3 text-sm text-muted-foreground">
+				当前家庭：<span class="font-medium text-foreground">{data.space.name}</span>
+			</div>
 		</div>
 	</section>
+
+	<section class="space-y-3">
+		<h2 class="text-xl font-semibold">常用功能</h2>
+		<div class="grid grid-cols-3 gap-2">
+			<a href="/app/dishes" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><ChefHat class="size-5 text-primary" />菜品库</a>
+			<a href="/app/targets" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><Target class="size-5 text-primary" />用餐档案</a>
+			<a href={isOwner ? '/app/invitations' : '#family-members'} class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><UsersRound class="size-5 text-primary" />家庭成员</a>
+		</div>
+	</section>
+
+	<div id="current-family" class="pt-2"><p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">家庭设置</p><h2 class="text-xl font-semibold">当前家庭</h2><p class="text-sm text-muted-foreground">{data.space.name}</p></div>
 
 	<section class="space-y-3" data-testid="workspace-switcher">
 		{#if data.workspaces.length > 1}
 			<div class="flex items-center justify-between">
-				<div><h2 class="text-xl font-semibold">我的工作区</h2><p class="text-sm text-muted-foreground">切换后，饭单和菜品会跟着更新</p></div>
+				<div><h2 class="text-xl font-semibold">切换家庭</h2><p class="text-sm text-muted-foreground">切换后，饭单和菜品会跟着更新</p></div>
 				<ArrowRightLeft class="size-6 text-primary" />
 			</div>
 			<div class="app-panel divide-y divide-border/70 overflow-hidden">
@@ -123,7 +139,7 @@
 						{:else}
 							<form method="post" action="?/switchWorkspace" use:enhanceWithFeedback={{ pendingLabel: '切换中...' }}>
 								<input type="hidden" name="spaceId" value={workspace.id} />
-								<Button type="submit" variant="outline" size="sm" class="rounded-xl bg-white" data-pending-label="切换中..." aria-label={`切换到 ${workspace.name}`}>切换</Button>
+								<Button type="submit" variant="outline" size="sm" class="h-11 rounded-xl bg-white" data-pending-label="切换中..." aria-label={`切换到 ${workspace.name}`}>切换</Button>
 							</form>
 						{/if}
 					</article>
@@ -132,20 +148,20 @@
 		{/if}
 
 		<details class="app-panel group overflow-hidden">
-			<summary class="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
+			<summary class="flex min-h-12 cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
 				<span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><HousePlus class="size-5" /></span>
 				<div class="min-w-0 flex-1">
-					<p class="font-semibold">{data.workspaces.length > 1 ? '创建新工作区' : '需要另一个家庭空间？'}</p>
+					<p class="font-semibold">{data.workspaces.length > 1 ? '创建另一个家庭' : '需要另一个家庭？'}</p>
 					<p class="text-sm text-muted-foreground">不同家庭或场景的数据彼此独立</p>
 				</div>
 				<ChevronDown class="size-5 text-muted-foreground transition-transform group-open:rotate-180" />
 			</summary>
 			<form method="post" action="?/createWorkspace" use:enhanceWithFeedback={{ pendingLabel: '创建中...' }} class="space-y-3 border-t border-border/70 p-4">
 				<div class="space-y-2">
-					<Label for="new-workspace-name">新工作区名称</Label>
-					<Input id="new-workspace-name" name="workspaceName" value={workspaceNameValue} maxlength={80} placeholder="例如：爸妈家" required class="app-input" />
+					<Label for="new-workspace-name">新家庭名称</Label>
+					<Input id="new-workspace-name" name="workspaceName" value={workspaceNameValue} maxlength={80} placeholder="例如：爸妈家" required class="app-input h-11" />
 				</div>
-				<p class="text-xs leading-5 text-muted-foreground">创建后会自动切换，原工作区内容不会受到影响。</p>
+				<p class="text-xs leading-5 text-muted-foreground">创建后会自动切换，原家庭内容不会受到影响。</p>
 				<Button type="submit" class="h-11 w-full rounded-2xl" data-pending-label="创建中..."><Plus class="size-4" />创建并切换</Button>
 			</form>
 		</details>
@@ -154,13 +170,13 @@
 	<section class="app-panel p-5">
 		<div class="mb-4 flex items-start gap-3">
 			<span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary"><Pencil class="size-5" /></span>
-			<div><h2 class="text-xl font-semibold">家庭空间</h2><p class="text-sm leading-6 text-muted-foreground">这个名称会显示在所有家庭成员的工作台。</p></div>
+			<div><h2 class="text-xl font-semibold">家庭名称</h2><p class="text-sm leading-6 text-muted-foreground">这个名称会显示给所有家庭成员。</p></div>
 		</div>
 		{#if isOwner}
 			<form method="post" action="?/rename" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-3">
 				<div class="space-y-2">
-					<Label for="workspace-name">空间名称</Label>
-					<Input id="workspace-name" name="name" value={spaceNameValue} maxlength={80} required class="app-input" />
+					<Label for="workspace-name">家庭名称</Label>
+					<Input id="workspace-name" name="name" value={spaceNameValue} maxlength={80} required class="app-input h-11" />
 				</div>
 				<Button type="submit" class="h-11 w-full rounded-2xl" data-pending-label="保存中...">保存名称</Button>
 			</form>
@@ -169,7 +185,7 @@
 		{/if}
 	</section>
 
-	<section class="space-y-3">
+	<section id="family-members" class="space-y-3">
 		<div class="flex items-center justify-between">
 			<div><h2 class="text-xl font-semibold">家庭成员</h2><p class="text-sm text-muted-foreground">当前有 {data.members.length} 位成员</p></div>
 			<UsersRound class="size-6 text-primary" />
@@ -191,7 +207,7 @@
 					{#if isOwner && member.role === 'member'}
 						<form method="post" action="?/removeMember" use:enhanceWithFeedback={{ confirmMessage: `确定移除 ${member.name} 吗？对方将立即失去这个家庭空间的访问权限。`, pendingLabel: '移除中...' }}>
 							<input type="hidden" name="membershipId" value={member.id} />
-							<Button type="submit" variant="ghost" size="sm" class="text-destructive" data-pending-label="移除中..." aria-label={`移除成员 ${member.name}`}>
+							<Button type="submit" variant="ghost" size="sm" class="h-11 text-destructive" data-pending-label="移除中..." aria-label={`移除成员 ${member.name}`}>
 								<UserMinus class="size-4" />移除
 							</Button>
 						</form>
@@ -222,19 +238,19 @@
 									<div class="min-w-0 flex-1"><p class="font-medium">等待加入</p><p class="truncate text-xs text-muted-foreground">{formatDate(invitation.expiresAt)} 到期</p></div>
 								</div>
 								<div class="grid grid-cols-[1fr_auto] gap-2">
-									<Button type="button" onclick={() => copyInvitation(invitation.token, invitation.url)} class="h-10 rounded-xl">
+									<Button type="button" onclick={() => copyInvitation(invitation.token, invitation.url)} class="h-11 rounded-xl">
 										{#if copiedToken === invitation.token}<Check class="size-4" />已复制{:else}<Copy class="size-4" />复制链接{/if}
 									</Button>
 									<form method="post" action="?/revokeInvitation" use:enhanceWithFeedback={{ confirmMessage: '撤销后，这个邀请链接将立即失效。确定撤销吗？', pendingLabel: '撤销中...' }}>
 										<input type="hidden" name="invitationId" value={invitation.id} />
-										<Button type="submit" variant="outline" class="h-10 rounded-xl bg-white" data-pending-label="撤销中..."><XCircle class="size-4" />撤销</Button>
+										<Button type="submit" variant="outline" class="h-11 rounded-xl bg-white" data-pending-label="撤销中..."><XCircle class="size-4" />撤销</Button>
 									</form>
 								</div>
 							</article>
 						{/each}
 					</div>
 				{/if}
-				<a href="/app/invitations" class="block text-center text-sm font-medium text-muted-foreground">查看全部邀请记录</a>
+				<a href="/app/invitations" class="flex min-h-11 items-center justify-center text-center text-sm font-medium text-muted-foreground">查看全部邀请记录</a>
 			</div>
 		</section>
 	{/if}
@@ -242,7 +258,7 @@
 	<section class="app-panel space-y-4 p-5">
 		<div class="flex items-start gap-3">
 			<span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><ShieldCheck class="size-5" /></span>
-			<div><h2 class="text-lg font-semibold">空间权限</h2><p class="text-sm leading-6 text-muted-foreground">{isOwner ? '所有者负责成员、邀请和危险操作。转让所有权功能上线前，所有者不能退出。' : '成员可以共同维护菜品、饭单和购物清单，也可以随时退出当前家庭空间。'}</p></div>
+			<div><h2 class="text-lg font-semibold">家庭权限</h2><p class="text-sm leading-6 text-muted-foreground">{isOwner ? '所有者负责成员、邀请和危险操作。转让所有权功能上线前，所有者不能退出。' : '成员可以共同维护菜品、饭单和购物清单，也可以随时退出当前家庭。'}</p></div>
 		</div>
 		{#if !isOwner}
 			<form method="post" action="?/leave" use:enhanceWithFeedback={{ confirmMessage: `确定退出「${data.space.name}」吗？退出后需要新的邀请才能再次加入。`, pendingLabel: '退出中...' }}>

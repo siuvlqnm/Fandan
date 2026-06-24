@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -16,7 +17,7 @@
 <main class="app-page app-bottom-safe">
 	<section class="space-y-4">
 		<div class="space-y-2">
-			<Button href="/app" variant="ghost" size="sm" class="h-9 justify-start px-0 text-muted-foreground">
+			<Button href="/app" variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
 				<ArrowLeft class="size-4" />
 				返回工作台
 			</Button>
@@ -26,16 +27,16 @@
 				记录人数、口味、忌口和预算备注。后续新建饭单时会直接复用这些信息。
 			</p>
 		</div>
-		<Button href="/app/targets/new" class="h-12 rounded-2xl">
+		{#if data.total > 0}<Button href="/app/targets/new" class="h-12 rounded-2xl">
 			<Plus class="size-4" />
 			新建对象
-		</Button>
+		</Button>{/if}
 	</section>
 
-	<form method="get" class="app-panel space-y-4 p-4">
-		<div class="space-y-2">
-			<Label for="target-search">搜索</Label>
-			<div class="relative">
+	{#if data.total > 0}
+	<form method="get" class="app-panel space-y-3 p-3">
+		<div class="flex gap-2">
+			<div class="relative min-w-0 flex-1">
 				<Search class="pointer-events-none absolute left-3 top-3.5 size-4 text-muted-foreground" />
 				<Input
 					id="target-search"
@@ -45,8 +46,11 @@
 					class="app-input pl-9"
 				/>
 			</div>
+			<Button type="submit" variant="outline" class="size-12 shrink-0 rounded-xl bg-white" aria-label="搜索用餐档案"><Search class="size-4" /></Button>
 		</div>
-		<div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+		{#if data.total > 5}<details class="group rounded-xl bg-muted/50" open={data.filters.type !== 'all'}>
+			<summary class="flex min-h-11 cursor-pointer list-none items-center px-3 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">更多筛选 <span class="ml-auto group-open:hidden">按类型</span></summary>
+		<div class="grid gap-3 border-t border-border/70 p-3 md:grid-cols-[1fr_auto] md:items-end">
 			<div class="space-y-2">
 				<Label for="target-type">类型</Label>
 				<select id="target-type" name="type" class="app-input h-11 text-sm">
@@ -57,7 +61,9 @@
 			</div>
 			<Button type="submit" variant="outline" class="h-11 rounded-xl bg-white">筛选</Button>
 		</div>
+		</details>{/if}
 	</form>
+	{/if}
 
 	{#if form?.message}
 		<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
@@ -75,12 +81,12 @@
 			<div class="app-panel space-y-4 p-5 text-center">
 				<UsersRound class="mx-auto size-8 text-primary" />
 				<div class="space-y-1">
-					<h3 class="text-xl font-semibold">还没有匹配的对象</h3>
-					<p class="text-sm leading-6 text-muted-foreground">可以新建第一个家庭、客户或聚餐对象，也可以调整搜索条件。</p>
+					<h3 class="text-xl font-semibold">{data.total === 0 ? '还没有用餐档案' : '没有匹配的档案'}</h3>
+					<p class="text-sm leading-6 text-muted-foreground">{data.total === 0 ? '需要记录特别的口味或忌口时，再创建一份档案。' : '换个关键词，或清除筛选后再看看。'}</p>
 				</div>
-				<Button href="/app/targets/new" class="h-12 rounded-2xl">
+				<Button href={data.total === 0 ? '/app/targets/new' : '/app/targets'} class="h-12 rounded-2xl">
 					<Plus class="size-4" />
-					新建对象
+					{data.total === 0 ? '新建用餐档案' : '清除筛选'}
 				</Button>
 			</div>
 		{:else}
@@ -115,15 +121,15 @@
 						</div>
 
 						<div class="grid grid-cols-[1fr_1fr_auto] gap-2">
-							<Button href={`/app/targets/${target.id}`} variant="outline" size="sm" class="rounded-xl bg-white">编辑</Button>
-							<Button href={`/app/meal-plans/new?targetId=${target.id}`} variant="ghost" size="sm" class="rounded-xl">新建饭单</Button>
+							<Button href={`/app/targets/${target.id}`} variant="outline" size="sm" class="h-11 rounded-xl bg-white">编辑</Button>
+							<Button href={`/app/meal-plans/new?targetId=${target.id}`} variant="ghost" size="sm" class="h-11 rounded-xl">安排一顿饭</Button>
 							<form method="post" action="?/delete" use:enhanceWithFeedback>
 								<input type="hidden" name="id" value={target.id} />
 								<Button
 									type="submit"
 									variant="destructive"
 									size="sm"
-									class="rounded-xl"
+									class="h-11 rounded-xl"
 									aria-label={`删除对象「${target.name}」`}
 									data-confirm={`删除对象「${target.name}」？已存在饭单不会删除，但会失去对象关联。`}
 									data-pending-label="删除中..."
@@ -138,3 +144,5 @@
 		{/if}
 	</section>
 </main>
+
+<MobileBottomNav />

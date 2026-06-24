@@ -17,7 +17,7 @@ The selected Product Design direction is `Shared Meal Room`:
 - Primary: service-product green for stable actions and navigation.
 - Attention: restrained red for pending confirmation and share actions.
 - Surfaces: rounded mobile panels with light borders and soft shadows.
-- Navigation: app routes use a fixed mobile bottom nav.
+- Navigation: app routes use a fixed three-item mobile bottom nav: `首页`, `饭单`, `我的`.
 - Typography: compact but readable mobile product scale, with 14-16px body text.
 
 ## Updated Surfaces
@@ -29,6 +29,13 @@ The selected Product Design direction is `Shared Meal Room`:
 - Meal-plan detail now separates menu, confirmation, shopping list and editing into focused mobile sections instead of showing every form at once.
 - Shopping-list page now behaves like a mobile shopping checklist first, with editing collapsed behind details.
 - Public share page now stands alone without the logged-in app header and focuses on guest feedback and confirmation.
+
+## LES-125 Density Rules
+
+- Dishes, meal profiles, invitations and family controls live in the `我的` secondary layer rather than competing for fixed navigation space.
+- Empty collections do not render search or filter controls. Collections of up to five records use only the most useful single-line search. Larger collections keep advanced filters collapsed until requested.
+- Home, list empty states and meal detail avoid duplicate primary calls to action in the first screen.
+- Interactive controls on the covered mobile routes have at least a 44px touch height, a visible keyboard focus state and no horizontal overflow at the mobile product viewport.
 
 ## QA Evidence
 
