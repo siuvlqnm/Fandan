@@ -3,9 +3,13 @@ import { ApiError } from '$lib/server/api/errors';
 import { requireUserSpace } from '$lib/server/context';
 import { createInvitation, listInvitations, revokeInvitation } from '$lib/server/invitations';
 import {
+	createWorkspace as createWorkspaceForUser,
+	createWorkspaceSchema,
 	leaveWorkspace,
+	listUserWorkspaces,
 	listWorkspaceMembers,
 	removeWorkspaceMember,
+	switchWorkspace as switchWorkspaceForUser,
 	updateWorkspace,
 	updateWorkspaceSchema
 } from '$lib/server/workspace-settings';
@@ -25,7 +29,8 @@ const actionFailure = (cause: unknown) => {
 
 export const load: PageServerLoad = async (event) => {
 	const context = await getContext(event);
-	const [members, invitations] = await Promise.all([
+	const [workspaces, members, invitations] = await Promise.all([
+		listUserWorkspaces(context),
 		listWorkspaceMembers(context),
 		context.membership.role === 'owner' ? listInvitations(context) : Promise.resolve([])
 	]);
@@ -41,6 +46,7 @@ export const load: PageServerLoad = async (event) => {
 			name: context.space.name,
 			role: context.membership.role
 		},
+		workspaces,
 		members,
 		invitations: invitations.map((invitation) => ({
 			...invitation,
@@ -48,6 +54,8 @@ export const load: PageServerLoad = async (event) => {
 		})),
 		feedback: {
 			saved: event.url.searchParams.get('saved') === '1',
+			workspaceCreated: event.url.searchParams.get('workspaceCreated') === '1',
+			workspaceSwitched: event.url.searchParams.get('workspaceSwitched') === '1',
 			created: event.url.searchParams.get('created') === '1',
 			revoked: event.url.searchParams.get('revoked') === '1',
 			removed: event.url.searchParams.get('removed') === '1',
@@ -57,6 +65,37 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
+	createWorkspace: async (event) => {
+		const formData = await event.request.formData();
+		const parsed = createWorkspaceSchema.safeParse({ name: formData.get('workspaceName') });
+		if (!parsed.success) {
+			return fail(422, {
+				message: parsed.error.issues[0]?.message ?? '空间名称不正确',
+				values: { workspaceName: String(formData.get('workspaceName') ?? '') }
+			});
+		}
+
+		try {
+			await createWorkspaceForUser(await getContext(event), parsed.data);
+		} catch (cause) {
+			return actionFailure(cause);
+		}
+
+		return redirect(303, '/app/settings?workspaceCreated=1');
+	},
+	switchWorkspace: async (event) => {
+		const formData = await event.request.formData();
+		const spaceId = String(formData.get('spaceId') ?? '');
+		if (!spaceId) return fail(400, { message: '缺少工作区编号' });
+
+		try {
+			await switchWorkspaceForUser(await getContext(event), spaceId);
+		} catch (cause) {
+			return actionFailure(cause);
+		}
+
+		return redirect(303, '/app/settings?workspaceSwitched=1');
+	},
 	rename: async (event) => {
 		const formData = await event.request.formData();
 		const parsed = updateWorkspaceSchema.safeParse({ name: formData.get('name') });

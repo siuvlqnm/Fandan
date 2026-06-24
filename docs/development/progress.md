@@ -2,6 +2,39 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-103 - Multiple Workspaces And Current Workspace Switching
+
+Status: implemented on 2026-06-24.
+
+What changed:
+
+- Added authenticated workspace list, create and select APIs.
+- Added a compact creation entry for single-workspace users and an explicit switcher only when multiple active memberships exist.
+- Made a newly created workspace an owner workspace and selected it in the same D1 batch.
+- Validated every switch against an active membership before updating `user_preferences.current_space_id`.
+- Kept dashboard, targets, dishes, meal plans and shopping lists on the shared `requireUserSpace` boundary, so a selection change refreshes all business data without client-side workspace IDs.
+- Reused stale-selection repair after leave or removal, returning the user to another active workspace automatically.
+- Documented the product, API, persistence and isolation contract.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- Created additional owner workspaces through both the JSON API and the `/app/settings` action; each became current immediately.
+- Switched workspaces through the mobile UI and observed explicit success feedback plus refreshed current-space settings.
+- Created a target and dish in one workspace; both were present there and absent from the original workspace.
+- A fresh login session retained the previously selected workspace.
+- An unrelated authenticated user received `403` when attempting to select a guessed workspace ID.
+- Removing a member from their selected shared workspace caused their next request to fall back to their personal owner workspace.
+- The 390px target route rendered with `scrollWidth === clientWidth` before and after switching.
+- Temporary users, workspaces, memberships, targets, dishes, sessions and invitations were removed after verification.
+
+Notes for next threads:
+
+- LES-102 is the final Phase 9 gate: run the complete two-account collaboration flow and prove old-data migration protection.
+- Ownership transfer remains intentionally out of scope, so every created workspace keeps its creator as the sole owner.
+- LES-103 uses the existing workspace tables and requires no D1 migration.
+
 ## LES-101 - Family Workspace Settings And Member Management
 
 Status: implemented on 2026-06-24.

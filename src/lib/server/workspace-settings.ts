@@ -1,13 +1,75 @@
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { apiError } from './api/errors';
 import { user } from './db/auth.schema';
 import { spaceMembers, spaces, userPreferences } from './db/schema';
-import { requireSpaceOwner, type AuthenticatedContext } from './context';
+import {
+	requireSpaceMembership,
+	requireSpaceOwner,
+	selectCurrentSpace,
+	type AuthenticatedContext
+} from './context';
 
 export const updateWorkspaceSchema = z.object({
 	name: z.string().trim().min(1, '请输入家庭空间名称').max(80, '空间名称不能超过 80 个字')
 });
+
+export const createWorkspaceSchema = updateWorkspaceSchema;
+
+export const listUserWorkspaces = async (context: AuthenticatedContext) => {
+	const memberships = await context.db
+		.select({
+			id: spaces.id,
+			name: spaces.name,
+			role: spaceMembers.role,
+			joinedAt: spaceMembers.joinedAt,
+			createdAt: spaces.createdAt,
+			updatedAt: spaces.updatedAt
+		})
+		.from(spaceMembers)
+		.innerJoin(spaces, eq(spaceMembers.spaceId, spaces.id))
+		.where(and(eq(spaceMembers.userId, context.user.id), eq(spaceMembers.status, 'active')))
+		.orderBy(desc(spaceMembers.role), asc(spaceMembers.joinedAt), asc(spaces.createdAt), asc(spaces.id));
+
+	return memberships
+		.map((workspace) => ({ ...workspace, isCurrent: workspace.id === context.space.id }))
+		.sort((left, right) => Number(right.isCurrent) - Number(left.isCurrent));
+};
+
+export const createWorkspace = async (
+	context: AuthenticatedContext,
+	input: z.infer<typeof createWorkspaceSchema>
+) => {
+	const data = createWorkspaceSchema.parse(input);
+	const spaceId = crypto.randomUUID();
+
+	await context.db.batch([
+		context.db.insert(spaces).values({
+			id: spaceId,
+			name: data.name,
+			ownerUserId: context.user.id
+		}),
+		context.db.insert(spaceMembers).values({
+			id: crypto.randomUUID(),
+			spaceId,
+			userId: context.user.id,
+			role: 'owner',
+			status: 'active'
+		}),
+		context.db
+			.insert(userPreferences)
+			.values({ userId: context.user.id, currentSpaceId: spaceId })
+			.onConflictDoUpdate({
+				target: userPreferences.userId,
+				set: { currentSpaceId: spaceId, updatedAt: sql`CURRENT_TIMESTAMP` }
+			})
+	]);
+
+	return requireSpaceMembership(context, context.user.id, spaceId);
+};
+
+export const switchWorkspace = (context: AuthenticatedContext, spaceId: string) =>
+	selectCurrentSpace(context, context.user.id, spaceId);
 
 export const listWorkspaceMembers = async (context: AuthenticatedContext) =>
 	context.db

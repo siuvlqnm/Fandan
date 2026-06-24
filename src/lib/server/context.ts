@@ -105,6 +105,12 @@ const saveCurrentSpacePreference = async (context: RequestContext, userId: strin
 		});
 };
 
+export const selectCurrentSpace = async (context: RequestContext, userId: string, spaceId: string) => {
+	const access = await requireSpaceMembership(context, userId, spaceId);
+	await saveCurrentSpacePreference(context, userId, spaceId);
+	return access;
+};
+
 export const getCurrentSpace = async (event: RequestEvent, context = getRequestContext(event)): Promise<SpaceAccess> => {
 	const user = event.locals.user;
 

@@ -6,7 +6,10 @@
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import {
 		ArrowLeft,
+		ArrowRightLeft,
 		Check,
+		ChevronDown,
+		CircleCheck,
 		Copy,
 		Crown,
 		DoorOpen,
@@ -14,6 +17,7 @@
 		LogOut,
 		Pencil,
 		Plus,
+		HousePlus,
 		ShieldCheck,
 		UserMinus,
 		UserPlus,
@@ -29,6 +33,8 @@
 	const isOwner = $derived(data.space.role === 'owner');
 	const actionValues = $derived((form as { values?: { name?: unknown } } | null)?.values);
 	const spaceNameValue = $derived(String(actionValues?.name ?? data.space.name));
+	const workspaceActionValues = $derived((form as { values?: { workspaceName?: unknown } } | null)?.values);
+	const workspaceNameValue = $derived(String(workspaceActionValues?.workspaceName ?? ''));
 	const pendingInvitations = $derived(data.invitations.filter((invitation) => invitation.state === 'pending'));
 	const roleLabels = { owner: '所有者', member: '成员' };
 
@@ -60,6 +66,12 @@
 	{#if data.feedback.saved}
 		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">家庭空间名称已更新。</p>
 	{/if}
+	{#if data.feedback.workspaceCreated}
+		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">新工作区已创建并切换，接下来新增的内容都会保存在这里。</p>
+	{/if}
+	{#if data.feedback.workspaceSwitched}
+		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">工作区已切换，页面数据已刷新。</p>
+	{/if}
 	{#if data.feedback.created}
 		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">邀请链接已创建，可以复制给家人。</p>
 	{/if}
@@ -88,6 +100,55 @@
 		<div class="border-t border-border/70 bg-white px-5 py-3 text-sm text-muted-foreground">
 			当前空间：<span class="font-medium text-foreground">{data.space.name}</span>
 		</div>
+	</section>
+
+	<section class="space-y-3" data-testid="workspace-switcher">
+		{#if data.workspaces.length > 1}
+			<div class="flex items-center justify-between">
+				<div><h2 class="text-xl font-semibold">我的工作区</h2><p class="text-sm text-muted-foreground">切换后，饭单和菜品会跟着更新</p></div>
+				<ArrowRightLeft class="size-6 text-primary" />
+			</div>
+			<div class="app-panel divide-y divide-border/70 overflow-hidden">
+				{#each data.workspaces as workspace}
+					<article class="flex items-center gap-3 p-4 {workspace.isCurrent ? 'bg-secondary/35' : ''}" data-testid={`workspace-${workspace.id}`}>
+						<span class="flex size-11 shrink-0 items-center justify-center rounded-2xl {workspace.isCurrent ? 'bg-white text-primary shadow-sm' : 'bg-muted text-muted-foreground'}">
+							{#if workspace.isCurrent}<CircleCheck class="size-5" />{:else}<UsersRound class="size-5" />{/if}
+						</span>
+						<div class="min-w-0 flex-1">
+							<p class="truncate font-semibold">{workspace.name}</p>
+							<p class="text-xs text-muted-foreground">{roleLabels[workspace.role]}</p>
+						</div>
+						{#if workspace.isCurrent}
+							<span class="app-chip bg-white text-primary">当前</span>
+						{:else}
+							<form method="post" action="?/switchWorkspace" use:enhanceWithFeedback={{ pendingLabel: '切换中...' }}>
+								<input type="hidden" name="spaceId" value={workspace.id} />
+								<Button type="submit" variant="outline" size="sm" class="rounded-xl bg-white" data-pending-label="切换中..." aria-label={`切换到 ${workspace.name}`}>切换</Button>
+							</form>
+						{/if}
+					</article>
+				{/each}
+			</div>
+		{/if}
+
+		<details class="app-panel group overflow-hidden">
+			<summary class="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
+				<span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><HousePlus class="size-5" /></span>
+				<div class="min-w-0 flex-1">
+					<p class="font-semibold">{data.workspaces.length > 1 ? '创建新工作区' : '需要另一个家庭空间？'}</p>
+					<p class="text-sm text-muted-foreground">不同家庭或场景的数据彼此独立</p>
+				</div>
+				<ChevronDown class="size-5 text-muted-foreground transition-transform group-open:rotate-180" />
+			</summary>
+			<form method="post" action="?/createWorkspace" use:enhanceWithFeedback={{ pendingLabel: '创建中...' }} class="space-y-3 border-t border-border/70 p-4">
+				<div class="space-y-2">
+					<Label for="new-workspace-name">新工作区名称</Label>
+					<Input id="new-workspace-name" name="workspaceName" value={workspaceNameValue} maxlength={80} placeholder="例如：爸妈家" required class="app-input" />
+				</div>
+				<p class="text-xs leading-5 text-muted-foreground">创建后会自动切换，原工作区内容不会受到影响。</p>
+				<Button type="submit" class="h-11 w-full rounded-2xl" data-pending-label="创建中..."><Plus class="size-4" />创建并切换</Button>
+			</form>
+		</details>
 	</section>
 
 	<section class="app-panel p-5">

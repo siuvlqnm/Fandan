@@ -107,6 +107,19 @@ LES-101 exposes the current workspace through `/app/settings` and completes the 
 
 The route and API contract is documented in `workspace-settings.md`.
 
+## Multiple Workspaces And Selection
+
+LES-103 lets a user own or join multiple workspaces while keeping one server-selected current workspace.
+
+- `GET /api/workspaces` lists active memberships and marks the current workspace.
+- `POST /api/workspaces` creates a workspace, active owner membership and current preference together.
+- `POST /api/workspaces/:id/select` accepts only an active membership before persisting the selection.
+- `/app/settings` keeps the switcher hidden for single-workspace users, exposes it when multiple active memberships exist and provides a compact create entry in both states.
+- Creating or switching never sends a workspace ID into ordinary business writes. Those routes continue resolving the trusted current workspace through `requireUserSpace`.
+- Refreshes and new sessions retain `user_preferences.current_space_id`; stale selections after leave/removal use the existing fallback and repair path.
+
+The detailed route and interaction contract is documented in `workspace-switching.md`.
+
 ## Verification
 
 LES-104 verification covers:
