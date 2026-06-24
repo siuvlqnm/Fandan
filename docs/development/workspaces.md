@@ -90,8 +90,22 @@ LES-100 implements invitation lifecycle operations on top of this model:
 - After the batch proves the current user won acceptance, `user_preferences.current_space_id` switches to the joined workspace.
 - Repeating acceptance by the same user returns the existing membership and repairs the current-space preference; another user receives a conflict.
 - Existing owners and members cannot join again, and only owners can list, create or revoke workspace invitations.
+- A fresh invitation can reactivate a historical `left` or `removed` member row without violating the unique user-space pair.
 
 The route and API contract is documented in `invitations.md`.
+
+## Settings And Member Management
+
+LES-101 exposes the current workspace through `/app/settings` and completes the mobile `我的` navigation item.
+
+- All active members can view the workspace name and active member list.
+- Owners can rename the workspace, manage pending invitations and remove non-owner members.
+- Members can leave voluntarily. Owners cannot leave or be removed before ownership transfer exists.
+- Leaving sets the membership to `left`; owner removal sets it to `removed`.
+- Both operations clear `user_preferences.current_space_id` only when it points at the affected workspace. The next authenticated request uses the existing fallback/repair path.
+- A later invitation can reactivate the historical membership row as an active member.
+
+The route and API contract is documented in `workspace-settings.md`.
 
 ## Verification
 

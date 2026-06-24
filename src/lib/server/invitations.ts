@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, sql } from 'drizzle-orm';
+import { and, desc, eq, exists, gt, ne, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { apiError } from './api/errors';
 import { spaceInvitations, spaceMembers, spaces, userPreferences, type SpaceInvitation } from './db/schema';
@@ -178,25 +178,49 @@ export const acceptInvitation = async (context: AuthenticatedContext, token: str
 		.limit(1);
 
 	if (existingMembership) {
-		throw apiError(
-			'CONFLICT',
-			existingMembership.role === 'owner'
-				? '空间所有者不能接受自己创建的邀请'
-				: '你已经拥有这个空间的成员记录'
-		);
+		if (existingMembership.role === 'owner') {
+			throw apiError('CONFLICT', '空间所有者不能接受自己创建的邀请');
+		}
+		if (existingMembership.status === 'active') {
+			throw apiError('CONFLICT', '你已经是这个空间的成员');
+		}
 	}
 
 	const membershipId = crypto.randomUUID();
 	const now = new Date().toISOString();
-
-	await context.db.batch([
-		context.db.insert(spaceMembers).select(sql`
+	const invitationIsAvailable = exists(
+		context.db
+			.select({ id: spaceInvitations.id })
+			.from(spaceInvitations)
+			.where(
+				and(
+					eq(spaceInvitations.id, invitation.id),
+					eq(spaceInvitations.status, 'pending'),
+					gt(spaceInvitations.expiresAt, now)
+				)
+			)
+	);
+	const membershipWrite = existingMembership
+		? context.db
+				.update(spaceMembers)
+				.set({ role: 'member', status: 'active', joinedAt: now, updatedAt: now })
+				.where(
+					and(
+						eq(spaceMembers.id, existingMembership.id),
+						ne(spaceMembers.status, 'active'),
+						invitationIsAvailable
+					)
+				)
+		: context.db.insert(spaceMembers).select(sql`
 			SELECT ${membershipId}, ${invitation.spaceId}, ${context.user.id}, 'member', 'active', ${now}, ${now}, ${now}
 			FROM ${spaceInvitations}
 			WHERE ${spaceInvitations.id} = ${invitation.id}
 				AND ${spaceInvitations.status} = 'pending'
 				AND ${spaceInvitations.expiresAt} > ${now}
-		`),
+		`);
+
+	await context.db.batch([
+		membershipWrite,
 		context.db
 			.update(spaceInvitations)
 			.set({ status: 'accepted', acceptedByUserId: context.user.id, acceptedAt: now, updatedAt: now })
@@ -217,7 +241,13 @@ export const acceptInvitation = async (context: AuthenticatedContext, token: str
 	const [membership] = await context.db
 		.select()
 		.from(spaceMembers)
-		.where(and(eq(spaceMembers.spaceId, invitation.spaceId), eq(spaceMembers.userId, context.user.id)))
+		.where(
+			and(
+				eq(spaceMembers.spaceId, invitation.spaceId),
+				eq(spaceMembers.userId, context.user.id),
+				eq(spaceMembers.status, 'active')
+			)
+		)
 		.limit(1);
 
 	if (!accepted || accepted.acceptedByUserId !== context.user.id || !membership) {

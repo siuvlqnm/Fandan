@@ -2,6 +2,40 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-101 - Family Workspace Settings And Member Management
+
+Status: implemented on 2026-06-24.
+
+What changed:
+
+- Connected the mobile bottom navigation's `我的` item to the real `/app/settings` route.
+- Added a role-aware settings page with current account, workspace, active members and permission guidance.
+- Let owners rename the workspace, create/copy/revoke invitations and remove active members.
+- Let members inspect the shared workspace and leave it voluntarily without seeing owner-only controls.
+- Prevented owners from leaving or being removed until a future ownership-transfer flow exists.
+- Cleared stale current-workspace preferences on leave/removal so the existing context repair returns users to another valid workspace.
+- Reactivated historical `left` or `removed` membership rows when a user accepts a fresh invitation, preserving the unique user-space pair.
+- Added workspace/member APIs and documented the route, permission and lifecycle contract.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- Owner mobile flow: rename workspace, create/copy invitation and see member list.
+- Member mobile flow: only read allowed settings, see both active members, hide all owner-only controls and leave with confirmation.
+- Fresh invitation successfully reactivated the historical member row after voluntary leave.
+- Owner API removed the member, cleared their selected workspace and reduced the active member list immediately.
+- Removed member's next `/api/me` request repaired to their personal owner workspace.
+- Owner leave and owner removal both returned `409` with explicit ownership-transfer guidance.
+- Settings page at the 390px target rendered without horizontal overflow.
+- Temporary accounts, spaces, memberships, sessions and invitations were removed after verification.
+
+Notes for next threads:
+
+- LES-103 can build workspace creation/switching on the same `user_preferences.current_space_id` repair behavior.
+- Ownership transfer is still intentionally out of scope; owner exit remains blocked.
+- LES-101 uses the existing membership schema and requires no new D1 migration.
+
 ## LES-100 - Family Workspace Invitation And Join Flow
 
 Status: implemented on 2026-06-24.

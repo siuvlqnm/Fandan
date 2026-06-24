@@ -1,0 +1,113 @@
+import { and, asc, desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
+import { apiError } from './api/errors';
+import { user } from './db/auth.schema';
+import { spaceMembers, spaces, userPreferences } from './db/schema';
+import { requireSpaceOwner, type AuthenticatedContext } from './context';
+
+export const updateWorkspaceSchema = z.object({
+	name: z.string().trim().min(1, '请输入家庭空间名称').max(80, '空间名称不能超过 80 个字')
+});
+
+export const listWorkspaceMembers = async (context: AuthenticatedContext) =>
+	context.db
+		.select({
+			id: spaceMembers.id,
+			userId: spaceMembers.userId,
+			role: spaceMembers.role,
+			status: spaceMembers.status,
+			joinedAt: spaceMembers.joinedAt,
+			name: user.name,
+			email: user.email,
+			image: user.image
+		})
+		.from(spaceMembers)
+		.innerJoin(user, eq(spaceMembers.userId, user.id))
+		.where(and(eq(spaceMembers.spaceId, context.space.id), eq(spaceMembers.status, 'active')))
+		.orderBy(desc(spaceMembers.role), asc(spaceMembers.joinedAt), asc(user.name));
+
+export const updateWorkspace = async (
+	context: AuthenticatedContext,
+	input: z.infer<typeof updateWorkspaceSchema>
+) => {
+	requireSpaceOwner(context);
+	const data = updateWorkspaceSchema.parse(input);
+	const now = new Date().toISOString();
+
+	await context.db
+		.update(spaces)
+		.set({ name: data.name, updatedAt: now })
+		.where(eq(spaces.id, context.space.id));
+
+	return { ...context.space, name: data.name, updatedAt: now };
+};
+
+const getActiveMembership = async (context: AuthenticatedContext, membershipId: string) => {
+	const [membership] = await context.db
+		.select()
+		.from(spaceMembers)
+		.where(
+			and(
+				eq(spaceMembers.id, membershipId),
+				eq(spaceMembers.spaceId, context.space.id),
+				eq(spaceMembers.status, 'active')
+			)
+		)
+		.limit(1);
+
+	return membership;
+};
+
+export const removeWorkspaceMember = async (context: AuthenticatedContext, membershipId: string) => {
+	requireSpaceOwner(context);
+	const membership = await getActiveMembership(context, membershipId);
+
+	if (!membership) throw apiError('NOT_FOUND', '成员不存在或已离开');
+	if (membership.role === 'owner') throw apiError('CONFLICT', '所有者不能被移除，请先完成所有权转让');
+	if (membership.userId === context.user.id) throw apiError('CONFLICT', '所有者不能移除自己');
+
+	const now = new Date().toISOString();
+	await context.db.batch([
+		context.db
+			.update(spaceMembers)
+			.set({ status: 'removed', updatedAt: now })
+			.where(and(eq(spaceMembers.id, membership.id), eq(spaceMembers.status, 'active'))),
+		context.db
+			.update(userPreferences)
+			.set({ currentSpaceId: null, updatedAt: now })
+			.where(
+				and(
+					eq(userPreferences.userId, membership.userId),
+					eq(userPreferences.currentSpaceId, context.space.id)
+				)
+			)
+	]);
+
+	return { ...membership, status: 'removed' as const, updatedAt: now };
+};
+
+export const leaveWorkspace = async (context: AuthenticatedContext) => {
+	if (context.membership.role === 'owner') {
+		throw apiError('CONFLICT', '所有者不能直接退出，请先完成所有权转让');
+	}
+
+	const now = new Date().toISOString();
+	await context.db.batch([
+		context.db
+			.update(spaceMembers)
+			.set({ status: 'left', updatedAt: now })
+			.where(
+				and(
+					eq(spaceMembers.id, context.membership.id),
+					eq(spaceMembers.status, 'active'),
+					eq(spaceMembers.role, 'member')
+				)
+			),
+		context.db
+			.update(userPreferences)
+			.set({ currentSpaceId: null, updatedAt: now })
+			.where(eq(userPreferences.userId, context.user.id))
+	]);
+
+	return { ...context.membership, status: 'left' as const, updatedAt: now };
+};

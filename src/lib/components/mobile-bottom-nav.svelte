@@ -7,7 +7,7 @@
 		{ label: '饭单', href: '/app/meal-plans', icon: ClipboardList, match: (path: string) => path.startsWith('/app/meal-plans') },
 		{ label: '菜品', href: '/app/dishes', icon: ChefHat, match: (path: string) => path.startsWith('/app/dishes') },
 		{ label: '对象', href: '/app/targets', icon: Target, match: (path: string) => path.startsWith('/app/targets') },
-		{ label: '我的', href: '/app', icon: UserRound, match: () => false }
+		{ label: '我的', href: '/app/settings', icon: UserRound, match: (path: string) => path.startsWith('/app/settings') || path.startsWith('/app/invitations') }
 	];
 </script>
 
