@@ -2,6 +2,36 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-102 - Family Workspace End-To-End And Migration Gate
+
+Status: implemented on 2026-06-24. Phase 9 family workspace foundation is complete.
+
+What changed:
+
+- Added `scripts/verify-family-workspace.mjs`, a repeatable end-to-end smoke using an isolated temporary D1 database.
+- Reconstructed a pre-1.1 database with a real credential account plus target, dish, meal plan and shopping-list data, then applied `0002_rainy_mindworm.sql` before login.
+- Verified owner membership/current-space backfill and preservation of every seeded business record through authenticated APIs.
+- Exercised independent owner/member sessions through invitation preview, acceptance, shared writes and owner-visible shopping-list updates.
+- Covered cross-workspace `404`, unauthorized workspace selection `403` and member access to owner-only invitation management `403`.
+- Covered repeated acceptance, revoked links, expired links and already-consumed invitations.
+- Added the family smoke to `npm run release:verify`, after typecheck and production build.
+- Documented the isolation strategy and release-gate contract.
+
+Verification completed:
+
+- `npm run verify:family-workspace`
+- `npm run release:verify`
+- Mobile browser smoke at `390 x 844` for the owner dashboard, member settings, shared meal-plan detail and shared shopping list.
+- The owner saw the member-created dish and plan; the member settings showed both accounts with the correct owner/member roles.
+- All inspected mobile routes had `scrollWidth === clientWidth`.
+- The automated smoke removed its temporary D1 directory; manual browser accounts and their workspace data were removed afterward.
+
+Notes for next threads:
+
+- Phase 9 is closed. Continue with LES-106 when product-flow questions have been reviewed and the Phase 10 sequence is still appropriate.
+- Run `npm run release:verify` for future releases; it now fails on family-workspace regressions as well as type/build failures.
+- The smoke does not touch the ordinary local D1 state or production D1 and requires no new migration.
+
 ## LES-103 - Multiple Workspaces And Current Workspace Switching
 
 Status: implemented on 2026-06-24.

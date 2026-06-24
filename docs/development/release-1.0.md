@@ -21,6 +21,8 @@ Run:
 npm run release:verify
 ```
 
+The command now also runs the isolated family-workspace collaboration and legacy-migration smoke added in LES-102. See `family-workspace-verification.md` for its coverage and cleanup guarantees.
+
 Then complete an authenticated mobile browser smoke at `390 x 844`:
 
 1. Register a temporary creator account.

@@ -25,7 +25,8 @@
 		"auth:schema": "better-auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes",
 		"deploy:dry-run": "npm run build && wrangler deploy --dry-run",
 		"deploy": "npm run build && wrangler deploy",
-		"release:verify": "npm run check && npm run build"
+		"verify:family-workspace": "node scripts/verify-family-workspace.mjs",
+		"release:verify": "npm run check && npm run build && npm run verify:family-workspace"
 	},
 	"devDependencies": {
 		"@better-auth/cli": "~1.4.21",

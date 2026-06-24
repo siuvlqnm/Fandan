@@ -75,6 +75,7 @@ npm run dev
 家庭工作区邀请与加入流程见 [docs/development/invitations.md](docs/development/invitations.md)。
 家庭工作区设置与成员管理见 [docs/development/workspace-settings.md](docs/development/workspace-settings.md)。
 多工作区创建与切换见 [docs/development/workspace-switching.md](docs/development/workspace-switching.md)。
+家庭工作区发布验证见 [docs/development/family-workspace-verification.md](docs/development/family-workspace-verification.md)。
 用餐对象 API 说明见 [docs/development/targets-api.md](docs/development/targets-api.md)。
 用餐对象页面说明见 [docs/development/targets-pages.md](docs/development/targets-pages.md)。
 菜品与食材 API 说明见 [docs/development/dishes-api.md](docs/development/dishes-api.md)。
@@ -99,10 +100,11 @@ MVP 部署说明见 [docs/development/deployment.md](docs/development/deployment
 ```bash
 npm run check
 npm run build
+npm run verify:family-workspace
 npm run release:verify
 ```
 
-`npm run check` 会先生成 `worker-configuration.d.ts`，再执行 Svelte typecheck。
+`npm run check` 会先生成 `worker-configuration.d.ts`，再执行 Svelte typecheck。`npm run release:verify` 还会在隔离的临时 D1 上验证旧数据迁移和双账号家庭协作。
 
 ## 暂不做
 

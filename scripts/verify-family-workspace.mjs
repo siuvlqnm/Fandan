@@ -1,0 +1,338 @@
+import { spawn, execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { createServer } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { once } from 'node:events';
+import { promisify } from 'node:util';
+import { hashPassword } from 'better-auth/crypto';
+
+const execFileAsync = promisify(execFile);
+const root = resolve(import.meta.dirname, '..');
+const workerPath = resolve(root, '.svelte-kit/cloudflare/_worker.js');
+const wranglerPath = resolve(root, 'node_modules/.bin/wrangler');
+const getAvailablePort = () =>
+	new Promise((resolvePort, reject) => {
+		const probe = createServer();
+		probe.once('error', reject);
+		probe.listen(0, '127.0.0.1', () => {
+			const address = probe.address();
+			if (!address || typeof address === 'string') {
+				probe.close(() => reject(new Error('Could not allocate a local smoke-test port')));
+				return;
+			}
+			probe.close(() => resolvePort(address.port));
+		});
+	});
+const port = await getAvailablePort();
+const origin = `http://127.0.0.1:${port}`;
+const password = 'Fandan-test-102!';
+const legacyUserId = 'smoke-les102-legacy-user';
+const legacySpaceId = 'smoke-les102-legacy-space';
+const legacyTargetId = 'smoke-les102-legacy-target';
+const legacyDishId = 'smoke-les102-legacy-dish';
+const legacyMealPlanId = 'smoke-les102-legacy-plan';
+const legacyShoppingListId = 'smoke-les102-legacy-list';
+const expiredToken = 'smoke-les102-expired-invitation';
+
+const assert = (condition, message) => {
+	if (!condition) throw new Error(message);
+};
+
+const delay = (milliseconds) => new Promise((resolveDelay) => setTimeout(resolveDelay, milliseconds));
+
+class Session {
+	#cookies = new Map();
+
+	async request(pathname, options = {}) {
+		const headers = new Headers(options.headers);
+		if (this.#cookies.size > 0) {
+			headers.set('cookie', Array.from(this.#cookies.entries()).map(([name, value]) => `${name}=${value}`).join('; '));
+		}
+		if (options.method && options.method !== 'GET') headers.set('origin', origin);
+
+		let body;
+		if (options.json !== undefined) {
+			headers.set('content-type', 'application/json');
+			body = JSON.stringify(options.json);
+		} else if (options.form !== undefined) {
+			headers.set('content-type', 'application/x-www-form-urlencoded');
+			body = new URLSearchParams(options.form);
+		}
+
+		const response = await fetch(new URL(pathname, origin), {
+			method: options.method ?? 'GET',
+			headers,
+			body,
+			redirect: options.redirect ?? 'manual'
+		});
+
+		const setCookies = response.headers.getSetCookie?.() ?? [response.headers.get('set-cookie')].filter(Boolean);
+		for (const setCookie of setCookies) {
+			const [pair] = setCookie.split(';');
+			const separator = pair.indexOf('=');
+			if (separator > 0) this.#cookies.set(pair.slice(0, separator), pair.slice(separator + 1));
+		}
+
+		const text = await response.text();
+		let data = null;
+		if (text) {
+			try {
+				data = JSON.parse(text);
+			} catch {
+				data = text;
+			}
+		}
+
+		const expectedStatus = options.expectedStatus ?? 200;
+		const acceptedStatuses = Array.isArray(expectedStatus) ? expectedStatus : [expectedStatus];
+		if (!acceptedStatuses.includes(response.status)) {
+			throw new Error(`${options.method ?? 'GET'} ${pathname} returned ${response.status}: ${text.slice(0, 500)}`);
+		}
+
+		return { response, data };
+	}
+}
+
+const runWrangler = async (persistPath, args) => {
+	const { stdout, stderr } = await execFileAsync(
+		wranglerPath,
+		['d1', 'execute', 'fandan', '--local', '--persist-to', persistPath, ...args],
+		{ cwd: root, env: { ...process.env, NO_COLOR: '1' }, maxBuffer: 10 * 1024 * 1024 }
+	);
+	return `${stdout}${stderr}`;
+};
+
+const applyMigrationFile = (persistPath, filename) =>
+	runWrangler(persistPath, [`--file=${resolve(root, 'drizzle', filename)}`]);
+
+const seedLegacyData = async (persistPath) => {
+	const passwordHash = await hashPassword(password);
+	const now = Date.now();
+	const sql = `
+INSERT INTO user (id, name, email, email_verified, created_at, updated_at)
+VALUES ('${legacyUserId}', '旧账号用户', 'les102-legacy@example.com', 1, ${now}, ${now});
+INSERT INTO account (id, account_id, provider_id, user_id, password, created_at, updated_at)
+VALUES ('smoke-les102-legacy-account', '${legacyUserId}', 'credential', '${legacyUserId}', '${passwordHash}', ${now}, ${now});
+INSERT INTO spaces (id, name, owner_user_id, created_at, updated_at)
+VALUES ('${legacySpaceId}', '旧账号家庭空间', '${legacyUserId}', '2026-06-01 08:00:00', '2026-06-01 08:00:00');
+INSERT INTO meal_targets (id, space_id, name, type, people_count)
+VALUES ('${legacyTargetId}', '${legacySpaceId}', '迁移前家庭对象', 'home', 3);
+INSERT INTO dishes (id, space_id, name, category, tags, visibility)
+VALUES ('${legacyDishId}', '${legacySpaceId}', '迁移前番茄炒蛋', '家常菜', '["旧数据"]', 'space');
+INSERT INTO dish_ingredients (id, dish_id, name, quantity, unit, category, sort_order)
+VALUES ('smoke-les102-legacy-ingredient', '${legacyDishId}', '番茄', '3', '个', '蔬菜', 0);
+INSERT INTO meal_plans (id, space_id, target_id, title, type, status)
+VALUES ('${legacyMealPlanId}', '${legacySpaceId}', '${legacyTargetId}', '迁移前周末晚餐', 'single_meal', 'draft');
+INSERT INTO meal_plan_items (id, meal_plan_id, dish_id, meal_slot, servings, sort_order)
+VALUES ('smoke-les102-legacy-plan-item', '${legacyMealPlanId}', '${legacyDishId}', '晚餐', 3, 0);
+INSERT INTO shopping_lists (id, meal_plan_id, title, status)
+VALUES ('${legacyShoppingListId}', '${legacyMealPlanId}', '迁移前采购清单', 'active');
+INSERT INTO shopping_list_items (id, shopping_list_id, name, quantity, unit, category, checked, sort_order)
+VALUES ('smoke-les102-legacy-list-item', '${legacyShoppingListId}', '番茄', '3', '个', '蔬菜', 0, 0);
+`;
+	await runWrangler(persistPath, ['--command', sql]);
+};
+
+const waitForServer = async (server, getLogs) => {
+	for (let attempt = 0; attempt < 80; attempt += 1) {
+		if (server.exitCode !== null) throw new Error(`Local worker exited early.\n${getLogs()}`);
+		try {
+			const response = await fetch(`${origin}/api/health`);
+			if (response.ok) return;
+		} catch {
+			// Worker is still starting.
+		}
+		await delay(250);
+	}
+	throw new Error(`Timed out waiting for local worker.\n${getLogs()}`);
+};
+
+const stopServer = async (server) => {
+	if (server.exitCode !== null) return;
+	server.kill('SIGTERM');
+	await Promise.race([
+		once(server, 'exit'),
+		delay(3000).then(() => {
+			if (server.exitCode === null) server.kill('SIGKILL');
+		})
+	]);
+};
+
+const signIn = (session, email) =>
+	session.request('/login?/signInEmail', {
+		method: 'POST',
+		form: { next: '/app', email, password }
+	});
+
+const signUp = (session, name, email) =>
+	session.request('/login?/signUpEmail', {
+		method: 'POST',
+		form: { next: '/app', name, email, password }
+	});
+
+const verifyCollaboration = async () => {
+	const owner = new Session();
+	const member = new Session();
+	const edgeUser = new Session();
+
+	await signIn(owner, 'les102-legacy@example.com');
+	const ownerWorkspace = (await owner.request('/api/workspace')).data.data;
+	assert(ownerWorkspace.workspace.id === legacySpaceId, 'Legacy owner did not retain the original workspace');
+	assert(ownerWorkspace.membership.role === 'owner', 'Legacy owner membership was not backfilled');
+
+	const legacyTargets = (await owner.request('/api/targets')).data.data.targets;
+	const legacyDishes = (await owner.request('/api/dishes')).data.data.dishes;
+	const legacyPlans = (await owner.request('/api/meal-plans')).data.data.mealPlans;
+	const legacyList = (await owner.request(`/api/shopping-lists/${legacyShoppingListId}`)).data.data.shoppingList;
+	assert(legacyTargets.some((target) => target.id === legacyTargetId), 'Legacy target was lost');
+	assert(legacyDishes.some((dish) => dish.id === legacyDishId), 'Legacy dish was lost');
+	assert(legacyPlans.some((plan) => plan.id === legacyMealPlanId), 'Legacy meal plan was lost');
+	assert(legacyList.items.some((item) => item.name === '番茄'), 'Legacy shopping list was lost');
+	console.log('✓ legacy owner login and data migration protection');
+
+	const invitation = (await owner.request('/api/workspace/invitations', {
+		method: 'POST',
+		json: { expiresInDays: 7 },
+		expectedStatus: 201
+	})).data.data.invitation;
+	const preview = (await new Session().request(`/api/invitations/${invitation.token}`)).data.data;
+	assert(preview.space.name === '旧账号家庭空间', 'Invitation preview has the wrong workspace');
+	assert(!JSON.stringify(preview).includes('迁移前番茄炒蛋'), 'Invitation preview leaked workspace data');
+
+	await signUp(member, '协作成员', 'les102-member@example.com');
+	const memberPersonalSpaceId = (await member.request('/api/workspace')).data.data.workspace.id;
+	const accepted = (await member.request(`/api/invitations/${invitation.token}/accept`, {
+		method: 'POST'
+	})).data.data;
+	assert(accepted.membership.role === 'member' && accepted.alreadyAccepted === false, 'Member did not join workspace');
+	const repeated = (await member.request(`/api/invitations/${invitation.token}/accept`, {
+		method: 'POST'
+	})).data.data;
+	assert(repeated.alreadyAccepted === true, 'Repeated invitation acceptance was not idempotent');
+	console.log('✓ invitation preview, join and repeated acceptance');
+
+	const collaborativeDish = (await member.request('/api/dishes', {
+		method: 'POST',
+		json: {
+			name: '成员新增炖鸡',
+			category: '家常菜',
+			tags: ['协作'],
+			ingredients: [{ name: '鸡腿', quantity: '2', unit: '只', category: '肉类' }]
+		},
+		expectedStatus: 201
+	})).data.data.dish;
+	const ownerDishes = (await owner.request('/api/dishes')).data.data.dishes;
+	assert(ownerDishes.some((dish) => dish.id === collaborativeDish.id), 'Owner cannot see the member-created dish');
+
+	const collaborativePlan = (await member.request('/api/meal-plans', {
+		method: 'POST',
+		json: {
+			title: '家庭协作晚餐',
+			targetId: legacyTargetId,
+			type: 'single_meal',
+			items: [{ dishId: collaborativeDish.id, mealSlot: '晚餐', servings: 2 }]
+		},
+		expectedStatus: 201
+	})).data.data.mealPlan;
+	const generatedList = (await member.request(`/api/meal-plans/${collaborativePlan.id}/shopping-list/generate`, {
+		method: 'POST',
+		expectedStatus: 201
+	})).data.data.shoppingList;
+	assert(generatedList.items.length === 1, 'Collaborative shopping list was not generated');
+	const checkedList = (await member.request(
+		`/api/shopping-lists/${generatedList.id}/items/${generatedList.items[0].id}`,
+		{ method: 'PATCH', json: { checked: true } }
+	)).data.data.shoppingList;
+	assert(checkedList.items[0].checked === true, 'Member shopping-list update was not stored');
+	const ownerList = (await owner.request(`/api/shopping-lists/${generatedList.id}`)).data.data.shoppingList;
+	assert(ownerList.items.some((item) => item.checked === true), 'Owner cannot see the member shopping-list update');
+	console.log('✓ shared dish, meal plan and shopping-list collaboration');
+
+	await member.request(`/api/workspaces/${memberPersonalSpaceId}/select`, { method: 'POST' });
+	const personalTarget = (await member.request('/api/targets', {
+		method: 'POST',
+		json: { name: '成员个人空间对象', type: 'home', peopleCount: 1 },
+		expectedStatus: 201
+	})).data.data.target;
+	await member.request(`/api/workspaces/${legacySpaceId}/select`, { method: 'POST' });
+	await owner.request(`/api/targets/${personalTarget.id}`, { expectedStatus: 404 });
+	await owner.request(`/api/workspaces/${memberPersonalSpaceId}/select`, { method: 'POST', expectedStatus: 403 });
+	await member.request('/api/workspace/invitations', {
+		method: 'POST',
+		json: { expiresInDays: 7 },
+		expectedStatus: 403
+	});
+	console.log('✓ cross-workspace reads, selection and owner-only authorization');
+
+	const revokedInvitation = (await owner.request('/api/workspace/invitations', {
+		method: 'POST',
+		json: { expiresInDays: 7 },
+		expectedStatus: 201
+	})).data.data.invitation;
+	await owner.request(`/api/workspace/invitations/${revokedInvitation.id}`, { method: 'DELETE' });
+	const revokedPreview = (await new Session().request(`/api/invitations/${revokedInvitation.token}`)).data.data;
+	assert(revokedPreview.invitation.state === 'revoked', 'Revoked invitation state was not returned');
+
+	await signUp(edgeUser, '边界账号', 'les102-edge@example.com');
+	await edgeUser.request(`/api/invitations/${revokedInvitation.token}/accept`, {
+		method: 'POST',
+		expectedStatus: 409
+	});
+	const expiredPreview = (await edgeUser.request(`/api/invitations/${expiredToken}`)).data.data;
+	assert(expiredPreview.invitation.state === 'expired', 'Expired invitation state was not returned');
+	await edgeUser.request(`/api/invitations/${expiredToken}/accept`, {
+		method: 'POST',
+		expectedStatus: 409
+	});
+	await edgeUser.request(`/api/invitations/${invitation.token}/accept`, {
+		method: 'POST',
+		expectedStatus: 409
+	});
+	console.log('✓ revoked, expired and already-consumed invitation rejection');
+
+	const ownerPage = await owner.request('/app');
+	const memberSettings = await member.request('/app/settings');
+	assert(String(ownerPage.data).includes('旧账号家庭空间'), 'Owner app page did not render the shared workspace');
+	assert(String(memberSettings.data).includes('协作成员'), 'Member settings page did not render');
+	console.log('✓ two independent authenticated application sessions');
+};
+
+if (!existsSync(workerPath)) {
+	throw new Error('Missing Cloudflare worker build. Run `npm run build` before this smoke test.');
+}
+
+const persistPath = await mkdtemp(join(tmpdir(), 'fandan-family-smoke-'));
+let server;
+let serverLogs = '';
+
+try {
+	console.log('Preparing isolated pre-1.1 database...');
+	await applyMigrationFile(persistPath, '0000_panoramic_carnage.sql');
+	await applyMigrationFile(persistPath, '0001_groovy_wilson_fisk.sql');
+	await seedLegacyData(persistPath);
+	await applyMigrationFile(persistPath, '0002_rainy_mindworm.sql');
+	await runWrangler(persistPath, ['--command', `
+INSERT INTO space_invitations (id, space_id, token, role, status, invited_by_user_id, expires_at)
+VALUES ('smoke-les102-expired-id', '${legacySpaceId}', '${expiredToken}', 'member', 'pending', '${legacyUserId}', '2000-01-01T00:00:00.000Z');
+`]);
+
+	server = spawn(
+		wranglerPath,
+		['dev', workerPath, '--port', String(port), '--persist-to', persistPath],
+		{ cwd: root, env: { ...process.env, NO_COLOR: '1' }, stdio: ['ignore', 'pipe', 'pipe'] }
+	);
+	server.stdout.on('data', (chunk) => {
+		serverLogs = `${serverLogs}${chunk}`.slice(-20000);
+	});
+	server.stderr.on('data', (chunk) => {
+		serverLogs = `${serverLogs}${chunk}`.slice(-20000);
+	});
+	await waitForServer(server, () => serverLogs);
+	await verifyCollaboration();
+	console.log('Family workspace smoke passed.');
+} finally {
+	if (server) await stopServer(server);
+	await rm(persistPath, { recursive: true, force: true });
+}
