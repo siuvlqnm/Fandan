@@ -20,6 +20,7 @@ LES-93 adds the creator-side shopping-list page for buying preparation and in-st
 - The regenerate button explicitly replaces the current shopping-list items from the meal-plan ingredients.
 - Empty shopping lists show a clear path to return to the meal plan or add a manual item.
 - Mobile layout keeps the main checking action visible and uses stacked controls for one-handed buying.
+- Lists opened from the first-meal flow show a completion card before the items, with meal review and owner invitation follow-ups.
 
 ## Implementation Notes
 

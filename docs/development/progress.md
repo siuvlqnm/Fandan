@@ -2,6 +2,32 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-123 - Arrange A Meal Manual Core Flow
+
+Status: implemented on 2026-06-24.
+
+What changed:
+
+- Replaced the entity-first meal-plan form with a mobile task flow centered on dishes and servings.
+- Allowed comma/newline dish entry, multi-select from existing dishes and automatic reusable dish creation without a target prerequisite.
+- Defaulted to tonight, two servings and the current family; moved title, date, time, saved meal context and notes under more settings.
+- Created a confirmed single meal, generated its deterministic shopping list and redirected directly to that editable list.
+- Added first-use completion guidance and follow-ups after the meal and list are saved.
+- Reduced the new-user dashboard to one primary `安排一顿饭` action.
+- Kept existing dishes, targets, meal plans and detail-management routes compatible.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run release:verify`
+- Isolated D1 HTTP smoke for a fresh account entering two dish names, creating reusable dishes with a three-serving basis, saving a confirmed meal and landing on its editable empty shopping list.
+
+Notes for next threads:
+
+- Browser visual QA remains subject to the same local URL policy blocker recorded under LES-122.
+- LES-124 and LES-125 are the next tasks unlocked by this core flow; publish still requires production migration `0003` before pushing main.
+
 ## LES-122 - Split Authentication And First-Use Entry
 
 Status: implemented on 2026-06-24.

@@ -64,7 +64,7 @@
 					<UserPlus class="size-5" />
 				</a>
 			{/if}
-			<a href="/app/meal-plans/new" class="flex size-11 items-center justify-center rounded-full bg-white text-primary shadow-sm" aria-label="新建饭单">
+			<a href="/app/meal-plans/new" class="flex size-11 items-center justify-center rounded-full bg-white text-primary shadow-sm" aria-label="安排一顿饭">
 				<Plus class="size-5" />
 			</a>
 			<form method="post" action="/logout">
@@ -81,22 +81,17 @@
 	{#if data.isNewUser}
 		<section class="app-panel overflow-hidden">
 			<div class="space-y-4 bg-secondary/70 p-5">
-				<p class="app-chip bg-white text-primary">第一份饭单</p>
+				<p class="app-chip bg-white text-primary">第一次使用</p>
 				<div class="space-y-2">
-					<h2 class="text-2xl font-semibold">先从下一顿吃什么开始</h2>
+					<h2 class="text-2xl font-semibold">先安排一顿饭</h2>
 					<p class="text-sm leading-6 text-muted-foreground">
-						创建饭单时可以顺手补对象和菜品，后面再分享给家人或客户确认。
+						只要写下想吃的菜和人数，就能直接得到这一顿的购物清单。
 					</p>
 				</div>
 				<Button href="/app/meal-plans/new" class="h-12 w-full rounded-2xl text-base">
 					<Plus class="size-4" />
-					新建第一份饭单
+					安排一顿饭
 				</Button>
-			</div>
-			<div class="grid grid-cols-3 divide-x divide-border/70 bg-white text-center text-sm">
-				<a href="/app/targets/new" class="p-4 font-medium">添加对象</a>
-				<a href="/app/dishes/new" class="p-4 font-medium">录入菜品</a>
-				<a href="/app/meal-plans" class="p-4 font-medium">查看饭单</a>
 			</div>
 		</section>
 	{:else if heroMealPlan}

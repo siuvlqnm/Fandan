@@ -134,6 +134,8 @@ export const load: PageServerLoad = async (event) => {
 		return {
 			shoppingList,
 			mealPlan,
+			firstUse: event.url.searchParams.get('first') === '1',
+			canInvite: context.membership.role === 'owner',
 			groups: groupItems(shoppingList.items),
 			summary: {
 				total: shoppingList.items.length,

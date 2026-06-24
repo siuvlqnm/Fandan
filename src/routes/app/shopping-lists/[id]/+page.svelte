@@ -56,6 +56,17 @@
 		>{form.message}</p>
 	{/if}
 
+	{#if data.firstUse}
+		<section class="app-panel space-y-4 border-primary/20 bg-secondary/50 p-5">
+			<div class="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><CheckCircle2 class="size-6" /></div>
+			<div class="space-y-1"><h2 class="text-xl font-semibold">这一顿安排好了</h2><p class="text-sm leading-6 text-muted-foreground">菜品和饭单已经保存。下面是按基准份数生成的购物清单；没有食材的菜可以先手动补购物项。</p></div>
+			<div class="grid gap-3 sm:grid-cols-2">
+				<Button href={`/app/meal-plans/${data.mealPlan.id}`} variant="outline" class="h-11 rounded-2xl bg-white">查看这顿饭</Button>
+				{#if data.canInvite}<Button href="/app/invitations" variant="ghost" class="h-11 rounded-2xl">邀请家人一起看</Button>{/if}
+			</div>
+		</section>
+	{/if}
+
 	<section class="app-soft-panel space-y-4 p-5">
 		<div class="flex items-center justify-between">
 			<div>

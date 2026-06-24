@@ -338,6 +338,23 @@ const verifyCollaboration = async () => {
 
 	const edgeSignUpResult = await signUp(edgeUser, '边界账号', 'les102-edge@example.com');
 	assert(edgeSignUpResult.data?.location === '/app/meal-plans/new', 'Direct registration did not continue to the first-meal flow');
+	const firstMealPage = String((await edgeUser.request('/app/meal-plans/new')).data);
+	assert(firstMealPage.includes('安排一顿饭') && firstMealPage.includes('这顿想吃什么') && !firstMealPage.includes('对象类型'), 'First-meal page still exposes the entity-oriented flow');
+	const arrangedMeal = await edgeUser.request('/app/meal-plans/new', {
+		method: 'POST',
+		form: {
+			dishNamesText: '番茄炒蛋、清炒时蔬',
+			servings: '3',
+			plannedDate: '2026-06-24',
+			mealSlot: '晚餐'
+		}
+	});
+	assert(/^\/app\/shopping-lists\/.+\?first=1$/.test(arrangedMeal.data?.location ?? ''), 'First meal did not continue to its shopping list');
+	const firstShoppingPage = String((await edgeUser.request(arrangedMeal.data.location)).data);
+	assert(firstShoppingPage.includes('这一顿安排好了') && firstShoppingPage.includes('清单还是空的'), 'First-meal completion did not show an editable shopping list');
+	const firstMealDishes = (await edgeUser.request('/api/dishes')).data.data.dishes;
+	assert(firstMealDishes.length === 2 && firstMealDishes.every((dish) => dish.baseServings === 3), 'Inline dish creation did not preserve the meal serving basis');
+	console.log('✓ first meal to editable shopping-list flow');
 	await edgeUser.request(`/api/invitations/${revokedInvitation.token}/accept`, {
 		method: 'POST',
 		expectedStatus: 409

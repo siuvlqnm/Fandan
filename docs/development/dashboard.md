@@ -16,7 +16,7 @@ The dashboard derives counts, recent records, pending confirmation plans, today'
 
 ## First Screen Rules
 
-New users see a prominent empty state with the primary action to create the first meal plan. Secondary actions link to creating the first dish or first meal target.
+New users see one prominent `安排一顿饭` action. Dish and target management are not presented as prerequisites.
 
 Existing users see a priority panel:
 
@@ -24,7 +24,7 @@ Existing users see a priority panel:
 2. Today's meal plans, when no pending-confirmation plans exist.
 3. Recently updated meal plans as the fallback.
 
-The primary `新建饭单` action stays visible in the page header on desktop and mobile.
+The primary `安排一顿饭` action stays visible in the page header on desktop and mobile.
 
 ## Sections
 
