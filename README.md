@@ -93,6 +93,9 @@ npm run dev
 MVP 部署说明见 [docs/development/deployment.md](docs/development/deployment.md)。
 1.0 发布检查见 [docs/development/release-1.0.md](docs/development/release-1.0.md)。
 1.1 家庭协作开发计划见 [outputs/饭单-1.1家庭协作开发计划.md](outputs/饭单-1.1家庭协作开发计划.md)。
+首次使用与核心流程审计见 [docs/audits/2026-06-24-first-use-flow/AUDIT.md](docs/audits/2026-06-24-first-use-flow/AUDIT.md)。
+问题清单与 AI 机会地图见 [docs/audits/2026-06-24-first-use-flow/PROBLEMS-AND-AI.md](docs/audits/2026-06-24-first-use-flow/PROBLEMS-AND-AI.md)。
+核心体验与 AI 优化交接见 [docs/development/core-experience-ai-handoff.md](docs/development/core-experience-ai-handoff.md)。
 每轮交接记录见 [docs/development/progress.md](docs/development/progress.md)。
 
 ## 验证
@@ -108,4 +111,4 @@ npm run release:verify
 
 ## 暂不做
 
-菜谱社区、AI 自动推荐、精确营养计算、PDF/图片导出、实时多人协作、库存管理、支付订单、上门服务交易撮合、医疗级营养建议、小饭桌合规留样。
+菜谱社区、独立 AI 中心、AI 自由计算采购数量、精确营养计算、PDF/图片导出、实时多人协作、库存管理、支付订单、上门服务交易撮合、医疗级营养建议、小饭桌合规留样。

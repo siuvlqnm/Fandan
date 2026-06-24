@@ -2,6 +2,33 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## 2026-06-24 - Core Experience Audit And AI Queue
+
+Status: documented and queued. No product code was changed in this slice.
+
+What was decided:
+
+- Ordinary families are the primary default experience. The core task is `arrange a meal -> decide dishes -> know what to buy`, not managing spaces, targets and record states.
+- The current first-use path, entity-based navigation, long forms, oversized search/filter areas and mixed page responsibilities create too much learning cost.
+- A meal's ingredient quantities need a deterministic base-serving model before AI or further collaboration work can rely on the shopping list.
+- Manual and AI creation must share the same editable draft and validation path. AI is embedded in specific tasks, never added as a separate product area.
+- AI may draft dishes and meal plans, but users confirm before saving; shopping quantities, allergies and permissions remain deterministic or explicitly user-confirmed.
+
+Evidence and handoff:
+
+- `docs/audits/2026-06-24-first-use-flow/AUDIT.md`
+- `docs/audits/2026-06-24-first-use-flow/PROBLEMS-AND-AI.md`
+- `docs/development/core-experience-ai-handoff.md`
+- Linear milestone: `Phase 9.5 首次使用与 AI 基础`
+- Parent issue: LES-120, with LES-121 through LES-127 as the executable queue.
+
+Notes for next threads:
+
+- Start directly with LES-121. Do not reopen product discovery unless implementation exposes a new conflict.
+- After LES-121, continue with LES-122 and LES-123 before visual-density or AI work.
+- LES-106 through LES-109 are blocked by LES-120 so the product does not add more collaboration complexity before the core flow becomes usable.
+- Follow the normal issue loop: implement, update docs, run risk-matched verification, commit/push, leave Linear evidence, then move to the next unblocked issue.
+
 ## LES-102 - Family Workspace End-To-End And Migration Gate
 
 Status: implemented on 2026-06-24. Phase 9 family workspace foundation is complete.
@@ -28,7 +55,7 @@ Verification completed:
 
 Notes for next threads:
 
-- Phase 9 is closed. Continue with LES-106 when product-flow questions have been reviewed and the Phase 10 sequence is still appropriate.
+- Phase 9 is closed. Complete the Phase 9.5 core-experience queue before resuming LES-106 and the rest of Phase 10.
 - Run `npm run release:verify` for future releases; it now fails on family-workspace regressions as well as type/build failures.
 - The smoke does not touch the ordinary local D1 state or production D1 and requires no new migration.
 
