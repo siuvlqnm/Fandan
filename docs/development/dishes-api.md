@@ -16,6 +16,8 @@ Dish payload:
 	"name": "番茄炒蛋",
 	"category": "家常菜",
 	"instructions": "先炒蛋，再炒番茄。",
+	"baseServings": 3,
+	"servingBasisConfirmed": true,
 	"tags": ["快手", "下饭"],
 	"visibility": "space",
 	"ingredients": [
@@ -59,7 +61,7 @@ Response:
 
 `POST /api/dishes`
 
-Only `name` is required. `tags` and `ingredients` default to empty arrays, and `visibility` defaults to `space`.
+Only `name` is required for API compatibility. `baseServings` defaults to `1` and new API-created dishes are marked confirmed; the product form always asks for the base servings explicitly. `tags` and `ingredients` default to empty arrays, and `visibility` defaults to `space`.
 
 Request:
 
@@ -68,6 +70,7 @@ Request:
 	"name": "番茄炒蛋",
 	"category": "家常菜",
 	"instructions": "先炒蛋，再炒番茄。",
+	"baseServings": 3,
 	"tags": ["快手", "下饭"],
 	"ingredients": [
 		{
@@ -96,6 +99,8 @@ Returns `404 NOT_FOUND` when the dish does not exist in the current space.
 At least one field is required. Omitted fields are not changed.
 
 If `ingredients` is omitted, existing ingredients are unchanged. If `ingredients` is provided, the ingredient list is replaced by the provided array. Passing `[]` clears ingredients.
+
+`baseServings` is the shared basis for every ingredient on the dish. Saving the dish form or patching `baseServings` sets `servingBasisConfirmed` to `true`. Dishes created before migration `0003` receive `baseServings = 1` and `servingBasisConfirmed = false`, preserving the previous generation behavior until a user reviews the basis.
 
 Request:
 

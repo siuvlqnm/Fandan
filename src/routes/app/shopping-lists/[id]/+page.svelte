@@ -76,6 +76,9 @@
 	</section>
 
 	<section class="space-y-4" data-testid="shopping-list-items">
+		<p class="rounded-2xl border border-border/80 bg-secondary/40 p-4 text-sm leading-6 text-muted-foreground">
+			数量按每道菜的“饭单份数 ÷ 食材基准份数”计算；文本数量、缺失数量和单位冲突不会猜测。每项下方会显示计算依据，可展开编辑确认。
+		</p>
 		{#if data.groups.length === 0}
 			<div class="app-panel space-y-4 p-5">
 				<div class="flex size-12 items-center justify-center rounded-2xl bg-secondary text-primary">
@@ -134,7 +137,7 @@
 											type="submit"
 											variant="ghost"
 											size="icon-sm"
-											class="rounded-xl text-muted-foreground"
+											class="size-11 rounded-xl text-muted-foreground"
 											aria-label="删除购物项"
 											data-confirm={`删除购物项「${item.name}」？`}
 											data-pending-label="删除中..."
@@ -145,7 +148,7 @@
 								</div>
 
 								<details class="rounded-2xl bg-muted/45">
-									<summary class="cursor-pointer px-3 py-2 text-sm font-medium text-muted-foreground">编辑数量和分类</summary>
+									<summary class="flex min-h-11 cursor-pointer items-center px-3 py-2 text-sm font-medium text-muted-foreground">编辑数量和分类</summary>
 									<form method="post" action="?/updateItem" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-3 p-3 pt-1">
 										<input type="hidden" name="itemId" value={item.id} />
 										<div class="space-y-2">

@@ -13,6 +13,8 @@ LES-93 adds the creator-side shopping-list page for buying preparation and in-st
 - Items are grouped by category and show group-level purchased counts.
 - Each item can be toggled purchased/unpurchased with a large touch target.
 - Each item can edit name, quantity, unit, category and notes.
+- The page explains the deterministic base-serving formula; each generated item shows its calculation or confirmation warning in notes.
+- Text quantities, missing quantities and unit conflicts stay editable and visibly unresolved instead of being guessed.
 - Users can add custom shopping items without editing the source dish.
 - Users can delete shopping items without editing the source dish.
 - The regenerate button explicitly replaces the current shopping-list items from the meal-plan ingredients.

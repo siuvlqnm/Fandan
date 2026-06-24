@@ -10,8 +10,11 @@ Linear uses `/meal-plans` and `/shopping-lists` notation for the product endpoin
 - Ingredients are grouped by normalized ingredient name and unit.
 - Different units stay as separate shopping items.
 - Missing ingredient categories become `其他`.
-- Numeric quantities are multiplied by the meal-plan item servings and summed.
-- Non-numeric quantities are preserved as text fragments.
+- Numeric quantities are multiplied by `meal-plan item servings / dish baseServings` and then summed.
+- Equal meal and base servings preserve the ingredient quantity: `3 个 / 3 人份` used for a 3-person meal remains `3 个`.
+- Non-numeric and missing quantities are never scaled or guessed; the item notes ask for confirmation.
+- Same-name ingredients with different units remain separate and carry an explicit conflict reminder.
+- Generated notes expose the calculation basis and any unconfirmed migrated dish basis.
 - The first generation creates the meal plan's default shopping list.
 - Later generations reuse the same default shopping list and replace its items only when this endpoint is called.
 - Manual edits are not changed by meal-plan edits unless the user explicitly regenerates the list.
@@ -29,12 +32,12 @@ Linear uses `/meal-plans` and `/shopping-lists` notation for the product endpoin
 			"id": "item-id",
 			"shoppingListId": "shopping-list-id",
 			"name": "鸡蛋",
-			"quantity": "6",
+			"quantity": "3",
 			"unit": "个",
 			"category": "蛋奶",
 			"checked": false,
 			"sourceDishId": "dish-id",
-			"notes": "来自：番茄炒蛋 × 3",
+			"notes": "计算：番茄炒蛋：饭单 3 份 ÷ 基准 3 份 = ×1",
 			"sortOrder": 0,
 			"createdAt": "2026-06-11 10:00:00",
 			"updatedAt": "2026-06-11 10:00:00"

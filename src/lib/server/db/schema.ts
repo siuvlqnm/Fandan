@@ -103,6 +103,8 @@ export const dishes = sqliteTable(
 		name: text('name').notNull(),
 		category: text('category'),
 		instructions: text('instructions'),
+		baseServings: integer('base_servings').notNull().default(1),
+		servingBasisConfirmed: integer('serving_basis_confirmed', { mode: 'boolean' }).notNull().default(false),
 		tags: text('tags', { mode: 'json' }).$type<string[]>().notNull().default(sql`'[]'`),
 		visibility: text('visibility', { enum: ['space', 'private'] }).notNull().default('space'),
 		createdAt: createdAt(),

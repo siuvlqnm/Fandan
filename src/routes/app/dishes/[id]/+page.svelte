@@ -52,7 +52,10 @@
 						<ListChecks class="size-5" />
 						食材摘要
 					</h2>
-					<p class="text-sm text-muted-foreground">{dish.ingredients.length} 种食材</p>
+				<p class="text-sm text-muted-foreground">{dish.ingredients.length} 种食材 · 基准 {dish.baseServings} 人份</p>
+				{#if !dish.servingBasisConfirmed}
+					<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">旧菜品的基准份数尚未确认，请在左侧核对后保存。</p>
+				{/if}
 				</div>
 				<div class="space-y-3">
 					{#if dish.ingredients.length === 0}

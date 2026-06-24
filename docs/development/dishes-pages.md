@@ -7,6 +7,12 @@ LES-88 adds creator-side pages for maintaining reusable dishes and ingredients. 
 - `/app/dishes`: dish library list with search, category filter, dish cards and delete action.
 - `/app/dishes/new`: create dish page.
 - `/app/dishes/:id`: edit dish page with ingredient summary and delete action.
+
+## Base servings
+
+- Create and edit forms ask how many people the complete ingredient list serves.
+- Migrated dishes display a warning until the user reviews and saves the safe `1`-serving default.
+- The edit summary shows the active basis because shopping-list quantities depend on it.
 - `/app/meal-plans/new?dishId=:id`: temporary placeholder entry that preserves selected dish context until LES-90/LES-91 replace the meal-plan flow.
 
 ## UX Boundaries

@@ -19,6 +19,8 @@
 		name?: string | null;
 		category?: string | null;
 		instructions?: string | null;
+		baseServings?: number | string | null;
+		servingBasisConfirmed?: boolean | null;
 		tags?: string[] | null;
 		tagsText?: string | null;
 		visibility?: string | null;
@@ -116,6 +118,27 @@
 	</div>
 
 	<div class="space-y-2">
+		<Label for="dish-base-servings">食材基准份数</Label>
+		<Input
+			id="dish-base-servings"
+			name="baseServings"
+			type="number"
+			min="1"
+			max="999"
+			value={values.baseServings ?? 1}
+			required
+			class="app-input"
+		/>
+		<p class="text-sm text-muted-foreground">下方全部食材共同对应几人份。购物清单会按“饭单份数 ÷ 基准份数”缩放。</p>
+		{#if values.servingBasisConfirmed === false}
+			<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">这是旧菜品的安全默认值。请核对份数；保存后即视为确认。</p>
+		{/if}
+		{#if errors.baseServings?.[0]}
+			<p class="text-sm text-destructive">{errors.baseServings[0]}</p>
+		{/if}
+	</div>
+
+	<div class="space-y-2">
 		<Label for="dish-tags">标签</Label>
 		<Input id="dish-tags" name="tagsText" value={tagsText} placeholder="快手, 下饭, 儿童友好" class="app-input" />
 		<p class="text-sm text-muted-foreground">用逗号分隔，列表页会展示并支持搜索。</p>
@@ -143,7 +166,7 @@
 				<h2 class="text-base font-medium">食材</h2>
 				<p class="text-sm text-muted-foreground">食材可以稍后再补；空白行不会保存。</p>
 			</div>
-			<Button type="button" variant="outline" size="sm" class="h-10 rounded-xl bg-white" onclick={addIngredient}>
+			<Button type="button" variant="outline" size="sm" class="h-11 rounded-xl bg-white" onclick={addIngredient}>
 				<Plus class="size-4" />
 				添加食材
 			</Button>
@@ -158,7 +181,7 @@
 				<div class="rounded-2xl border border-border/80 bg-white p-3">
 					<div class="mb-3 flex items-center justify-between gap-3">
 						<p class="text-sm font-medium">食材 {index + 1}</p>
-						<Button type="button" variant="ghost" size="sm" onclick={() => removeIngredient(index)} aria-label="删除食材">
+						<Button type="button" variant="ghost" size="sm" class="size-11 p-0" onclick={() => removeIngredient(index)} aria-label="删除食材">
 							<Trash2 class="size-4" />
 						</Button>
 					</div>

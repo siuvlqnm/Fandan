@@ -36,12 +36,16 @@ const dishFieldsSchema = z.object({
 	name: z.string().trim().min(1, '请输入菜品名称').max(80),
 	category: nullableTextSchema(40),
 	instructions: nullableTextSchema(4000),
+	baseServings: z.number().int().min(1, '基准份数至少为 1').max(999),
+	servingBasisConfirmed: z.boolean().optional(),
 	tags: tagsSchema.optional(),
 	visibility: dishVisibilitySchema.optional(),
 	ingredients: z.array(ingredientSchema).max(100).optional()
 });
 
 export const createDishSchema = dishFieldsSchema.extend({
+	baseServings: z.number().int().min(1).max(999).optional().default(1),
+	servingBasisConfirmed: z.boolean().optional().default(true),
 	tags: tagsSchema.optional().default([]),
 	visibility: dishVisibilitySchema.optional().default('space'),
 	ingredients: z.array(ingredientSchema).max(100).optional().default([])
@@ -55,6 +59,7 @@ export const dishFormSchema = z.object({
 	name: z.string().trim().min(1, '请输入菜品名称').max(80),
 	category: formNullableTextSchema(40),
 	instructions: formNullableTextSchema(4000),
+	baseServings: z.coerce.number().int().min(1, '基准份数至少为 1').max(999),
 	tagsText: z.string().trim().max(500).optional(),
 	visibility: dishVisibilitySchema.default('space'),
 	ingredients: z.array(ingredientSchema).max(100).default([])
@@ -84,6 +89,8 @@ export const dishFormToCreateInput = (input: DishFormInput): CreateDishInput => 
 	name: input.name,
 	category: input.category,
 	instructions: input.instructions,
+	baseServings: input.baseServings,
+	servingBasisConfirmed: true,
 	tags: parseDishTagsText(input.tagsText),
 	visibility: input.visibility,
 	ingredients: input.ingredients
@@ -108,6 +115,8 @@ const serializeDish = (dish: Dish, ingredients: SerializedIngredient[] = []) => 
 	name: dish.name,
 	category: dish.category,
 	instructions: dish.instructions,
+	baseServings: dish.baseServings,
+	servingBasisConfirmed: dish.servingBasisConfirmed,
 	tags: Array.isArray(dish.tags) ? dish.tags : [],
 	visibility: dish.visibility,
 	ingredients,
@@ -205,6 +214,8 @@ export const createDish = async (context: AuthenticatedContext, input: CreateDis
 		name: input.name,
 		category: input.category ?? null,
 		instructions: input.instructions ?? null,
+		baseServings: input.baseServings,
+		servingBasisConfirmed: input.servingBasisConfirmed,
 		tags: input.tags,
 		visibility: input.visibility
 	});
@@ -225,6 +236,9 @@ export const updateDish = async (context: AuthenticatedContext, id: string, inpu
 	const values = Object.fromEntries(
 		Object.entries(dishInput).filter(([, value]) => value !== undefined)
 	) as Partial<NewDish>;
+	if (values.baseServings !== undefined && values.servingBasisConfirmed === undefined) {
+		values.servingBasisConfirmed = true;
+	}
 
 	if (Object.keys(values).length > 0) {
 		await context.db

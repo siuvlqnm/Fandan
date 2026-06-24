@@ -195,7 +195,9 @@ const buildGeneratedItems = async (context: AuthenticatedContext, mealPlanId: st
 	const dishRows = await context.db
 		.select({
 			id: dishes.id,
-			name: dishes.name
+			name: dishes.name,
+			baseServings: dishes.baseServings,
+			servingBasisConfirmed: dishes.servingBasisConfirmed
 		})
 		.from(dishes)
 		.where(and(eq(dishes.spaceId, context.space.id), inArray(dishes.id, dishIds)));
@@ -218,7 +220,8 @@ const buildGeneratedItems = async (context: AuthenticatedContext, mealPlanId: st
 		unit: string | null;
 		category: string;
 		sourceDishIds: Set<string>;
-		sourceLabels: string[];
+		calculationLabels: string[];
+		warnings: string[];
 		numericQuantity: number;
 		hasNumericQuantity: boolean;
 		textQuantities: string[];
@@ -246,27 +249,47 @@ const buildGeneratedItems = async (context: AuthenticatedContext, mealPlanId: st
 					unit,
 					category,
 					sourceDishIds: new Set<string>(),
-					sourceLabels: [],
+					calculationLabels: [],
+					warnings: [],
 					numericQuantity: 0,
 					hasNumericQuantity: false,
 					textQuantities: [],
 					sortOrder: aggregates.size
 				} satisfies Aggregate);
 			const parsedQuantity = parseQuantity(ingredient.quantity);
+			const baseServings = dish?.baseServings ?? 1;
+			const scale = mealPlanItem.servings / baseServings;
+			const dishLabel = dish?.name ?? '未知菜品';
+			const basisLabel = `${dishLabel}：饭单 ${mealPlanItem.servings} 份 ÷ 基准 ${baseServings} 份`;
 
 			if (parsedQuantity === null) {
 				if (ingredient.quantity) {
-					aggregate.textQuantities.push(`${ingredient.quantity}${unit ?? ''} × ${mealPlanItem.servings}`);
+					aggregate.textQuantities.push(ingredient.quantity);
+					aggregate.warnings.push(`${dishLabel}使用文本数量“${ingredient.quantity}”，未自动缩放`);
+				} else {
+					aggregate.warnings.push(`${dishLabel}未填写数量`);
 				}
 			} else {
-				aggregate.numericQuantity += parsedQuantity * mealPlanItem.servings;
+				aggregate.numericQuantity += parsedQuantity * scale;
 				aggregate.hasNumericQuantity = true;
+			}
+			aggregate.calculationLabels.push(`${basisLabel} = ×${formatQuantity(scale)}`);
+
+			if (dish && !dish.servingBasisConfirmed) {
+				aggregate.warnings.push(`${dish.name}沿用旧数据安全默认基准，请确认`);
 			}
 
 			aggregate.sourceDishIds.add(mealPlanItem.dishId);
-			aggregate.sourceLabels.push(`${dish?.name ?? '未知菜品'} × ${mealPlanItem.servings}`);
 			aggregates.set(key, aggregate);
 		}
+	}
+
+	const unitsByName = new Map<string, Set<string>>();
+	for (const aggregate of aggregates.values()) {
+		const key = normalizeKeyPart(aggregate.name);
+		const units = unitsByName.get(key) ?? new Set<string>();
+		units.add(aggregate.unit ?? '无单位');
+		unitsByName.set(key, units);
 	}
 
 	return Array.from(aggregates.values()).map((aggregate, index) => ({
@@ -280,7 +303,13 @@ const buildGeneratedItems = async (context: AuthenticatedContext, mealPlanId: st
 		category: aggregate.category,
 		checked: false,
 		sourceDishId: aggregate.sourceDishIds.size === 1 ? Array.from(aggregate.sourceDishIds)[0] : null,
-		notes: `来自：${Array.from(new Set(aggregate.sourceLabels)).join('、')}`,
+		notes: [
+			`计算：${Array.from(new Set(aggregate.calculationLabels)).join('；')}`,
+			...((unitsByName.get(normalizeKeyPart(aggregate.name))?.size ?? 0) > 1
+				? ['提醒：同名食材存在不同单位，已分开保留']
+				: []),
+			...Array.from(new Set(aggregate.warnings)).map((warning) => `提醒：${warning}`)
+		].join('；'),
 		sortOrder: index
 	}));
 };

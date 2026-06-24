@@ -2,6 +2,32 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-121 - Base Servings And Trustworthy Shopping Quantities
+
+Status: implemented on 2026-06-24.
+
+What changed:
+
+- Added dish-level `baseServings` and `servingBasisConfirmed` fields plus migration `0003_worried_luminals.sql`.
+- Migrated existing dishes to a safe one-serving basis marked unconfirmed, preserving the previous generator rule until the dish is explicitly reviewed.
+- Added base-serving input and migrated-data warnings to dish create/edit pages.
+- Replaced blind multiplication with `ingredient quantity × meal servings / dish base servings`.
+- Kept text and missing quantities unscaled, separated unit conflicts, and stored calculation/warning evidence on every generated shopping item.
+- Kept generated quantities editable and regeneration deterministic.
+- Extended the isolated D1 family smoke with migration, equal-basis, scaling, text/missing quantity, unit-conflict and repeat-generation assertions.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run release:verify`
+- Mobile browser smoke at `390 x 844` for dish creation/editing and generated shopping-list explanation/edit controls.
+
+Notes for next threads:
+
+- Migration `0003` must be applied to production D1 before code depending on these fields is deployed.
+- LES-122 is the next independent task; LES-123 becomes unblocked after both LES-121 and LES-122 are complete.
+
 ## 2026-06-24 - Core Experience Audit And AI Queue
 
 Status: documented and queued. No product code was changed in this slice.

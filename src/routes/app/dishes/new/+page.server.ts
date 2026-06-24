@@ -13,6 +13,7 @@ const emptyValues = {
 	name: '',
 	category: '',
 	instructions: '',
+	baseServings: 1,
 	tagsText: '',
 	visibility: 'space',
 	ingredients: []
@@ -48,6 +49,7 @@ export const _readDishForm = async (request: Request) => {
 		name: String(formData.get('name') ?? ''),
 		category: String(formData.get('category') ?? ''),
 		instructions: String(formData.get('instructions') ?? ''),
+		baseServings: String(formData.get('baseServings') ?? '1'),
 		tagsText: String(formData.get('tagsText') ?? ''),
 		tags: parseDishTagsText(String(formData.get('tagsText') ?? '')),
 		visibility: String(formData.get('visibility') ?? 'space'),

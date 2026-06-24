@@ -188,6 +188,9 @@ const verifyCollaboration = async () => {
 	const legacyList = (await owner.request(`/api/shopping-lists/${legacyShoppingListId}`)).data.data.shoppingList;
 	assert(legacyTargets.some((target) => target.id === legacyTargetId), 'Legacy target was lost');
 	assert(legacyDishes.some((dish) => dish.id === legacyDishId), 'Legacy dish was lost');
+	const legacyDish = legacyDishes.find((dish) => dish.id === legacyDishId);
+	assert(legacyDish.baseServings === 1, 'Legacy dish did not receive the safe base-serving default');
+	assert(legacyDish.servingBasisConfirmed === false, 'Legacy dish was incorrectly marked as confirmed');
 	assert(legacyPlans.some((plan) => plan.id === legacyMealPlanId), 'Legacy meal plan was lost');
 	assert(legacyList.items.some((item) => item.name === '番茄'), 'Legacy shopping list was lost');
 	console.log('✓ legacy owner login and data migration protection');
@@ -218,8 +221,15 @@ const verifyCollaboration = async () => {
 		json: {
 			name: '成员新增炖鸡',
 			category: '家常菜',
+			baseServings: 2,
 			tags: ['协作'],
-			ingredients: [{ name: '鸡腿', quantity: '2', unit: '只', category: '肉类' }]
+			ingredients: [
+				{ name: '鸡腿', quantity: '2', unit: '只', category: '肉类' },
+				{ name: '盐', quantity: '适量', unit: null, category: '调味' },
+				{ name: '姜', quantity: null, unit: '块', category: '调味' },
+				{ name: '番茄', quantity: '300', unit: 'g', category: '蔬菜' },
+				{ name: '番茄', quantity: '2', unit: '个', category: '蔬菜' }
+			]
 		},
 		expectedStatus: 201
 	})).data.data.dish;
@@ -240,12 +250,44 @@ const verifyCollaboration = async () => {
 		method: 'POST',
 		expectedStatus: 201
 	})).data.data.shoppingList;
-	assert(generatedList.items.length === 1, 'Collaborative shopping list was not generated');
+	assert(generatedList.items.length === 5, 'Collaborative shopping list was not generated');
+	const chicken = generatedList.items.find((item) => item.name === '鸡腿');
+	const salt = generatedList.items.find((item) => item.name === '盐');
+	const ginger = generatedList.items.find((item) => item.name === '姜');
+	const tomatoes = generatedList.items.filter((item) => item.name === '番茄');
+	assert(chicken?.quantity === '2', 'Equal meal and base servings did not preserve ingredient quantity');
+	assert(chicken?.notes.includes('饭单 2 份 ÷ 基准 2 份 = ×1'), 'Calculation basis was not exposed');
+	assert(salt?.quantity === '适量' && salt.notes.includes('未自动缩放'), 'Text quantity was guessed or lost');
+	assert(ginger?.quantity === null && ginger.notes.includes('未填写数量'), 'Missing quantity was guessed');
+	assert(tomatoes.length === 2 && tomatoes.every((item) => item.notes.includes('不同单位')), 'Unit conflicts were merged or not explained');
+	const regeneratedList = (await member.request(`/api/meal-plans/${collaborativePlan.id}/shopping-list/generate`, {
+		method: 'POST',
+		expectedStatus: 201
+	})).data.data.shoppingList;
+	const generatedValues = generatedList.items.map(({ name, quantity, unit, category, notes }) => ({ name, quantity, unit, category, notes }));
+	const regeneratedValues = regeneratedList.items.map(({ name, quantity, unit, category, notes }) => ({ name, quantity, unit, category, notes }));
+	assert(JSON.stringify(generatedValues) === JSON.stringify(regeneratedValues), 'Regeneration was not repeatable');
+	const scaledPlan = (await member.request('/api/meal-plans', {
+		method: 'POST',
+		json: {
+			title: '家庭协作加倍晚餐',
+			targetId: legacyTargetId,
+			type: 'single_meal',
+			items: [{ dishId: collaborativeDish.id, mealSlot: '晚餐', servings: 4 }]
+		},
+		expectedStatus: 201
+	})).data.data.mealPlan;
+	const scaledList = (await member.request(`/api/meal-plans/${scaledPlan.id}/shopping-list/generate`, {
+		method: 'POST',
+		expectedStatus: 201
+	})).data.data.shoppingList;
+	assert(scaledList.items.find((item) => item.name === '鸡腿')?.quantity === '4', 'Numeric quantity did not scale by meal/base servings');
+	const checkedItemId = regeneratedList.items[0].id;
 	const checkedList = (await member.request(
-		`/api/shopping-lists/${generatedList.id}/items/${generatedList.items[0].id}`,
+		`/api/shopping-lists/${regeneratedList.id}/items/${checkedItemId}`,
 		{ method: 'PATCH', json: { checked: true } }
 	)).data.data.shoppingList;
-	assert(checkedList.items[0].checked === true, 'Member shopping-list update was not stored');
+	assert(checkedList.items.find((item) => item.id === checkedItemId)?.checked === true, 'Member shopping-list update was not stored');
 	const ownerList = (await owner.request(`/api/shopping-lists/${generatedList.id}`)).data.data.shoppingList;
 	assert(ownerList.items.some((item) => item.checked === true), 'Owner cannot see the member shopping-list update');
 	console.log('✓ shared dish, meal plan and shopping-list collaboration');
@@ -313,6 +355,7 @@ try {
 	await applyMigrationFile(persistPath, '0001_groovy_wilson_fisk.sql');
 	await seedLegacyData(persistPath);
 	await applyMigrationFile(persistPath, '0002_rainy_mindworm.sql');
+	await applyMigrationFile(persistPath, '0003_worried_luminals.sql');
 	await runWrangler(persistPath, ['--command', `
 INSERT INTO space_invitations (id, space_id, token, role, status, invited_by_user_id, expires_at)
 VALUES ('smoke-les102-expired-id', '${legacySpaceId}', '${expiredToken}', 'member', 'pending', '${legacyUserId}', '2000-01-01T00:00:00.000Z');
