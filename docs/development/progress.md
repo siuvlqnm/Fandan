@@ -2,6 +2,31 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-124 - AI Dish Draft Completion
+
+Status: implemented on 2026-06-25.
+
+What changed:
+
+- Added an optional `一句话补全草稿` section to the existing new-dish page.
+- Added a provider-isolated Workers AI adapter that returns structured dish drafts without saving them.
+- Validated AI output through a server-side schema before filling the editable dish form.
+- Surfaced uncertain fields and notes as review warnings for base servings, category, tags, instructions and ingredient rows.
+- Preserved the pure manual create action and made AI unavailable, timeout, provider failure and invalid structure recoverable from the same page.
+- Added the Cloudflare `AI` binding to `wrangler.jsonc` with remote local development support.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- Pure adapter smoke with a fake provider covering valid output, invalid-output retry and missing-provider fallback.
+- Isolated D1 + remote Workers AI HTTP smoke: registration/login, AI draft action, no dish persisted before confirmation, AI-confirmed dish save and manual dish save.
+
+Notes for next threads:
+
+- LES-126 is now unblocked and should reuse the same provider boundary and draft-before-save contract.
+- The in-app browser blocked the local `127.0.0.1:4175` verification URL in this run, so visual QA for the AI section should be refreshed if the browser policy allows a local page in the next session.
+
 ## LES-125 - Mobile Navigation And First-Screen Density
 
 Status: implemented on 2026-06-25.

@@ -7,7 +7,13 @@ import {
 	type DishFormInput
 } from '$lib/server/dishes';
 import { requireUserSpace } from '$lib/server/context';
+import {
+	createWorkersAiDishDraftProvider,
+	DishDraftError,
+	generateDishDraft
+} from '$lib/server/ai/dish-drafts';
 import type { Actions, PageServerLoad } from './$types';
+import { z } from 'zod';
 
 const emptyValues = {
 	name: '',
@@ -20,6 +26,12 @@ const emptyValues = {
 };
 
 const readList = (formData: FormData, name: string) => formData.getAll(name).map((value) => String(value ?? ''));
+
+const dishDraftPromptSchema = z
+	.string()
+	.trim()
+	.min(2, '请至少写下菜名')
+	.max(500, '描述请控制在 500 字以内');
 
 export const _readDishForm = async (request: Request) => {
 	const formData = await request.formData();
@@ -70,12 +82,82 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	return {
-		values: emptyValues
+		values: emptyValues,
+		aiAvailable: Boolean((event.platform?.env as (Env & { AI?: Ai }) | undefined)?.AI)
 	};
 };
 
 export const actions: Actions = {
-	default: async (event) => {
+	draft: async (event) => {
+		await requireUserSpace(event);
+		const formData = await event.request.formData();
+		const prompt = String(formData.get('prompt') ?? '');
+		const promptResult = dishDraftPromptSchema.safeParse(prompt);
+
+		if (!promptResult.success) {
+			return fail(400, {
+				values: { ...emptyValues, name: prompt.trim().slice(0, 80) },
+				ai: {
+					status: 'error' as const,
+					prompt,
+					message: promptResult.error.issues[0]?.message ?? '请写下菜名或一句描述。',
+					retryable: false
+				}
+			});
+		}
+
+		const env = event.platform?.env as (Env & { AI?: Ai; AI_DISH_MODEL?: string }) | undefined;
+		const provider = createWorkersAiDishDraftProvider(env?.AI, env?.AI_DISH_MODEL);
+
+		try {
+			const result = await generateDishDraft(provider, promptResult.data);
+			const { draft } = result;
+
+			return {
+				values: {
+					name: draft.name,
+					category: draft.category ?? '',
+					instructions: draft.instructions ?? '',
+					baseServings: draft.baseServings ?? 1,
+					tagsText: draft.tags.join(', '),
+					tags: draft.tags,
+					visibility: 'space',
+					ingredients: draft.ingredients.map((ingredient, index) => ({
+						...ingredient,
+						quantity: ingredient.quantity ?? '',
+						unit: ingredient.unit ?? '',
+						category: ingredient.category ?? '',
+						notes: ingredient.notes ?? '',
+						sortOrder: index
+					}))
+				},
+				ai: {
+					status: 'draft' as const,
+					prompt: promptResult.data,
+					uncertainFields: draft.uncertainFields,
+					notes: draft.notes,
+					attempts: result.attempts,
+					model: result.model
+				}
+			};
+		} catch (error) {
+			const draftError =
+				error instanceof DishDraftError
+					? error
+					: new DishDraftError('provider_error', 'AI 暂时没有生成草稿，请继续手动填写。');
+
+			return fail(draftError.code === 'unavailable' ? 503 : 502, {
+				values: { ...emptyValues, name: promptResult.data.slice(0, 80) },
+				ai: {
+					status: 'error' as const,
+					prompt: promptResult.data,
+					message: draftError.message,
+					retryable: draftError.retryable
+				}
+			});
+		}
+	},
+	create: async (event) => {
 		const context = await requireUserSpace(event);
 		const values = await _readDishForm(event.request);
 		const result = dishFormSchema.safeParse(values);

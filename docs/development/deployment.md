@@ -8,7 +8,7 @@ The production D1 database has been created through the Cloudflare API connector
 
 - Database name: `fandan`
 - Database id: `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`
-- Migration status: `drizzle/0000_panoramic_carnage.sql`, `drizzle/0001_groovy_wilson_fisk.sql` and `drizzle/0002_rainy_mindworm.sql` have been applied through the Cloudflare API connector and recorded in `d1_migrations`.
+- Migration status: `drizzle/0000_panoramic_carnage.sql`, `drizzle/0001_groovy_wilson_fisk.sql`, `drizzle/0002_rainy_mindworm.sql` and `drizzle/0003_worried_luminals.sql` have been applied to production D1 and recorded in `d1_migrations`.
 - Production URL: `https://fandan.siuvlqnm.workers.dev/`
 - Deployment path: Cloudflare dashboard is authorized to read the GitHub project and automatically deploy updates from GitHub.
 
@@ -30,6 +30,7 @@ Set or verify these in Cloudflare before relying on production:
 - `CLOUDFLARE_DATABASE_ID`: `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`.
 - `ORIGIN`: deployed Worker URL, currently `https://fandan.siuvlqnm.workers.dev/`, or the future custom domain.
 - `BETTER_AUTH_SECRET`: high-entropy production secret, different from local development.
+- `AI` binding: Workers AI binding configured by `wrangler.jsonc` for AI dish drafts.
 
 Use Wrangler secrets or dashboard variables for production secrets. Do not commit real values.
 

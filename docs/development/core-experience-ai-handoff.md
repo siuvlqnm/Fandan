@@ -4,13 +4,13 @@
 
 ## 新对话从这里开始
 
-LES-121、LES-122、LES-123 和 LES-125 已完成并发布。下一个任务是 [LES-124](https://linear.app/less-lab/issue/LES-124)：AI 菜品草稿补全。
+LES-121、LES-122、LES-123、LES-125 和 LES-124 已完成并发布。下一个任务是 [LES-126](https://linear.app/less-lab/issue/LES-126)：AI 饭单草稿生成。
 
-不要重新做产品规划。先阅读本文件和 LES-124 的验收标准，沿用现有菜品表单、schema、权限和保存路径，然后完成代码、文档、验证、提交和 Linear 回填。LES-124 完成后继续下一个已解除阻塞的任务。
+不要重新做产品规划。先阅读本文件和 LES-126 的验收标准，复用 LES-124 的 AI provider boundary 与“草稿先编辑、确认后保存”规则，然后完成代码、文档、验证、提交和 Linear 回填。LES-126 完成后继续下一个已解除阻塞的任务。
 
 建议的新对话首句：
 
-> 先阅读 `docs/development/core-experience-ai-handoff.md`，然后从 LES-124 开始实现。验证、更新文档并提交后，继续下一个已解除阻塞的任务。
+> 先阅读 `docs/development/core-experience-ai-handoff.md`，然后从 LES-126 开始实现。验证、更新文档并提交后，继续下一个已解除阻塞的任务。
 
 ## 已确认的产品方向
 
@@ -43,8 +43,8 @@ LES-121、LES-122、LES-123 和 LES-125 已完成并发布。下一个任务是 
 | 2 | [LES-122](https://linear.app/less-lab/issue/LES-122) | 拆分登录注册与首用引导 | 无 | 已完成 |
 | 3 | [LES-123](https://linear.app/less-lab/issue/LES-123) | 重构手动安排一顿饭 | LES-121、LES-122 | 已完成 |
 | 4 | [LES-125](https://linear.app/less-lab/issue/LES-125) | 精简导航、列表首屏和设置 | LES-123 | 已完成 |
-| 5 | [LES-124](https://linear.app/less-lab/issue/LES-124) | AI 菜品草稿补全 | LES-121、LES-123 | 下一步 |
-| 6 | [LES-126](https://linear.app/less-lab/issue/LES-126) | AI 饭单草稿生成 | LES-123、LES-124 | 阻塞中 |
+| 5 | [LES-124](https://linear.app/less-lab/issue/LES-124) | AI 菜品草稿补全 | LES-121、LES-123 | 已完成 |
+| 6 | [LES-126](https://linear.app/less-lab/issue/LES-126) | AI 饭单草稿生成 | LES-123、LES-124 | 下一步 |
 | 7 | [LES-127](https://linear.app/less-lab/issue/LES-127) | 后续 AI 机会评估 | LES-124、LES-126 | 阻塞中 |
 
 LES-106 至 LES-109 暂由 LES-120 阻塞。先把核心流程做得愿意用，再恢复协作增强。

@@ -35,7 +35,8 @@
 		submitLabel = '保存',
 		cancelHref = '/app/dishes',
 		action,
-		message
+		message,
+		aiUncertainFields = []
 	}: {
 		values?: DishFormValues;
 		errors?: DishFormErrors;
@@ -43,6 +44,7 @@
 		cancelHref?: string;
 		action?: string;
 		message?: string;
+		aiUncertainFields?: string[];
 	} = $props();
 
 	const emptyIngredient = (): IngredientFormValues => ({
@@ -85,6 +87,10 @@
 	const selectClass = 'app-input h-12 text-sm';
 
 	const tagsText = $derived(values.tagsText ?? values.tags?.join(', ') ?? '');
+	const isAiUncertain = (field: string) =>
+		aiUncertainFields.some((uncertainField) =>
+			uncertainField === field || uncertainField.startsWith(`${field}.`)
+		);
 </script>
 
 <form method="post" {action} use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-6">
@@ -100,6 +106,7 @@
 		<div class="space-y-2">
 			<Label for="dish-category">分类</Label>
 			<Input id="dish-category" name="category" value={values.category ?? ''} placeholder="家常菜" class="app-input" />
+			{#if isAiUncertain('category')}<p class="text-sm text-amber-800">AI 建议，保存前请核对。</p>{/if}
 			{#if errors.category?.[0]}
 				<p class="text-sm text-destructive">{errors.category[0]}</p>
 			{/if}
@@ -130,6 +137,9 @@
 			class="app-input"
 		/>
 		<p class="text-sm text-muted-foreground">下方全部食材共同对应几人份。购物清单会按“饭单份数 ÷ 基准份数”缩放。</p>
+		{#if isAiUncertain('baseServings')}
+			<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">原描述没有明确人数，当前显示 1 人份占位值。请修改为真实基准份数后再保存。</p>
+		{/if}
 		{#if values.servingBasisConfirmed === false}
 			<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">这是旧菜品的安全默认值。请核对份数；保存后即视为确认。</p>
 		{/if}
@@ -142,6 +152,7 @@
 		<Label for="dish-tags">标签</Label>
 		<Input id="dish-tags" name="tagsText" value={tagsText} placeholder="快手, 下饭, 儿童友好" class="app-input" />
 		<p class="text-sm text-muted-foreground">用逗号分隔，列表页会展示并支持搜索。</p>
+		{#if isAiUncertain('tags')}<p class="text-sm text-amber-800">AI 建议，保存前请核对。</p>{/if}
 		{#if errors.tagsText?.[0]}
 			<p class="text-sm text-destructive">{errors.tagsText[0]}</p>
 		{/if}
@@ -155,6 +166,7 @@
 			class={cn(textAreaClass)}
 			placeholder="例如：先炒鸡蛋盛出，再炒番茄，最后混合调味。"
 		>{values.instructions ?? ''}</textarea>
+		{#if isAiUncertain('instructions')}<p class="text-sm text-amber-800">AI 建议，保存前请核对步骤。</p>{/if}
 		{#if errors.instructions?.[0]}
 			<p class="text-sm text-destructive">{errors.instructions[0]}</p>
 		{/if}
@@ -180,7 +192,10 @@
 			{#each ingredientRows as ingredient, index}
 				<div class="rounded-2xl border border-border/80 bg-white p-3">
 					<div class="mb-3 flex items-center justify-between gap-3">
-						<p class="text-sm font-medium">食材 {index + 1}</p>
+						<div>
+							<p class="text-sm font-medium">食材 {index + 1}</p>
+							{#if isAiUncertain(`ingredients.${index}`)}<p class="text-xs text-amber-800">AI 建议，数量和单位请核对</p>{/if}
+						</div>
 						<Button type="button" variant="ghost" size="sm" class="size-11 p-0" onclick={() => removeIngredient(index)} aria-label="删除食材">
 							<Trash2 class="size-4" />
 						</Button>

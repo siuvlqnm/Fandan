@@ -5,8 +5,16 @@ LES-88 adds creator-side pages for maintaining reusable dishes and ingredients. 
 ## Routes
 
 - `/app/dishes`: dish library list with adaptive search/filter density, dish cards and delete action.
-- `/app/dishes/new`: create dish page.
+- `/app/dishes/new`: create dish page with the optional AI dish-draft helper and the full manual form.
 - `/app/dishes/:id`: edit dish page with ingredient summary and delete action.
+
+## AI dish drafts
+
+- The AI helper shares the same add-dish entry and form; there is no separate AI navigation or chat surface.
+- `?/draft` accepts a short natural-language prompt and fills a structured, editable form draft.
+- `?/create` is the only action that writes a dish to D1.
+- Drafts are validated server-side and uncertainty is shown before save, especially for base servings and suggested ingredient quantities.
+- See `docs/development/ai-dish-drafts.md` for provider, timeout, retry and failure behavior.
 
 ## Base servings
 
