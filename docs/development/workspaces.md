@@ -79,6 +79,20 @@ Production D1 applied this migration on 2026-06-23. The backfill produced one ac
 - Invitation tokens must be high entropy when LES-100 adds creation APIs.
 - Public meal-plan share tokens remain separate from workspace invitations and member authorization.
 
+## Invitation And Join Runtime
+
+LES-100 implements invitation lifecycle operations on top of this model:
+
+- Owners create 256-bit random URL-safe tokens that expire after seven days by default.
+- `/invite/:token` exposes the workspace name, expiry and invitation state, but no dishes, meal plans, targets, shopping lists or member records.
+- Login and registration submit a validated relative `next` path so the user returns to the invitation after authentication.
+- Acceptance uses a D1 batch with conditional `INSERT ... SELECT` and conditional invitation update. Only a still-pending, unexpired invitation can create the member row.
+- After the batch proves the current user won acceptance, `user_preferences.current_space_id` switches to the joined workspace.
+- Repeating acceptance by the same user returns the existing membership and repairs the current-space preference; another user receives a conflict.
+- Existing owners and members cannot join again, and only owners can list, create or revoke workspace invitations.
+
+The route and API contract is documented in `invitations.md`.
+
 ## Verification
 
 LES-104 verification covers:

@@ -44,6 +44,7 @@
 				<p class="text-sm text-muted-foreground">回到你的菜单协作工作台。</p>
 			</div>
 			<form method="post" action="?/signInEmail" use:enhance class="space-y-4">
+				<input type="hidden" name="next" value={data.next} />
 				<div class="space-y-2">
 					<Label for="signin-email" class="inline-flex items-center gap-1.5"><Mail class="size-4" />邮箱</Label>
 					<Input id="signin-email" name="email" type="email" autocomplete="email" required class="app-input" />
@@ -71,6 +72,7 @@
 				<p class="text-sm text-muted-foreground">使用邮箱和密码创建你的饭单账号。</p>
 			</div>
 			<form method="post" action="?/signUpEmail" use:enhance class="space-y-4">
+				<input type="hidden" name="next" value={data.next} />
 				<div class="space-y-2">
 					<Label for="signup-name" class="inline-flex items-center gap-1.5"><UserRound class="size-4" />名称</Label>
 					<Input id="signup-name" name="name" autocomplete="name" required class="app-input" />

@@ -10,7 +10,8 @@
 		Plus,
 		Send,
 		ShoppingBag,
-		UsersRound
+		UsersRound,
+		UserPlus
 	} from 'lucide-svelte';
 	import type { PageData } from './$types';
 
@@ -58,6 +59,11 @@
 			</span>
 		</a>
 		<div class="flex items-center gap-2">
+			{#if data.space.role === 'owner'}
+				<a href="/app/invitations" class="flex size-11 items-center justify-center rounded-full bg-white text-primary shadow-sm" aria-label="邀请家人">
+					<UserPlus class="size-5" />
+				</a>
+			{/if}
 			<a href="/app/meal-plans/new" class="flex size-11 items-center justify-center rounded-full bg-white text-primary shadow-sm" aria-label="新建饭单">
 				<Plus class="size-5" />
 			</a>

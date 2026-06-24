@@ -2,6 +2,38 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-100 - Family Workspace Invitation And Join Flow
+
+Status: implemented on 2026-06-24.
+
+What changed:
+
+- Added owner-only invitation list, create and revoke APIs plus the mobile `/app/invitations` management page.
+- Generated 256-bit random URL-safe invitation tokens with a seven-day default expiry.
+- Added a public `/invite/:token` preview that exposes only the workspace name, invitation status and expiry.
+- Preserved the invite return path through both login and registration using a validated form field.
+- Added atomic invitation acceptance that conditionally creates membership, records the accepting user and switches `user_preferences.current_space_id`.
+- Protected against owner self-acceptance, duplicate memberships, expired/revoked links and concurrent acceptance.
+- Made repeated acceptance by the same user idempotent and kept accepted, expired and revoked states explicit.
+- Added the owner dashboard shortcut and documented the full route/API contract in `docs/development/invitations.md`.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- Existing-account flow: anonymous preview, login return, accept and immediate access to the owner's existing target, dish and meal plan.
+- New-account flow: registration return, accept and current-workspace switch.
+- Owner self-invite protection, repeated accepted-link rendering, member management access returning `403`, revoked-link and expired-link states.
+- Public preview contained no private workspace data before acceptance.
+- Mobile browser smoke at the 390px target; the joined shared dashboard had no horizontal overflow.
+- Temporary users, workspaces, memberships and invitations were removed after the smoke test.
+
+Notes for next threads:
+
+- LES-101 can reuse `listInvitations`, `createInvitation` and `revokeInvitation` inside the family settings/member-management surface.
+- Only owners may manage invitations. Ordinary shared business data remains writable by active members.
+- LES-100 uses the LES-104 schema as-is, so no new D1 migration is required.
+
 ## LES-105 - Membership-Aware Workspace Context
 
 Status: implemented on 2026-06-23.

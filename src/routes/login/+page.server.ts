@@ -10,15 +10,16 @@ import type { Actions, PageServerLoad } from './$types';
 
 const signInSchema = z.object({
 	email: z.email('请输入有效邮箱'),
-	password: z.string().min(8, '密码至少 8 位')
+	password: z.string().min(8, '密码至少 8 位'),
+	next: z.string().optional()
 });
 
 const signUpSchema = signInSchema.extend({
 	name: z.string().min(1, '请输入名称')
 });
 
-const getRedirectTo = (event: RequestEvent) => {
-	const next = event.url.searchParams.get('next');
+const getRedirectTo = (event: RequestEvent, formNext?: string) => {
+	const next = formNext ?? event.url.searchParams.get('next');
 	return next?.startsWith('/') && !next.startsWith('//') ? next : '/app';
 };
 
@@ -28,6 +29,7 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	return {
+		next: getRedirectTo(event),
 		signInForm: await superValidate(zod4(signInSchema), { id: 'sign-in' }),
 		signUpForm: await superValidate(zod4(signUpSchema), { id: 'sign-up' })
 	};
@@ -55,7 +57,7 @@ export const actions: Actions = {
 				body: {
 					email: form.data.email,
 					password: form.data.password,
-					callbackURL: getRedirectTo(event)
+					callbackURL: getRedirectTo(event, form.data.next)
 				},
 				headers: event.request.headers
 			});
@@ -67,7 +69,7 @@ export const actions: Actions = {
 			return fail(400, { signInForm: { ...form, message } });
 		}
 
-		return redirect(302, getRedirectTo(event));
+		return redirect(302, getRedirectTo(event, form.data.next));
 	},
 
 	signUpEmail: async (event) => {
@@ -92,7 +94,7 @@ export const actions: Actions = {
 					email: form.data.email,
 					password: form.data.password,
 					name: form.data.name,
-					callbackURL: getRedirectTo(event)
+					callbackURL: getRedirectTo(event, form.data.next)
 				},
 				headers: event.request.headers
 			});
@@ -104,6 +106,6 @@ export const actions: Actions = {
 			return fail(400, { signUpForm: { ...form, message } });
 		}
 
-		return redirect(302, getRedirectTo(event));
+		return redirect(302, getRedirectTo(event, form.data.next));
 	}
 };

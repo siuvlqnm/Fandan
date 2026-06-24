@@ -72,6 +72,7 @@ npm run dev
 服务端 API 约定见 [docs/development/server.md](docs/development/server.md)。
 登录和默认工作空间说明见 [docs/development/auth.md](docs/development/auth.md)。
 家庭工作区数据模型说明见 [docs/development/workspaces.md](docs/development/workspaces.md)。
+家庭工作区邀请与加入流程见 [docs/development/invitations.md](docs/development/invitations.md)。
 用餐对象 API 说明见 [docs/development/targets-api.md](docs/development/targets-api.md)。
 用餐对象页面说明见 [docs/development/targets-pages.md](docs/development/targets-pages.md)。
 菜品与食材 API 说明见 [docs/development/dishes-api.md](docs/development/dishes-api.md)。
