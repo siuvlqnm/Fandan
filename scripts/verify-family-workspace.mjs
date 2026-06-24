@@ -166,16 +166,29 @@ const signIn = (session, email) =>
 		form: { next: '/app', email, password }
 	});
 
-const signUp = (session, name, email) =>
-	session.request('/login?/signUpEmail', {
+const signUp = (session, name, email, next = '/app/meal-plans/new') =>
+	session.request('/register?/signUpEmail', {
 		method: 'POST',
-		form: { next: '/app', name, email, password }
+		form: { next, name, email, password }
 	});
 
 const verifyCollaboration = async () => {
 	const owner = new Session();
 	const member = new Session();
 	const edgeUser = new Session();
+	const loggedOut = new Session();
+	const loginPage = String((await loggedOut.request('/login')).data);
+	const registerPage = String((await loggedOut.request('/register')).data);
+	assert(loginPage.includes('登录饭单') && loginPage.includes('创建账号并安排第一顿饭'), 'Login page does not have a focused registration entry');
+	assert(!loginPage.includes('只填写名称、邮箱和密码'), 'Login page still renders the full registration form');
+	assert(registerPage.includes('只填写名称、邮箱和密码') && registerPage.includes('创建账号并安排第一顿饭') && registerPage.includes('注册中...'), 'Registration page is missing the focused first-use form or pending feedback');
+	assert(!registerPage.includes('回到你的菜单协作工作台'), 'Registration page still renders the sign-in form');
+	const invalidRegistration = await loggedOut.request('/register?/signUpEmail', {
+		method: 'POST',
+		form: { name: '', email: 'not-an-email', password: 'short' }
+	});
+	assert(invalidRegistration.data?.status === 400 && JSON.stringify(invalidRegistration.data).includes('密码至少 8 位'), 'Registration validation feedback was not returned');
+	console.log('✓ split login and registration surfaces');
 
 	await signIn(owner, 'les102-legacy@example.com');
 	const ownerWorkspace = (await owner.request('/api/workspace')).data.data;
@@ -204,7 +217,13 @@ const verifyCollaboration = async () => {
 	assert(preview.space.name === '旧账号家庭空间', 'Invitation preview has the wrong workspace');
 	assert(!JSON.stringify(preview).includes('迁移前番茄炒蛋'), 'Invitation preview leaked workspace data');
 
-	await signUp(member, '协作成员', 'les102-member@example.com');
+	const memberSignUpResult = await signUp(member, '协作成员', 'les102-member@example.com', `/invite/${invitation.token}`);
+	assert(memberSignUpResult.data?.location === `/invite/${invitation.token}`, 'Invitation registration did not preserve its return path');
+	const duplicateRegistration = await new Session().request('/register?/signUpEmail', {
+		method: 'POST',
+		form: { name: '重复账号', email: 'les102-member@example.com', password }
+	});
+	assert(duplicateRegistration.data?.status === 400, 'Duplicate registration was not rejected');
 	const memberPersonalSpaceId = (await member.request('/api/workspace')).data.data.workspace.id;
 	const accepted = (await member.request(`/api/invitations/${invitation.token}/accept`, {
 		method: 'POST'
@@ -317,7 +336,8 @@ const verifyCollaboration = async () => {
 	const revokedPreview = (await new Session().request(`/api/invitations/${revokedInvitation.token}`)).data.data;
 	assert(revokedPreview.invitation.state === 'revoked', 'Revoked invitation state was not returned');
 
-	await signUp(edgeUser, '边界账号', 'les102-edge@example.com');
+	const edgeSignUpResult = await signUp(edgeUser, '边界账号', 'les102-edge@example.com');
+	assert(edgeSignUpResult.data?.location === '/app/meal-plans/new', 'Direct registration did not continue to the first-meal flow');
 	await edgeUser.request(`/api/invitations/${revokedInvitation.token}/accept`, {
 		method: 'POST',
 		expectedStatus: 409

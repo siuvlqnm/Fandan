@@ -6,7 +6,7 @@ LES-100 provides the complete invitation and join path for family workspaces.
 
 - `/app/invitations`: owner-only mobile page for creating, copying and revoking invitation links.
 - `/invite/:token`: public invitation preview and authenticated acceptance page.
-- `/login?next=/invite/:token`: login/registration entry that preserves invitation context.
+- `/login?next=/invite/:token` and `/register?next=/invite/:token`: separate auth entries that preserve invitation context.
 
 The public page shows only the workspace name, invitation expiry and lifecycle state. Shared business records become readable only after an active membership is created.
 

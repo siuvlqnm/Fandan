@@ -57,7 +57,10 @@
 						<Button type="submit" class="h-12 w-full rounded-2xl text-base" disabled={!canAccept} data-pending-label="加入中..."><UserPlus class="size-4" />确认加入</Button>
 					</form>
 				{:else}
-					<Button href={`/login?next=${encodeURIComponent(`/invite/${data.token}`)}`} class="h-12 w-full rounded-2xl text-base"><UserPlus class="size-4" />登录或注册后加入</Button>
+					<div class="grid gap-3">
+						<Button href={`/login?next=${encodeURIComponent(`/invite/${data.token}`)}`} class="h-12 w-full rounded-2xl text-base"><UserPlus class="size-4" />登录后加入</Button>
+						<Button href={`/register?next=${encodeURIComponent(`/invite/${data.token}`)}`} variant="outline" class="h-12 w-full rounded-2xl bg-white text-base">创建账号后加入</Button>
+					</div>
 				{/if}
 				<div class="flex gap-3 text-sm leading-6 text-muted-foreground"><ShieldCheck class="mt-0.5 size-5 shrink-0 text-primary" /><p>加入前不会展示空间里的私人内容；只有确认加入后才能访问共享数据。</p></div>
 			</div>

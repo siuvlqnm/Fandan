@@ -2,6 +2,32 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-122 - Split Authentication And First-Use Entry
+
+Status: implemented on 2026-06-24.
+
+What changed:
+
+- Kept `/login` focused on returning users and added a clear link to the separate `/register` route.
+- Added a three-field registration page with validation, pending feedback and duplicate-submit protection.
+- Made direct registration continue to `/app/meal-plans/new` instead of the empty dashboard.
+- Preserved safe `next` redirects for protected pages and invitation login/registration.
+- Split invitation auth choices into explicit login and account-creation actions.
+- Hid workspace, target and professional-service concepts from the registration surface.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run release:verify`
+- Isolated D1 HTTP smoke for separate login/registration surfaces, validation errors, duplicate registration, first-meal redirect and invitation return.
+
+Notes for next threads:
+
+- LES-123 becomes unblocked when LES-121 and LES-122 are both published.
+- The new registration destination intentionally uses the existing meal-plan form; LES-123 owns simplifying that form into the final first-meal flow.
+- A final in-app-browser pass was attempted, but the local verification URL was blocked by the browser URL policy; do not treat responsive visual QA for LES-122 as completed.
+
 ## LES-121 - Base Servings And Trustworthy Shopping Quantities
 
 Status: implemented on 2026-06-24.

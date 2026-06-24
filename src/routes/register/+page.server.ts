@@ -8,7 +8,8 @@ import { ensureDefaultSpace } from '$lib/server/workspace';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
-const signInSchema = z.object({
+const signUpSchema = z.object({
+	name: z.string().trim().min(1, '请输入名称').max(80),
 	email: z.email('请输入有效邮箱'),
 	password: z.string().min(8, '密码至少 8 位'),
 	next: z.string().optional()
@@ -17,7 +18,7 @@ const signInSchema = z.object({
 const safeNext = (value: string | null | undefined) =>
 	value?.startsWith('/') && !value.startsWith('//') ? value : null;
 const getRedirectTo = (event: RequestEvent, formNext?: string) =>
-	safeNext(formNext ?? event.url.searchParams.get('next')) ?? '/app';
+	safeNext(formNext ?? event.url.searchParams.get('next')) ?? '/app/meal-plans/new';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
@@ -26,22 +27,22 @@ export const load: PageServerLoad = async (event) => {
 
 	return {
 		next: getRedirectTo(event),
-		registerNext: safeNext(event.url.searchParams.get('next')),
-		signInForm: await superValidate(zod4(signInSchema), { id: 'sign-in' })
+		loginNext: safeNext(event.url.searchParams.get('next')),
+		signUpForm: await superValidate(zod4(signUpSchema), { id: 'sign-up' })
 	};
 };
 
 export const actions: Actions = {
-	signInEmail: async (event) => {
-		const form = await superValidate(event, zod4(signInSchema), { id: 'sign-in' });
+	signUpEmail: async (event) => {
+		const form = await superValidate(event, zod4(signUpSchema), { id: 'sign-up' });
 
 		if (!form.valid) {
-			return fail(400, { signInForm: form });
+			return fail(400, { signUpForm: form });
 		}
 
 		if (!event.locals.auth) {
 			return fail(503, {
-				signInForm: {
+				signUpForm: {
 					...form,
 					message: '服务暂时不可用，请稍后重试'
 				}
@@ -49,10 +50,11 @@ export const actions: Actions = {
 		}
 
 		try {
-			const result = await event.locals.auth.api.signInEmail({
+			const result = await event.locals.auth.api.signUpEmail({
 				body: {
 					email: form.data.email,
 					password: form.data.password,
+					name: form.data.name,
 					callbackURL: getRedirectTo(event, form.data.next)
 				},
 				headers: event.request.headers
@@ -61,8 +63,8 @@ export const actions: Actions = {
 			const { db } = getRequestContext(event);
 			await ensureDefaultSpace(db, result.user);
 		} catch (error) {
-			const message = error instanceof APIError ? error.message : '登录失败，请稍后重试';
-			return fail(400, { signInForm: { ...form, message } });
+			const message = error instanceof APIError ? error.message : '注册失败，请稍后重试';
+			return fail(400, { signUpForm: { ...form, message } });
 		}
 
 		return redirect(302, getRedirectTo(event, form.data.next));
