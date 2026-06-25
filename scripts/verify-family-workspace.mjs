@@ -340,7 +340,7 @@ const verifyCollaboration = async () => {
 	assert(edgeSignUpResult.data?.location === '/app/meal-plans/new', 'Direct registration did not continue to the first-meal flow');
 	const firstMealPage = String((await edgeUser.request('/app/meal-plans/new')).data);
 	assert(firstMealPage.includes('安排一顿饭') && firstMealPage.includes('这顿想吃什么') && !firstMealPage.includes('对象类型'), 'First-meal page still exposes the entity-oriented flow');
-	const arrangedMeal = await edgeUser.request('/app/meal-plans/new', {
+	const arrangedMeal = await edgeUser.request('/app/meal-plans/new?/create', {
 		method: 'POST',
 		form: {
 			dishNamesText: '番茄炒蛋、清炒时蔬',

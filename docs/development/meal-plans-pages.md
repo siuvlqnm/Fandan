@@ -14,6 +14,8 @@ LES-90 adds creator-side pages for listing meal plans and creating the first dra
 - A new account can create its first meal without creating a target or leaving the flow.
 - The only primary inputs are dishes and servings; date, time, title, saved meal context and notes live under more settings.
 - Inline dish names are saved as reusable dishes whose base servings match this meal.
+- Optional AI meal drafts fill the same editable form from one natural-language prompt.
+- AI drafts clearly separate saved existing dishes from new suggested dishes; new suggestions can be removed or replaced before saving.
 - Existing target and dish entry links preserve context through `targetId` and `dishId` query parameters.
 - Submitting creates a confirmed single meal, generates its deterministic shopping list and opens that list with first-use guidance.
 - The list page hides filters when empty and collapses status, type and target filters behind a secondary control once more than five plans exist.
@@ -33,6 +35,7 @@ LES-90 adds creator-side pages for listing meal plans and creating the first dra
 
 - Page actions call `src/lib/server/meal-plans.ts` directly instead of calling JSON route handlers.
 - Inline dish creation reuses `src/lib/server/dishes.ts`; existing targets remain optional for compatibility.
+- AI meal drafts use `src/lib/server/ai/meal-drafts.ts`; the provider only returns a draft and never writes meal data.
 - Quick dish creation on the detail page reuses `src/lib/server/dishes.ts`.
 - Shopping-list generation on the detail page reuses `src/lib/server/shopping-lists.ts`.
 - Detail item actions keep the LES-89 API contract: item changes are persisted as a complete replacement list on the parent meal plan.

@@ -3,7 +3,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
-	import { ArrowLeft, CalendarDays, Check, ChevronDown, Utensils } from 'lucide-svelte';
+	import { ArrowLeft, CalendarDays, Check, ChevronDown, Sparkles, Utensils } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -11,7 +11,16 @@
 	const errors = $derived((form?.errors ?? {}) as Record<string, string[]>);
 	const dishes = $derived(form?.dishes ?? data.dishes);
 	const targets = $derived(form?.targets ?? data.targets);
+	const mealAi = $derived(form?.mealAi);
 	const selectedIds = $derived(new Set(values.dishIds ?? []));
+	const selectedDishes = $derived(dishes.filter((dish) => selectedIds.has(dish.id)));
+	const suggestedNames = $derived(
+		String(values.dishNamesText ?? '')
+			.split(/[,，、\n]/)
+			.map((name) => name.trim())
+			.filter(Boolean)
+	);
+	const suggestedDrafts = $derived(mealAi?.status === 'draft' ? mealAi.suggestedDishes : []);
 	const controlClass = 'app-input h-12';
 </script>
 
@@ -27,7 +36,45 @@
 		</div>
 	</section>
 
-	<form method="post" use:enhanceWithFeedback={{ pendingLabel: '正在安排...' }} class="space-y-5">
+	<section class="app-panel space-y-4 border-primary/15 bg-secondary/35 p-5">
+		<div class="flex items-start gap-3">
+			<span class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white text-primary shadow-sm"><Sparkles class="size-5" /></span>
+			<div class="space-y-1">
+				<h2 class="text-lg font-semibold">一句话生成饭单草稿</h2>
+				<p class="text-sm leading-6 text-muted-foreground">例如“今晚 3 人，清淡，半小时能做好”。AI 会先填入下面的可编辑表单。</p>
+			</div>
+		</div>
+		<form method="post" action="?/draft" use:enhanceWithFeedback={{ pendingLabel: '正在生成草稿...' }} class="space-y-3">
+			<label for="meal-draft-prompt" class="sr-only">饭单需求</label>
+			<textarea id="meal-draft-prompt" name="prompt" maxlength="500" class="app-input min-h-24 py-3" placeholder="写下人数、时间、口味或限制">{mealAi?.prompt ?? ''}</textarea>
+			<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+				<p class="text-xs leading-5 text-muted-foreground">会优先复用已有菜品，新建议会明确标记；过敏和忌口不被覆盖。</p>
+				<Button type="submit" variant="outline" class="h-11 rounded-2xl bg-white" data-pending-label="正在生成草稿..." disabled={!data.aiAvailable}>
+					<Sparkles class="size-4" />生成饭单草稿
+				</Button>
+			</div>
+		</form>
+		{#if !data.aiAvailable}
+			<p class="rounded-2xl bg-white p-3 text-sm text-muted-foreground">AI 草稿当前未配置；下面仍可直接手动安排。</p>
+		{:else if mealAi?.status === 'error'}
+			<p class="rounded-2xl bg-white p-3 text-sm text-destructive" role="alert">{mealAi.message}</p>
+		{:else if mealAi?.status === 'draft'}
+			<div class="space-y-3 rounded-2xl bg-white p-4" aria-live="polite">
+				<div class="space-y-1">
+					<p class="font-medium text-primary">饭单草稿已填入，尚未保存</p>
+					<p class="text-sm leading-6 text-muted-foreground">可以删除、替换或继续编辑。点击底部主按钮后才会创建饭单并生成购物清单。</p>
+				</div>
+				{#if mealAi.assumptions.length > 0 || mealAi.constraints.length > 0}
+					<ul class="list-disc space-y-1 pl-5 text-sm text-amber-900">
+						{#each [...mealAi.constraints, ...mealAi.assumptions] as item}<li>{item}</li>{/each}
+					</ul>
+				{/if}
+			</div>
+		{/if}
+	</section>
+
+	<form method="post" action="?/create" use:enhanceWithFeedback={{ pendingLabel: '正在安排...' }} class="space-y-5">
+		<input type="hidden" name="draftPrompt" value={mealAi?.prompt ?? ''} />
 		<section class="app-panel space-y-5 p-5">
 			<div class="space-y-2">
 				<Label for="dish-names" class="text-base font-semibold">这顿想吃什么？</Label>
@@ -35,6 +82,34 @@
 				<p class="text-sm text-muted-foreground">用逗号或换行分隔，新菜会自动保存，之后可以补食材。</p>
 				{#if errors.dishNamesText?.[0]}<p class="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{errors.dishNamesText[0]}</p>{/if}
 			</div>
+
+			{#if mealAi?.status === 'draft'}
+				<div class="grid gap-3 rounded-2xl bg-white p-4 text-sm">
+					{#if selectedDishes.length > 0}
+						<div><p class="font-medium text-primary">复用已有菜品</p><p class="text-muted-foreground">{selectedDishes.map((dish) => dish.name).join('、')}</p></div>
+					{/if}
+					{#if suggestedNames.length > 0}
+						<div class="space-y-2">
+							<p class="font-medium text-primary">AI 新建议</p>
+							<div class="grid gap-2">
+								{#each suggestedNames as name}
+									{@const reason = suggestedDrafts.find((dish) => dish.name === name)?.reason}
+									<div class="grid gap-2 rounded-xl border border-border/70 p-3">
+										<div>
+											<p class="font-medium">{name}<span class="ml-2 text-xs text-muted-foreground">确认后才会保存为菜品</span></p>
+											{#if reason}<p class="text-xs leading-5 text-muted-foreground">{reason}</p>{/if}
+										</div>
+										<div class="grid grid-cols-2 gap-2">
+											<Button type="submit" variant="outline" size="sm" class="h-11 bg-white" name="removeDishName" value={name} formaction="?/removeDish">删除</Button>
+											<Button type="submit" variant="ghost" size="sm" class="h-11" name="replaceDishName" value={name} formaction="?/replaceDish" data-pending-label="替换中...">换一道</Button>
+										</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
+				</div>
+			{/if}
 
 			{#if dishes.length > 0}
 				<div class="space-y-3">

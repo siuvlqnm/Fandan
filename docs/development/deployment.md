@@ -30,7 +30,8 @@ Set or verify these in Cloudflare before relying on production:
 - `CLOUDFLARE_DATABASE_ID`: `a6dfa36e-47ca-4d6a-ae9b-20297ea7c90a`.
 - `ORIGIN`: deployed Worker URL, currently `https://fandan.siuvlqnm.workers.dev/`, or the future custom domain.
 - `BETTER_AUTH_SECRET`: high-entropy production secret, different from local development.
-- `AI` binding: Workers AI binding configured by `wrangler.jsonc` for AI dish drafts.
+- `AI` binding: Workers AI binding configured by `wrangler.jsonc` for AI dish and meal drafts.
+- `AI_DISH_MODEL` and `AI_MEAL_MODEL`: optional non-secret model override variables.
 
 Use Wrangler secrets or dashboard variables for production secrets. Do not commit real values.
 

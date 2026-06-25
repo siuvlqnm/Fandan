@@ -2,6 +2,33 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-126 - AI Meal Draft Generation
+
+Status: implemented on 2026-06-25.
+
+What changed:
+
+- Added an optional `一句话生成饭单草稿` helper to `/app/meal-plans/new`.
+- Added a provider-isolated Workers AI adapter for structured meal drafts.
+- Validated AI output before filling the shared editable meal form.
+- Normalized existing dish ids and target ids against the current workspace before using them.
+- Marked saved existing dishes separately from AI-suggested new dishes.
+- Added per-dish remove and replace actions for suggested dishes without resetting the rest of the draft.
+- Kept manual creation, validation, permissions, dish creation, meal creation and shopping-list generation on the same save path.
+- Added `AI_MEAL_MODEL` as an optional model override.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run release:verify`
+- Local preview with remote Workers AI at `390 x 844`: generated a meal draft from `今晚 3 人，清淡，半小时能做好，两道菜`, verified the editable draft filled two AI suggestions and 3 servings, removed one suggested dish without resetting the draft, then confirmed the meal and landed on the generated shopping list.
+
+Notes for next threads:
+
+- LES-127 is the next task after LES-126 is committed, pushed and closed.
+- The local preview D1 must have migration `0003_worried_luminals.sql` applied before testing meal saves that create dishes, because the current save path writes `base_servings` and `serving_basis_confirmed`.
+
 ## LES-124 - AI Dish Draft Completion
 
 Status: implemented on 2026-06-25.
