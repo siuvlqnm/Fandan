@@ -50,6 +50,12 @@ Remote migrations for the current schema have already been applied. When future 
 
 `0002_rainy_mindworm.sql` was applied on 2026-06-23. The pre-migration Time Travel bookmark is `00000018-00000000-00005093-e0309fb1ba77a32e14180e79e91b1f81`. Post-migration verification found 3 users, 3 spaces, 3 owner memberships, 3 current-space preferences and no spaces missing an active owner membership.
 
+2026-06-25 production sync verification after LES-126:
+
+- `npm run db:migrate:remote` returned `No migrations to apply!`.
+- `origin/main` pointed to `16ba17a922a1df6aebeb5ab762ef118e82bf6cdf`.
+- `https://fandan.siuvlqnm.workers.dev/api/health` returned `ok: true` and `database.queryOk: true`.
+
 The local demo seed file deletes and recreates demo data for local development. Do not run `scripts/db/seed.local.sql` against production.
 
 ## Deploy Commands

@@ -23,6 +23,7 @@ Verification completed:
 - `npm run build`
 - `npm run release:verify`
 - Local preview with remote Workers AI at `390 x 844`: generated a meal draft from `今晚 3 人，清淡，半小时能做好，两道菜`, verified the editable draft filled two AI suggestions and 3 servings, removed one suggested dish without resetting the draft, then confirmed the meal and landed on the generated shopping list.
+- Production sync check on 2026-06-25: `npm run db:migrate:remote` reported no pending D1 migrations, `origin/main` pointed to `16ba17a922a1df6aebeb5ab762ef118e82bf6cdf`, and `https://fandan.siuvlqnm.workers.dev/api/health` returned `queryOk: true`.
 
 Notes for next threads:
 
