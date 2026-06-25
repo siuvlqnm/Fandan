@@ -3,10 +3,16 @@ import {
 	createDish,
 	dishFormSchema,
 	dishFormToCreateInput,
-	parseDishTagsText,
 	type DishFormInput
 } from '$lib/server/dishes';
 import { requireUserSpace } from '$lib/server/context';
+import {
+	DISH_CATEGORY_OPTIONS,
+	INGREDIENT_CATEGORY_OPTIONS,
+	INGREDIENT_UNIT_OPTIONS,
+	normalizeDishTags,
+	normalizeOptionalOption
+} from '$lib/domain/food-options';
 import {
 	createWorkersAiDishDraftProvider,
 	DishDraftError,
@@ -42,12 +48,14 @@ export const _readDishForm = async (request: Request) => {
 	const notes = readList(formData, 'ingredientNotes');
 	const sortOrders = readList(formData, 'ingredientSortOrder');
 
+	const selectedTags = normalizeDishTags(formData.getAll('tags').map((value) => String(value ?? '')));
+
 	const ingredients = names
 		.map((name, index) => ({
 			name,
 			quantity: quantities[index] ?? '',
-			unit: units[index] ?? '',
-			category: categories[index] ?? '',
+			unit: normalizeOptionalOption(units[index] ?? '', INGREDIENT_UNIT_OPTIONS) ?? '',
+			category: normalizeOptionalOption(categories[index] ?? '', INGREDIENT_CATEGORY_OPTIONS) ?? '',
 			notes: notes[index] ?? '',
 			sortOrder: Number(sortOrders[index] ?? index)
 		}))
@@ -59,11 +67,11 @@ export const _readDishForm = async (request: Request) => {
 
 	return {
 		name: String(formData.get('name') ?? ''),
-		category: String(formData.get('category') ?? ''),
+		category: normalizeOptionalOption(String(formData.get('category') ?? ''), DISH_CATEGORY_OPTIONS) ?? '',
 		instructions: String(formData.get('instructions') ?? ''),
 		baseServings: String(formData.get('baseServings') ?? '1'),
-		tagsText: String(formData.get('tagsText') ?? ''),
-		tags: parseDishTagsText(String(formData.get('tagsText') ?? '')),
+		tagsText: selectedTags.join(', '),
+		tags: selectedTags,
 		visibility: String(formData.get('visibility') ?? 'space'),
 		ingredients
 	};

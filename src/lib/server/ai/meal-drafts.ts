@@ -1,16 +1,43 @@
 import { z } from 'zod';
+import {
+	DISH_CATEGORY_OPTIONS,
+	DISH_TAG_OPTIONS,
+	INGREDIENT_CATEGORY_OPTIONS,
+	INGREDIENT_UNIT_OPTIONS,
+	normalizeDishTags,
+	normalizeOption,
+	optionListText
+} from '$lib/domain/food-options';
 
 const DEFAULT_MODEL = '@cf/meta/llama-3.1-8b-instruct-fast';
 const MAX_ATTEMPTS = 2;
 const TIMEOUT_MS = 12_000;
-const MAX_OUTPUT_TOKENS = 1_000;
+const MAX_OUTPUT_TOKENS = 2_400;
+
+const suggestedDishIngredientSchema = z
+	.object({
+		name: z.string().trim().min(1).max(80),
+		quantity: z.string().trim().min(1).max(40),
+		unit: z.enum(INGREDIENT_UNIT_OPTIONS),
+		category: z.enum(INGREDIENT_CATEGORY_OPTIONS),
+		notes: z.string().trim().max(500).nullable()
+	})
+	.strict();
 
 const suggestedDishSchema = z
 	.object({
 		name: z.string().trim().min(1).max(80),
-		reason: z.string().trim().max(160).nullable()
+		reason: z.string().trim().max(160).nullable(),
+		category: z.enum(DISH_CATEGORY_OPTIONS),
+		tags: z.array(z.enum(DISH_TAG_OPTIONS)).min(1).max(6),
+		baseServings: z.number().int().min(1).max(999),
+		ingredients: z.array(suggestedDishIngredientSchema).min(2).max(10),
+		instructions: z.string().trim().min(8).max(2000),
+		uncertainFields: z.array(z.string().trim().min(1).max(120)).max(30)
 	})
 	.strict();
+
+export const mealDraftSuggestedDishSchema = suggestedDishSchema;
 
 export const mealDraftSchema = z
 	.object({
@@ -20,7 +47,7 @@ export const mealDraftSchema = z
 		mealSlot: z.string().trim().max(40).nullable(),
 		targetId: z.string().trim().max(120).nullable(),
 		existingDishIds: z.array(z.string().trim().min(1).max(120)).max(6),
-		suggestedDishes: z.array(suggestedDishSchema).min(1).max(6),
+		suggestedDishes: z.array(suggestedDishSchema).max(6),
 		notes: z.string().trim().max(2000).nullable(),
 		assumptions: z.array(z.string().trim().min(1).max(200)).max(8),
 		constraints: z.array(z.string().trim().min(1).max(200)).max(8),
@@ -113,15 +140,45 @@ const jsonSchema = {
 		existingDishIds: { type: 'array', maxItems: 6, items: { type: 'string', maxLength: 120 } },
 		suggestedDishes: {
 			type: 'array',
-			minItems: 1,
 			maxItems: 6,
 			items: {
 				type: 'object',
 				additionalProperties: false,
-				required: ['name', 'reason'],
+				required: [
+					'name',
+					'reason',
+					'category',
+					'tags',
+					'baseServings',
+					'ingredients',
+					'instructions',
+					'uncertainFields'
+				],
 				properties: {
 					name: { type: 'string', maxLength: 80 },
-					reason: { type: ['string', 'null'], maxLength: 160 }
+					reason: { type: ['string', 'null'], maxLength: 160 },
+					category: { type: 'string', enum: DISH_CATEGORY_OPTIONS },
+					tags: { type: 'array', minItems: 1, maxItems: 6, items: { type: 'string', enum: DISH_TAG_OPTIONS } },
+					baseServings: { type: 'integer', minimum: 1, maximum: 999 },
+					ingredients: {
+						type: 'array',
+						minItems: 2,
+						maxItems: 10,
+						items: {
+							type: 'object',
+							additionalProperties: false,
+							required: ['name', 'quantity', 'unit', 'category', 'notes'],
+							properties: {
+								name: { type: 'string', maxLength: 80 },
+								quantity: { type: 'string', minLength: 1, maxLength: 40 },
+								unit: { type: 'string', enum: INGREDIENT_UNIT_OPTIONS },
+								category: { type: 'string', enum: INGREDIENT_CATEGORY_OPTIONS },
+								notes: { type: ['string', 'null'], maxLength: 500 }
+							}
+						}
+					},
+					instructions: { type: 'string', minLength: 8, maxLength: 2000 },
+					uncertainFields: { type: 'array', maxItems: 30, items: { type: 'string', maxLength: 120 } }
 				}
 			}
 		},
@@ -134,17 +191,25 @@ const jsonSchema = {
 
 const systemPrompt = `你是饭单应用的 AI 饭单草稿助手。你只生成可编辑草稿，不保存数据。
 
+可选菜品分类：${optionListText(DISH_CATEGORY_OPTIONS)}
+可选标签：${optionListText(DISH_TAG_OPTIONS)}
+可选食材分类：${optionListText(INGREDIENT_CATEGORY_OPTIONS)}
+可选单位：${optionListText(INGREDIENT_UNIT_OPTIONS)}
+
 规则：
 1. 默认给一顿饭 2 到 3 道菜；如果用户明确要求更多或更少，尊重用户。
 2. 优先复用 existingDishes 中的菜品，并且 existingDishIds 只能包含输入列表里的 id。
-3. 新建议必须放到 suggestedDishes，不能伪装成已保存菜品。
+3. 新建议必须放到 suggestedDishes，不能伪装成已保存菜品。每道新建议必须带完整可编辑菜品草稿：category、tags、baseServings、instructions、2 到 6 种 ingredients。
 4. 如果用户提到目标对象，targetId 只能选择 targets 输入列表里的 id；无法确认就返回 null。
 5. 如果用户提到目标对象或饮食限制，targets 里的 dietaryRestrictions 优先级最高，不要被建议覆盖。
 6. 不要推断过敏、疾病、身份或家庭成员信息；不确定内容写到 assumptions 或 uncertainFields。
 7. plannedDate 可用今天 today 推断“今晚/明天”等简单日期；不确定就返回 null。
-8. suggestedDishes 必须至少有一道菜。没有可复用菜品时，必须提供 2 到 3 道具体 suggestedDishes 菜名。
-9. notes 用简短中文记录口味、时间、限制和需要用户核对的信息。
-10. 输出必须严格符合 JSON Schema，不要输出 Markdown。`;
+8. category、tags、食材 category、unit 只能从上面的可选项选择，不能创造新选项。
+9. suggestedDishes 的每个食材都必须有 name、quantity、unit、category。数量用简短可采购文本，例如 "3"、"250"、"1/2"、"适量"；不要留空。
+10. 新建议的 baseServings 默认等于本顿 servings；若 servings 不确定，则按常见家庭用量估算 2 或 3，并在该菜 uncertainFields 写入 "baseServings"。
+11. 凡不是用户原话明确给出的菜品分类、标签、做法、食材数量或单位，都写入该菜 uncertainFields，例如 "ingredients.0.quantity"。
+12. notes 用简短中文记录口味、时间、限制和需要用户核对的信息。
+13. 输出必须严格符合 JSON Schema，不要输出 Markdown。`;
 
 const textOrNull = (value: unknown) => (typeof value === 'string' && value.trim() ? value.trim() : null);
 
@@ -166,6 +231,7 @@ const normalizeDraftCandidate = (candidate: unknown, input: MealDraftProviderInp
 	const validDishIds = new Set(input.dishes.map((dish) => dish.id));
 	const validTargetIds = new Set(input.targets.map((target) => target.id));
 	const excludedNames = new Set((input.excludeDishNames ?? []).map((name) => name.trim()).filter(Boolean));
+	const servings = typeof value.servings === 'number' && Number.isInteger(value.servings) ? value.servings : null;
 	const existingDishIds = Array.isArray(value.existingDishIds)
 		? Array.from(new Set(value.existingDishIds.filter((id): id is string => typeof id === 'string' && validDishIds.has(id)))).slice(0, 6)
 		: [];
@@ -175,13 +241,69 @@ const normalizeDraftCandidate = (candidate: unknown, input: MealDraftProviderInp
 					if (!dish || typeof dish !== 'object' || Array.isArray(dish)) return null;
 					const item = dish as Record<string, unknown>;
 					const name = textOrNull(item.name);
-					return name && !excludedNames.has(name) ? { name, reason: textOrNull(item.reason) } : null;
+					if (!name || excludedNames.has(name)) return null;
+
+					const ingredients = Array.isArray(item.ingredients)
+						? item.ingredients
+								.map((ingredient) => {
+									if (!ingredient || typeof ingredient !== 'object' || Array.isArray(ingredient)) return null;
+									const ingredientItem = ingredient as Record<string, unknown>;
+									const ingredientName = textOrNull(ingredientItem.name);
+									if (!ingredientName) return null;
+									return {
+										name: ingredientName,
+										quantity: textOrNull(ingredientItem.quantity) ?? '适量',
+										unit: normalizeOption(textOrNull(ingredientItem.unit), INGREDIENT_UNIT_OPTIONS, '适量'),
+										category: normalizeOption(textOrNull(ingredientItem.category), INGREDIENT_CATEGORY_OPTIONS, '其他'),
+										notes: textOrNull(ingredientItem.notes)
+									};
+								})
+								.filter(
+									(ingredient): ingredient is {
+										name: string;
+										quantity: string;
+										unit: (typeof INGREDIENT_UNIT_OPTIONS)[number];
+										category: (typeof INGREDIENT_CATEGORY_OPTIONS)[number];
+										notes: string | null;
+									} => Boolean(ingredient)
+								)
+						: [];
+					const tags = normalizeDishTags(
+						Array.isArray(item.tags)
+							? item.tags.map((tag) => textOrNull(tag)).filter((tag): tag is string => Boolean(tag))
+							: []
+					).slice(0, 6);
+					const uncertainFields = Array.isArray(item.uncertainFields)
+						? item.uncertainFields.map((field) => textOrNull(field)).filter((field): field is string => Boolean(field))
+						: [];
+					const baseServings =
+						typeof item.baseServings === 'number' && Number.isInteger(item.baseServings)
+							? item.baseServings
+							: servings ?? 2;
+					if (
+						!(typeof item.baseServings === 'number' && Number.isInteger(item.baseServings)) &&
+						!uncertainFields.includes('baseServings')
+					) {
+						uncertainFields.push('baseServings');
+					}
+
+					return {
+						name,
+						reason: textOrNull(item.reason),
+						category: normalizeOption(textOrNull(item.category), DISH_CATEGORY_OPTIONS, '家常菜'),
+						tags: tags.length > 0 ? tags : ['快手'],
+						baseServings,
+						ingredients,
+						instructions:
+							textOrNull(item.instructions) ??
+							`${name}按家常做法处理，先备好食材，再按熟成顺序烹调并调味。`,
+						uncertainFields
+					};
 				})
-				.filter((dish): dish is { name: string; reason: string | null } => Boolean(dish))
+				.filter((dish): dish is z.infer<typeof suggestedDishSchema> => Boolean(dish))
 				.slice(0, 6)
 		: [];
 	const targetId = textOrNull(value.targetId);
-	const servings = typeof value.servings === 'number' && Number.isInteger(value.servings) ? value.servings : null;
 	const uncertainFields = Array.isArray(value.uncertainFields)
 		? value.uncertainFields.map((field) => textOrNull(field)).filter((field): field is string => Boolean(field))
 		: [];

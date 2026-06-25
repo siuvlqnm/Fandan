@@ -2,6 +2,12 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import {
+		DISH_CATEGORY_OPTIONS,
+		DISH_TAG_OPTIONS,
+		INGREDIENT_CATEGORY_OPTIONS,
+		INGREDIENT_UNIT_OPTIONS
+	} from '$lib/domain/food-options';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { cn } from '$lib/utils';
 	import { Plus, Trash2 } from 'lucide-svelte';
@@ -87,6 +93,19 @@
 	const selectClass = 'app-input h-12 text-sm';
 
 	const tagsText = $derived(values.tagsText ?? values.tags?.join(', ') ?? '');
+	const selectedTags = $derived(
+		new Set(
+			tagsText
+				.split(/[,，]/)
+				.map((tag) => tag.trim())
+				.filter(Boolean)
+		)
+	);
+	const selectedOption = (value: string | number | null | undefined, options: readonly string[], fallback = '') => {
+		const normalized = String(value ?? '').trim();
+		if (!normalized) return '';
+		return options.includes(normalized) ? normalized : fallback;
+	};
 	const isAiUncertain = (field: string) =>
 		aiUncertainFields.some((uncertainField) =>
 			uncertainField === field || uncertainField.startsWith(`${field}.`)
@@ -105,7 +124,12 @@
 
 		<div class="space-y-2">
 			<Label for="dish-category">分类</Label>
-			<Input id="dish-category" name="category" value={values.category ?? ''} placeholder="家常菜" class="app-input" />
+			<select id="dish-category" name="category" class={selectClass}>
+				<option value="" selected={!values.category}>选择分类</option>
+				{#each DISH_CATEGORY_OPTIONS as category}
+					<option value={category} selected={selectedOption(values.category, DISH_CATEGORY_OPTIONS, '其他') === category}>{category}</option>
+				{/each}
+			</select>
 			{#if isAiUncertain('category')}<p class="text-sm text-amber-800">AI 建议，保存前请核对。</p>{/if}
 			{#if errors.category?.[0]}
 				<p class="text-sm text-destructive">{errors.category[0]}</p>
@@ -150,8 +174,15 @@
 
 	<div class="space-y-2">
 		<Label for="dish-tags">标签</Label>
-		<Input id="dish-tags" name="tagsText" value={tagsText} placeholder="快手, 下饭, 儿童友好" class="app-input" />
-		<p class="text-sm text-muted-foreground">用逗号分隔，列表页会展示并支持搜索。</p>
+		<div id="dish-tags" class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+			{#each DISH_TAG_OPTIONS as tag}
+				<label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-2xl border border-border/80 bg-white px-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-secondary/60">
+					<input type="checkbox" name="tags" value={tag} checked={selectedTags.has(tag)} class="size-4 rounded" />
+					<span>{tag}</span>
+				</label>
+			{/each}
+		</div>
+		<p class="text-sm text-muted-foreground">选择常用标签，列表页会展示并支持搜索。</p>
 		{#if isAiUncertain('tags')}<p class="text-sm text-amber-800">AI 建议，保存前请核对。</p>{/if}
 		{#if errors.tagsText?.[0]}
 			<p class="text-sm text-destructive">{errors.tagsText[0]}</p>
@@ -224,17 +255,21 @@
 						</div>
 						<div class="space-y-2">
 							<Label for={`ingredient-unit-${index}`}>单位</Label>
-							<Input id={`ingredient-unit-${index}`} name="ingredientUnit" value={ingredient.unit ?? ''} placeholder="个" class="app-input" />
+							<select id={`ingredient-unit-${index}`} name="ingredientUnit" class={selectClass}>
+								<option value="" selected={!ingredient.unit}>选择单位</option>
+								{#each INGREDIENT_UNIT_OPTIONS as unit}
+									<option value={unit} selected={selectedOption(ingredient.unit, INGREDIENT_UNIT_OPTIONS, '适量') === unit}>{unit}</option>
+								{/each}
+							</select>
 						</div>
 						<div class="space-y-2">
 							<Label for={`ingredient-category-${index}`}>分类</Label>
-							<Input
-								id={`ingredient-category-${index}`}
-								name="ingredientCategory"
-								value={ingredient.category ?? ''}
-								placeholder="蛋奶"
-								class="app-input"
-							/>
+							<select id={`ingredient-category-${index}`} name="ingredientCategory" class={selectClass}>
+								<option value="" selected={!ingredient.category}>选择分类</option>
+								{#each INGREDIENT_CATEGORY_OPTIONS as category}
+									<option value={category} selected={selectedOption(ingredient.category, INGREDIENT_CATEGORY_OPTIONS, '其他') === category}>{category}</option>
+								{/each}
+							</select>
 						</div>
 					</div>
 					<div class="mt-3 space-y-2">

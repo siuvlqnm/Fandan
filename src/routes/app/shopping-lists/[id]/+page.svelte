@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { INGREDIENT_CATEGORY_OPTIONS, INGREDIENT_UNIT_OPTIONS } from '$lib/domain/food-options';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, CheckCircle2, Circle, ClipboardList, Plus, RefreshCw, Save, ShoppingBag, Trash2 } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
@@ -15,6 +16,12 @@
 	const completionPercent = $derived(data.summary.total === 0 ? 0 : Math.round((data.summary.checked / data.summary.total) * 100));
 	const textAreaClass =
 		'app-input min-h-20 py-3';
+	const selectClass = 'app-input h-11 text-sm';
+	const selectedOption = (value: string | null | undefined, options: readonly string[], fallback = '') => {
+		const normalized = String(value ?? '').trim();
+		if (!normalized) return '';
+		return options.includes(normalized) ? normalized : fallback;
+	};
 </script>
 
 <svelte:head>
@@ -173,12 +180,21 @@
 											</div>
 											<div class="space-y-2">
 												<Label for={`unit-${item.id}`}>单位</Label>
-												<Input id={`unit-${item.id}`} name="unit" value={item.unit ?? ''} class="app-input h-11" />
+												<select id={`unit-${item.id}`} name="unit" class={selectClass}>
+													<option value="" selected={!item.unit}>选择单位</option>
+													{#each INGREDIENT_UNIT_OPTIONS as unit}
+														<option value={unit} selected={selectedOption(item.unit, INGREDIENT_UNIT_OPTIONS, '适量') === unit}>{unit}</option>
+													{/each}
+												</select>
 											</div>
 										</div>
 										<div class="space-y-2">
 											<Label for={`category-${item.id}`}>分类</Label>
-											<Input id={`category-${item.id}`} name="category" value={item.category ?? '其他'} class="app-input h-11" />
+											<select id={`category-${item.id}`} name="category" class={selectClass}>
+												{#each INGREDIENT_CATEGORY_OPTIONS as category}
+													<option value={category} selected={selectedOption(item.category, INGREDIENT_CATEGORY_OPTIONS, '其他') === category}>{category}</option>
+												{/each}
+											</select>
 										</div>
 										<div class="space-y-2">
 											<Label for={`notes-${item.id}`}>备注</Label>
@@ -218,12 +234,22 @@
 				</div>
 				<div class="space-y-2">
 					<Label for="new-item-unit">单位</Label>
-					<Input id="new-item-unit" name="unit" value={String(addValues.unit ?? '')} placeholder="把" class="app-input h-11" />
+					<select id="new-item-unit" name="unit" class={selectClass}>
+						<option value="" selected={!addValues.unit}>选择单位</option>
+						{#each INGREDIENT_UNIT_OPTIONS as unit}
+							<option value={unit} selected={selectedOption(String(addValues.unit ?? ''), INGREDIENT_UNIT_OPTIONS, '适量') === unit}>{unit}</option>
+						{/each}
+					</select>
 				</div>
 			</div>
 			<div class="space-y-2">
 				<Label for="new-item-category">分类</Label>
-				<Input id="new-item-category" name="category" value={String(addValues.category ?? '')} placeholder="蔬菜" class="app-input h-11" />
+				<select id="new-item-category" name="category" class={selectClass}>
+					<option value="" selected={!addValues.category}>选择分类</option>
+					{#each INGREDIENT_CATEGORY_OPTIONS as category}
+						<option value={category} selected={selectedOption(String(addValues.category ?? ''), INGREDIENT_CATEGORY_OPTIONS, '其他') === category}>{category}</option>
+					{/each}
+				</select>
 			</div>
 			<div class="space-y-2">
 				<Label for="new-item-notes">备注</Label>

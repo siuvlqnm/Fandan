@@ -9,6 +9,7 @@ import { listTargets } from '$lib/server/targets';
 import {
 	createWorkersAiMealDraftProvider,
 	generateMealDraft,
+	mealDraftSuggestedDishSchema,
 	MealDraftError,
 	type MealDraft
 } from '$lib/server/ai/meal-drafts';
@@ -26,7 +27,8 @@ const arrangeMealSchema = z
 		plannedDate: nullableText(20),
 		mealSlot: nullableText(40),
 		targetId: nullableText(120),
-		notes: nullableText(2000)
+		notes: nullableText(2000),
+		suggestedDishDraftsJson: z.string().trim().max(30_000).optional()
 	})
 	.refine((value) => value.dishIds.length > 0 || value.dishNamesText.length > 0, {
 		message: '请选择已有菜品，或输入这顿想吃的菜',
@@ -69,7 +71,8 @@ const defaults = (dishId = '', targetId = '') => ({
 	plannedDate: new Date().toISOString().slice(0, 10),
 	mealSlot: '晚餐',
 	targetId,
-	notes: ''
+	notes: '',
+	suggestedDishDraftsJson: ''
 });
 
 const toDishContext = (dish: Awaited<ReturnType<typeof listDishes>>[number]) => ({
@@ -95,7 +98,8 @@ const draftToValues = (draft: MealDraft, fallback = defaults()) => ({
 	plannedDate: draft.plannedDate ?? fallback.plannedDate,
 	mealSlot: draft.mealSlot ?? fallback.mealSlot,
 	targetId: draft.targetId ?? fallback.targetId,
-	notes: draft.notes ?? fallback.notes
+	notes: draft.notes ?? fallback.notes,
+	suggestedDishDraftsJson: JSON.stringify(draft.suggestedDishes)
 });
 
 const readValuesFromFormData = (formData: FormData) => {
@@ -107,11 +111,22 @@ const readValuesFromFormData = (formData: FormData) => {
 		plannedDate: String(formData.get('plannedDate') ?? ''),
 		mealSlot: String(formData.get('mealSlot') ?? ''),
 		targetId: String(formData.get('targetId') ?? ''),
-		notes: String(formData.get('notes') ?? '')
+		notes: String(formData.get('notes') ?? ''),
+		suggestedDishDraftsJson: String(formData.get('suggestedDishDraftsJson') ?? '')
 	};
 };
 
 const readForm = async (request: Request) => readValuesFromFormData(await request.formData());
+
+const parseSuggestedDishDrafts = (value: string | null | undefined) => {
+	if (!value?.trim()) return [];
+
+	try {
+		return z.array(mealDraftSuggestedDishSchema).max(10).parse(JSON.parse(value));
+	} catch {
+		return [];
+	}
+};
 
 const createMealAction = async (event: Parameters<Actions['default']>[0]) => {
 	const context = await requireUserSpace(event);
@@ -132,6 +147,9 @@ const createMealAction = async (event: Parameters<Actions['default']>[0]) => {
 
 	try {
 		const existingDishesByName = new Map(dishes.map((dish) => [dish.name.trim(), dish.id]));
+		const suggestedDraftsByName = new Map(
+			parseSuggestedDishDrafts(values.suggestedDishDraftsJson).map((dish) => [dish.name.trim(), dish])
+		);
 		const inlineDishIds = [];
 		for (const name of dishNames) {
 			const existingDishId = existingDishesByName.get(name);
@@ -140,7 +158,22 @@ const createMealAction = async (event: Parameters<Actions['default']>[0]) => {
 				continue;
 			}
 
-			const dish = await createDish(context, createDishSchema.parse({ name, baseServings: result.data.servings }));
+			const draft = suggestedDraftsByName.get(name);
+			const dish = await createDish(
+				context,
+				createDishSchema.parse(
+					draft
+						? {
+								name: draft.name,
+								category: draft.category,
+								instructions: draft.instructions,
+								baseServings: draft.baseServings,
+								tags: draft.tags,
+								ingredients: draft.ingredients
+							}
+						: { name, baseServings: result.data.servings }
+				)
+			);
 			existingDishesByName.set(dish.name.trim(), dish.id);
 			inlineDishIds.push(dish.id);
 		}
@@ -150,7 +183,7 @@ const createMealAction = async (event: Parameters<Actions['default']>[0]) => {
 			title,
 			targetId: result.data.targetId,
 			type: 'single_meal',
-			status: 'confirmed',
+			status: 'pending_confirmation',
 			startDate: result.data.plannedDate,
 			endDate: result.data.plannedDate,
 			notes: result.data.notes,
@@ -271,9 +304,14 @@ export const actions: Actions = {
 			const replacement = result.draft.suggestedDishes.find((dish) => !remainingNames.includes(dish.name) && dish.name !== replaceDishName);
 
 			if (!replacement) throw new MealDraftError('invalid_response', 'AI 没有给出可替换的菜，请手动调整或再试一次。');
+			const remainingDrafts = parseSuggestedDishDrafts(values.suggestedDishDraftsJson).filter(
+				(dish) => remainingNames.includes(dish.name) && dish.name !== replaceDishName
+			);
+			const nextDrafts = [...remainingDrafts, replacement];
+			const nextNames = [...remainingNames, replacement.name];
 
 			return {
-				values: { ...values, dishNamesText: [...remainingNames, replacement.name].join('、') },
+				values: { ...values, dishNamesText: nextNames.join('、'), suggestedDishDraftsJson: JSON.stringify(nextDrafts) },
 				dishes,
 				targets,
 				mealAi: {
@@ -282,7 +320,7 @@ export const actions: Actions = {
 					assumptions: result.draft.assumptions,
 					constraints: result.draft.constraints,
 					uncertainFields: result.draft.uncertainFields,
-					suggestedDishes: [{ name: replacement.name, reason: replacement.reason }],
+					suggestedDishes: nextDrafts,
 					existingDishIds: values.dishIds,
 					attempts: result.attempts,
 					model: result.model
@@ -299,10 +337,17 @@ export const actions: Actions = {
 		const values = readValuesFromFormData(formData);
 		const removeDishName = String(formData.get('removeDishName') ?? '').trim();
 		const remainingNames = parseDishNames(values.dishNamesText).filter((name) => name !== removeDishName);
+		const remainingDrafts = parseSuggestedDishDrafts(values.suggestedDishDraftsJson).filter((dish) =>
+			remainingNames.includes(dish.name)
+		);
 		const [dishes, targets] = await Promise.all([listDishes(context), listTargets(context)]);
 
 		return {
-			values: { ...values, dishNamesText: remainingNames.join('、') },
+			values: {
+				...values,
+				dishNamesText: remainingNames.join('、'),
+				suggestedDishDraftsJson: JSON.stringify(remainingDrafts)
+			},
 			dishes,
 			targets,
 			mealAi: {
@@ -311,7 +356,7 @@ export const actions: Actions = {
 				assumptions: [],
 				constraints: [],
 				uncertainFields: [],
-				suggestedDishes: remainingNames.map((name) => ({ name, reason: null })),
+				suggestedDishes: remainingDrafts,
 				existingDishIds: values.dishIds,
 				attempts: 0,
 				model: 'manual-edit'

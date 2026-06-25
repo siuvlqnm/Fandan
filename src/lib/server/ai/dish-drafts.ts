@@ -1,16 +1,25 @@
 import { z } from 'zod';
+import {
+	DISH_CATEGORY_OPTIONS,
+	DISH_TAG_OPTIONS,
+	INGREDIENT_CATEGORY_OPTIONS,
+	INGREDIENT_UNIT_OPTIONS,
+	normalizeDishTags,
+	normalizeOption,
+	optionListText
+} from '$lib/domain/food-options';
 
 const DEFAULT_MODEL = '@cf/meta/llama-3.2-3b-instruct';
 const MAX_ATTEMPTS = 2;
 const TIMEOUT_MS = 12_000;
-const MAX_OUTPUT_TOKENS = 1_200;
+const MAX_OUTPUT_TOKENS = 1_800;
 
 const dishDraftIngredientSchema = z
 	.object({
 		name: z.string().trim().min(1).max(80),
-		quantity: z.string().trim().max(40).nullable(),
-		unit: z.string().trim().max(24).nullable(),
-		category: z.string().trim().max(40).nullable(),
+		quantity: z.string().trim().min(1).max(40),
+		unit: z.enum(INGREDIENT_UNIT_OPTIONS),
+		category: z.enum(INGREDIENT_CATEGORY_OPTIONS),
 		notes: z.string().trim().max(500).nullable()
 	})
 	.strict();
@@ -18,11 +27,11 @@ const dishDraftIngredientSchema = z
 export const dishDraftSchema = z
 	.object({
 		name: z.string().trim().min(1).max(80),
-		category: z.string().trim().max(40).nullable(),
-		tags: z.array(z.string().trim().min(1).max(24)).max(12),
-		baseServings: z.number().int().min(1).max(999).nullable(),
-		ingredients: z.array(dishDraftIngredientSchema).max(12),
-		instructions: z.string().trim().max(4000).nullable(),
+		category: z.enum(DISH_CATEGORY_OPTIONS),
+		tags: z.array(z.enum(DISH_TAG_OPTIONS)).min(1).max(6),
+		baseServings: z.number().int().min(1).max(999),
+		ingredients: z.array(dishDraftIngredientSchema).min(2).max(12),
+		instructions: z.string().trim().min(8).max(4000),
 		uncertainFields: z.array(z.string().trim().min(1).max(120)).max(50),
 		notes: z.array(z.string().trim().min(1).max(240)).max(8)
 	})
@@ -75,11 +84,12 @@ const jsonSchema = {
 	],
 	properties: {
 		name: { type: 'string', maxLength: 80 },
-		category: { type: ['string', 'null'], maxLength: 40 },
-		tags: { type: 'array', maxItems: 12, items: { type: 'string', maxLength: 24 } },
-		baseServings: { type: ['integer', 'null'], minimum: 1, maximum: 999 },
+		category: { type: 'string', enum: DISH_CATEGORY_OPTIONS },
+		tags: { type: 'array', minItems: 1, maxItems: 6, items: { type: 'string', enum: DISH_TAG_OPTIONS } },
+		baseServings: { type: 'integer', minimum: 1, maximum: 999 },
 		ingredients: {
 			type: 'array',
+			minItems: 2,
 			maxItems: 12,
 			items: {
 				type: 'object',
@@ -87,14 +97,14 @@ const jsonSchema = {
 				required: ['name', 'quantity', 'unit', 'category', 'notes'],
 				properties: {
 					name: { type: 'string', maxLength: 80 },
-					quantity: { type: ['string', 'null'], maxLength: 40 },
-					unit: { type: ['string', 'null'], maxLength: 24 },
-					category: { type: ['string', 'null'], maxLength: 40 },
+					quantity: { type: 'string', minLength: 1, maxLength: 40 },
+					unit: { type: 'string', enum: INGREDIENT_UNIT_OPTIONS },
+					category: { type: 'string', enum: INGREDIENT_CATEGORY_OPTIONS },
 					notes: { type: ['string', 'null'], maxLength: 500 }
 				}
 			}
 		},
-		instructions: { type: ['string', 'null'], maxLength: 4000 },
+		instructions: { type: 'string', minLength: 8, maxLength: 4000 },
 		uncertainFields: { type: 'array', maxItems: 50, items: { type: 'string', maxLength: 120 } },
 		notes: { type: 'array', maxItems: 8, items: { type: 'string', maxLength: 240 } }
 	}
@@ -102,14 +112,21 @@ const jsonSchema = {
 
 const systemPrompt = `你是饭单应用的菜品草稿助手。把用户的一句话整理为可编辑的结构化菜品草稿。
 
+可选菜品分类：${optionListText(DISH_CATEGORY_OPTIONS)}
+可选标签：${optionListText(DISH_TAG_OPTIONS)}
+可选食材分类：${optionListText(INGREDIENT_CATEGORY_OPTIONS)}
+可选单位：${optionListText(INGREDIENT_UNIT_OPTIONS)}
+
 规则：
 1. 只生成草稿，绝不声称已经保存。
 2. 不推断过敏、忌口、疾病、身份或家庭成员信息，也不要增加这些字段。
-3. 用户明确给出人数时才把它作为 baseServings；未给出时返回 null，并在 uncertainFields 写入 "baseServings"。
-4. 可建议 3 到 8 种关键食材和简短做法，但凡不是用户原话明确给出的内容，都在 uncertainFields 中写入对应路径，例如 "category"、"ingredients.0.quantity" 或 "instructions"。
-5. 数量必须是简短文本；无法确定就返回 null，不要伪造精确值。
-6. notes 用简短中文说明最需要用户核对的事项。不要计算购物数量。
-7. 输出必须严格符合 JSON Schema，不要输出 Markdown。`;
+3. 必须生成 category、1 到 6 个 tags、baseServings、instructions，以及 2 到 8 种关键食材。
+4. category、tags、食材 category、unit 只能从上面的可选项中选择，不能创造新选项。
+5. 用户明确给出人数时作为 baseServings；未给出时按常见家庭用量估算 2 或 3，并在 uncertainFields 写入 "baseServings"。
+6. 每个食材必须有 name、quantity、unit、category。数量用简短可采购文本，例如 "3"、"250"、"1/2"、"适量"；不要留空。
+7. 凡不是用户原话明确给出的内容，都在 uncertainFields 中写入对应路径，例如 "category"、"ingredients.0.quantity"、"ingredients.0.unit" 或 "instructions"。
+8. notes 用简短中文说明最需要用户核对的事项。不要计算购物数量。
+9. 输出必须严格符合 JSON Schema，不要输出 Markdown。`;
 
 const extractContent = (response: Record<string, unknown>) => {
 	if ('response' in response) {
@@ -157,9 +174,9 @@ const normalizeDraftCandidate = (candidate: unknown, prompt: string) => {
 				const item = ingredient as Record<string, unknown>;
 				return {
 					name: textOrNull(item.name) ?? '',
-					quantity: textOrNull(item.quantity),
-					unit: textOrNull(item.unit),
-					category: textOrNull(item.category),
+					quantity: textOrNull(item.quantity) ?? '适量',
+					unit: normalizeOption(textOrNull(item.unit), INGREDIENT_UNIT_OPTIONS, '适量'),
+					category: normalizeOption(textOrNull(item.category), INGREDIENT_CATEGORY_OPTIONS, '其他'),
 					notes: textOrNull(item.notes)
 				};
 			})
@@ -167,26 +184,33 @@ const normalizeDraftCandidate = (candidate: unknown, prompt: string) => {
 	const baseServings =
 		typeof value.baseServings === 'number' && Number.isInteger(value.baseServings)
 			? value.baseServings
-			: null;
+			: 2;
 	const uncertainFields = Array.isArray(value.uncertainFields)
 		? value.uncertainFields
 				.map((field) => textOrNull(field))
 				.filter((field): field is string => Boolean(field))
 		: [];
 
-	if (baseServings === null && !uncertainFields.includes('baseServings')) {
+	if (
+		!(typeof value.baseServings === 'number' && Number.isInteger(value.baseServings)) &&
+		!uncertainFields.includes('baseServings')
+	) {
 		uncertainFields.push('baseServings');
 	}
 
+	const tags = normalizeDishTags(
+		Array.isArray(value.tags)
+			? value.tags.map((tag) => textOrNull(tag)).filter((tag): tag is string => Boolean(tag))
+			: []
+	).slice(0, 6);
+
 	return {
 		name,
-		category: textOrNull(value.category),
-		tags: Array.isArray(value.tags)
-			? value.tags.map((tag) => textOrNull(tag)).filter((tag): tag is string => Boolean(tag))
-			: [],
+		category: normalizeOption(textOrNull(value.category), DISH_CATEGORY_OPTIONS, '家常菜'),
+		tags: tags.length > 0 ? tags : ['快手'],
 		baseServings,
 		ingredients,
-		instructions: textOrNull(value.instructions),
+		instructions: textOrNull(value.instructions) ?? `${name}按家常做法处理，先备好食材，再按熟成顺序烹调并调味。`,
 		uncertainFields,
 		notes: Array.isArray(value.notes)
 			? value.notes.map((note) => textOrNull(note)).filter((note): note is string => Boolean(note))

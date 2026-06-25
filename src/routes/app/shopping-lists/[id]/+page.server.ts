@@ -2,6 +2,11 @@ import { fail, redirect, error as kitError } from '@sveltejs/kit';
 import { z } from 'zod';
 import { ApiError } from '$lib/server/api/errors';
 import { requireUserSpace } from '$lib/server/context';
+import {
+	INGREDIENT_CATEGORY_OPTIONS,
+	INGREDIENT_UNIT_OPTIONS,
+	normalizeOptionalOption
+} from '$lib/domain/food-options';
 import { getMealPlan } from '$lib/server/meal-plans';
 import {
 	createShoppingListItem,
@@ -69,8 +74,8 @@ const readItemForm = async (request: Request) => {
 		itemId: formString(formData, 'itemId'),
 		name: formString(formData, 'name'),
 		quantity: formString(formData, 'quantity'),
-		unit: formString(formData, 'unit'),
-		category: formString(formData, 'category'),
+		unit: normalizeOptionalOption(formString(formData, 'unit'), INGREDIENT_UNIT_OPTIONS) ?? '',
+		category: normalizeOptionalOption(formString(formData, 'category'), INGREDIENT_CATEGORY_OPTIONS) ?? '',
 		notes: formString(formData, 'notes')
 	};
 };

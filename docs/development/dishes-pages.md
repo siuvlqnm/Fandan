@@ -27,8 +27,9 @@ LES-88 adds creator-side pages for maintaining reusable dishes and ingredients. 
 
 - Users can create a dish with only `name`.
 - Optional fields: category, tags, simple instructions and ingredients.
-- Tags are entered as comma-separated text and stored as a string array.
-- Ingredient rows support name, quantity, unit, category and notes.
+- Category, tags, ingredient unit and ingredient category use the fixed option sets in `src/lib/domain/food-options.ts` so manual forms and AI drafts share the same vocabulary.
+- Tags are selected from predefined chips and stored as a string array.
+- Ingredient rows support name, quantity, unit, category and notes; unit and category are selected rather than typed.
 - Blank ingredient rows are ignored on submit.
 - Search covers dish names, categories, tags and ingredient names through `src/lib/server/dishes.ts`.
 - Category filtering is derived from current-space dish categories.

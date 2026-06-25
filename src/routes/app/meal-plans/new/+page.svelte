@@ -75,11 +75,12 @@
 
 	<form method="post" action="?/create" use:enhanceWithFeedback={{ pendingLabel: '正在安排...' }} class="space-y-5">
 		<input type="hidden" name="draftPrompt" value={mealAi?.prompt ?? ''} />
+		<input type="hidden" name="suggestedDishDraftsJson" value={values.suggestedDishDraftsJson ?? ''} />
 		<section class="app-panel space-y-5 p-5">
 			<div class="space-y-2">
 				<Label for="dish-names" class="text-base font-semibold">这顿想吃什么？</Label>
 				<textarea id="dish-names" name="dishNamesText" class="app-input min-h-28 py-3" placeholder="例如：番茄炒蛋、清炒时蔬">{values.dishNamesText ?? ''}</textarea>
-				<p class="text-sm text-muted-foreground">用逗号或换行分隔，新菜会自动保存，之后可以补食材。</p>
+				<p class="text-sm text-muted-foreground">用逗号或换行分隔。AI 新菜会带可编辑食材草稿；手动输入的新菜可之后补食材。</p>
 				{#if errors.dishNamesText?.[0]}<p class="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{errors.dishNamesText[0]}</p>{/if}
 			</div>
 
@@ -93,12 +94,28 @@
 							<p class="font-medium text-primary">AI 新建议</p>
 							<div class="grid gap-2">
 								{#each suggestedNames as name}
-									{@const reason = suggestedDrafts.find((dish) => dish.name === name)?.reason}
+									{@const draft = suggestedDrafts.find((dish) => dish.name === name)}
 									<div class="grid gap-2 rounded-xl border border-border/70 p-3">
 										<div>
 											<p class="font-medium">{name}<span class="ml-2 text-xs text-muted-foreground">确认后才会保存为菜品</span></p>
-											{#if reason}<p class="text-xs leading-5 text-muted-foreground">{reason}</p>{/if}
+											{#if draft?.reason}<p class="text-xs leading-5 text-muted-foreground">{draft.reason}</p>{/if}
 										</div>
+										{#if draft}
+											<div class="grid gap-2 rounded-xl bg-secondary/40 p-3 text-xs leading-5 text-muted-foreground">
+												<p>{draft.category} · 基准 {draft.baseServings} 人份 · {draft.tags.join('、')}</p>
+												{#if draft.ingredients.length > 0}
+													<p>
+														食材：
+														{draft.ingredients.map((ingredient) => `${ingredient.name} ${ingredient.quantity} ${ingredient.unit}`).join('、')}
+													</p>
+												{/if}
+												{#if draft.uncertainFields.length > 0}
+													<p class="text-amber-800">AI 估算了部分分类、数量或做法，保存前请核对。</p>
+												{/if}
+											</div>
+										{:else}
+											<p class="rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900">这道新菜还没有食材草稿，保存后购物清单可能为空。</p>
+										{/if}
 										<div class="grid grid-cols-2 gap-2">
 											<Button type="submit" variant="outline" size="sm" class="h-11 bg-white" name="removeDishName" value={name} formaction="?/removeDish">删除</Button>
 											<Button type="submit" variant="ghost" size="sm" class="h-11" name="replaceDishName" value={name} formaction="?/replaceDish" data-pending-label="替换中...">换一道</Button>

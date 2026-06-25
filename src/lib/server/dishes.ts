@@ -10,6 +10,7 @@ import {
 	type NewDishIngredient
 } from './db/schema';
 import type { AuthenticatedContext } from './context';
+import { normalizeDishTags } from '$lib/domain/food-options';
 
 const dishVisibilitySchema = z.enum(['space', 'private']);
 
@@ -76,13 +77,10 @@ type SerializedDish = ReturnType<typeof serializeDish>;
 const normalizeSearch = (value: string | null | undefined) => value?.trim().toLowerCase() ?? '';
 
 export const parseDishTagsText = (value: string | null | undefined) =>
-	Array.from(
-		new Set(
-			(value ?? '')
-				.split(/[,，]/)
-				.map((tag) => tag.trim())
-				.filter(Boolean)
-		)
+	normalizeDishTags(
+		(value ?? '')
+			.split(/[,，]/)
+			.map((tag) => tag.trim())
 	);
 
 export const dishFormToCreateInput = (input: DishFormInput): CreateDishInput => ({

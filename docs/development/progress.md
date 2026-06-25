@@ -2,6 +2,26 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## 2026-06-25 - Production Walkthrough Fixes For AI Drafts
+
+Status: implemented locally on 2026-06-25.
+
+What changed:
+
+- Added shared food option constants for dish categories, dish tags, ingredient categories and ingredient units.
+- Replaced freeform category/unit/tag controls in dish forms with fixed selections, and reused fixed unit/category selections in shopping-list item add/edit forms.
+- Tightened AI dish drafts so generated drafts include category, tags, base servings, instructions and ingredient name/quantity/unit/category rows instead of sparse placeholders.
+- Extended AI meal drafts so each suggested new dish carries a full editable dish draft. Confirming the meal now creates those new dishes with ingredients, so the generated shopping list is not empty when AI suggests new dishes.
+- Changed the first-meal save path to create new meal plans in `待确认` status, so sharing a freshly created meal can collect guest feedback without an extra manual status switch.
+- Documented the 2026-06-25 production walkthrough findings in `docs/audits/2026-06-25-production-walkthrough/AUDIT.md`.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run release:verify`
+- Local browser smoke at `390 x 844`: dish create form showed fixed category/tag/unit/category choices, saved a dish with selected options and ingredient data, created a meal from that dish, generated a non-empty shopping list and confirmed the new meal defaulted to `待确认`.
+
 ## LES-126 - AI Meal Draft Generation
 
 Status: implemented on 2026-06-25.
