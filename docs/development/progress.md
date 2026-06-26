@@ -2,6 +2,25 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## 2026-06-26 - Docs And Linear Status Sync
+
+Status: synchronized on 2026-06-26. No code changes.
+
+What changed:
+
+- Rechecked local handoff/progress/planning docs against Linear.
+- Confirmed LES-106, LES-107, LES-108, LES-109 and LES-110 are complete.
+- Updated Linear statuses for LES-106 through LES-109 from Todo to Done; LES-110 was already Done.
+- Left LES-111, LES-112, LES-113 and LES-114 as Todo in Linear.
+- Left LES-127 in Backlog; AI expansion remains deferred.
+- Updated `outputs/饭单-1.1家庭协作开发计划.md` so Phase 10 is complete, LES-110 is complete and LES-111 is the next Phase 11 task.
+- Corrected the Phase 9.5 planning status so LES-121 through LES-126 are shown as complete and LES-127 as deferred.
+- Updated the Linear document `饭单 1.1 家庭协作开发计划` to match the local planning document.
+
+Notes for next threads:
+
+- Start from LES-111. Do not reopen LES-127 or redo family-collaboration planning before the account settings/password recovery slice.
+
 ## LES-110 - Share Link Permissions And Expiry
 
 Status: implemented locally on 2026-06-26. No database migration required; this exposes existing `share_links.can_feedback`, `share_links.can_confirm` and `share_links.expires_at` fields in the creator meal-plan confirmation panel.
@@ -55,7 +74,7 @@ Verification completed:
 
 Notes for next threads:
 
-- Phase 10 is complete. The next documented task is LES-110 in Phase 11.
+- Phase 10 is complete. LES-110 has since completed; the current next documented task is LES-111 in Phase 11.
 - LES-109 intentionally does not add notification delivery, unread state or a separate activity table.
 
 ## LES-108 - Shared Edit Conflict Protection
@@ -143,8 +162,9 @@ What changed:
 
 - Deferred LES-127 AI expansion evaluation so the product can focus on an internal family trial first.
 - Reopened Phase 10 family collaboration experience as the next implementation track.
-- Set LES-106 as the next task, followed by LES-107, LES-108 and LES-109.
+- At that time, the queue moved to LES-106, followed by LES-107, LES-108 and LES-109.
 - Updated `docs/development/core-experience-ai-handoff.md` and `outputs/饭单-1.1家庭协作开发计划.md` so future threads do not resume from LES-127 by mistake.
+- Later update: LES-106 through LES-110 are complete and Linear statuses have been synchronized; LES-111 is now next.
 
 Rationale:
 
@@ -275,7 +295,7 @@ Verification completed:
 
 Notes for next threads:
 
-- LES-127 is the next task after LES-126 is committed, pushed and closed.
+- Historical note: LES-127 was the next task immediately after LES-126. This has since been superseded by the 2026-06-26 family-trial realignment; LES-127 is now Backlog and LES-111 is the current next task.
 - The local preview D1 must have migration `0003_worried_luminals.sql` applied before testing meal saves that create dishes, because the current save path writes `base_servings` and `serving_basis_confirmed`.
 
 ## LES-124 - AI Dish Draft Completion
@@ -459,7 +479,7 @@ Verification completed:
 
 Notes for next threads:
 
-- Phase 9 is closed. Complete the Phase 9.5 core-experience queue before resuming LES-106 and the rest of Phase 10.
+- Historical note: Phase 9 is closed. The Phase 9.5 and Phase 10 queues have since completed; use the latest section at the top of this file for the current next task.
 - Run `npm run release:verify` for future releases; it now fails on family-workspace regressions as well as type/build failures.
 - The smoke does not touch the ordinary local D1 state or production D1 and requires no new migration.
 
