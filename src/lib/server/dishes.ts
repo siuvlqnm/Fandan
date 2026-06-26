@@ -11,6 +11,7 @@ import {
 } from './db/schema';
 import type { AuthenticatedContext } from './context';
 import { normalizeDishTags } from '$lib/domain/food-options';
+import { loadUserLabels, userLabelFrom, type UserLabel } from './user-labels';
 
 const dishVisibilitySchema = z.enum(['space', 'private']);
 
@@ -108,7 +109,11 @@ const serializeIngredient = (ingredient: DishIngredient) => ({
 	updatedAt: ingredient.updatedAt
 });
 
-const serializeDish = (dish: Dish, ingredients: SerializedIngredient[] = []) => ({
+const serializeDish = (
+	dish: Dish,
+	ingredients: SerializedIngredient[] = [],
+	actors: { createdBy: UserLabel | null; updatedBy: UserLabel | null } = { createdBy: null, updatedBy: null }
+) => ({
 	id: dish.id,
 	name: dish.name,
 	category: dish.category,
@@ -118,6 +123,8 @@ const serializeDish = (dish: Dish, ingredients: SerializedIngredient[] = []) => 
 	tags: Array.isArray(dish.tags) ? dish.tags : [],
 	visibility: dish.visibility,
 	ingredients,
+	createdBy: actors.createdBy,
+	updatedBy: actors.updatedBy,
 	createdAt: dish.createdAt,
 	updatedAt: dish.updatedAt
 });
@@ -179,11 +186,17 @@ export const listDishes = async (context: AuthenticatedContext, options?: { quer
 		context,
 		rows.map((dish) => dish.id)
 	);
+	const userLabels = await loadUserLabels(context, rows.flatMap((dish) => [dish.createdByUserId, dish.updatedByUserId]));
 
 	const query = normalizeSearch(options?.query);
 
 	return rows
-		.map((dish) => serializeDish(dish, ingredientsByDish.get(dish.id) ?? []))
+		.map((dish) =>
+			serializeDish(dish, ingredientsByDish.get(dish.id) ?? [], {
+				createdBy: userLabelFrom(userLabels, dish.createdByUserId),
+				updatedBy: userLabelFrom(userLabels, dish.updatedByUserId)
+			})
+		)
 		.filter((dish) => dishMatchesQuery(dish, query));
 };
 
@@ -199,8 +212,12 @@ export const getDish = async (context: AuthenticatedContext, id: string) => {
 	}
 
 	const ingredientsByDish = await loadIngredients(context, [dish.id]);
+	const userLabels = await loadUserLabels(context, [dish.createdByUserId, dish.updatedByUserId]);
 
-	return serializeDish(dish, ingredientsByDish.get(dish.id) ?? []);
+	return serializeDish(dish, ingredientsByDish.get(dish.id) ?? [], {
+		createdBy: userLabelFrom(userLabels, dish.createdByUserId),
+		updatedBy: userLabelFrom(userLabels, dish.updatedByUserId)
+	});
 };
 
 export const createDish = async (context: AuthenticatedContext, input: CreateDishInput) => {
@@ -215,7 +232,9 @@ export const createDish = async (context: AuthenticatedContext, input: CreateDis
 		baseServings: input.baseServings,
 		servingBasisConfirmed: input.servingBasisConfirmed,
 		tags: input.tags,
-		visibility: input.visibility
+		visibility: input.visibility,
+		createdByUserId: context.user.id,
+		updatedByUserId: context.user.id
 	});
 
 	const ingredients = ingredientValues(id, input.ingredients);
@@ -243,6 +262,7 @@ export const updateDish = async (context: AuthenticatedContext, id: string, inpu
 			.update(dishes)
 			.set({
 				...values,
+				updatedByUserId: context.user.id,
 				updatedAt: sql`CURRENT_TIMESTAMP`
 			})
 			.where(and(eq(dishes.id, id), eq(dishes.spaceId, context.space.id)));
@@ -259,7 +279,7 @@ export const updateDish = async (context: AuthenticatedContext, id: string, inpu
 
 		await context.db
 			.update(dishes)
-			.set({ updatedAt: sql`CURRENT_TIMESTAMP` })
+			.set({ updatedByUserId: context.user.id, updatedAt: sql`CURRENT_TIMESTAMP` })
 			.where(and(eq(dishes.id, id), eq(dishes.spaceId, context.space.id)));
 	}
 

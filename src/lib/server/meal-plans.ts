@@ -12,6 +12,7 @@ import {
 	type NewMealPlanItem
 } from './db/schema';
 import type { AuthenticatedContext } from './context';
+import { loadUserLabels, userLabelFrom, type UserLabel } from './user-labels';
 
 const mealPlanTypeSchema = z.enum(['single_meal', 'day', 'week', 'gathering']);
 const mealPlanStatusSchema = z.enum(['draft', 'pending_confirmation', 'confirmed', 'completed', 'archived']);
@@ -72,7 +73,10 @@ export type MealPlanFormInput = z.infer<typeof mealPlanFormSchema>;
 type SerializedMealPlanItem = ReturnType<typeof serializeMealPlanItem>;
 type SerializedMealPlan = ReturnType<typeof serializeMealPlan>;
 
-const serializeMealPlanItem = (item: MealPlanItem) => ({
+const serializeMealPlanItem = (
+	item: MealPlanItem,
+	actors: { createdBy: UserLabel | null; updatedBy: UserLabel | null } = { createdBy: null, updatedBy: null }
+) => ({
 	id: item.id,
 	mealPlanId: item.mealPlanId,
 	dishId: item.dishId,
@@ -82,11 +86,17 @@ const serializeMealPlanItem = (item: MealPlanItem) => ({
 	recommendationRating: item.recommendationRating,
 	notes: item.notes,
 	sortOrder: item.sortOrder,
+	createdBy: actors.createdBy,
+	updatedBy: actors.updatedBy,
 	createdAt: item.createdAt,
 	updatedAt: item.updatedAt
 });
 
-const serializeMealPlan = (mealPlan: MealPlan, items: SerializedMealPlanItem[] = []) => ({
+const serializeMealPlan = (
+	mealPlan: MealPlan,
+	items: SerializedMealPlanItem[] = [],
+	actors: { createdBy: UserLabel | null; updatedBy: UserLabel | null } = { createdBy: null, updatedBy: null }
+) => ({
 	id: mealPlan.id,
 	targetId: mealPlan.targetId,
 	title: mealPlan.title,
@@ -96,11 +106,13 @@ const serializeMealPlan = (mealPlan: MealPlan, items: SerializedMealPlanItem[] =
 	endDate: mealPlan.endDate,
 	notes: mealPlan.notes,
 	items,
+	createdBy: actors.createdBy,
+	updatedBy: actors.updatedBy,
 	createdAt: mealPlan.createdAt,
 	updatedAt: mealPlan.updatedAt
 });
 
-const itemValues = (mealPlanId: string, items: MealPlanItemInput[]): NewMealPlanItem[] =>
+const itemValues = (mealPlanId: string, items: MealPlanItemInput[], actorUserId: string): NewMealPlanItem[] =>
 	items.map((item, index) => ({
 		id: crypto.randomUUID(),
 		mealPlanId,
@@ -110,7 +122,9 @@ const itemValues = (mealPlanId: string, items: MealPlanItemInput[]): NewMealPlan
 		servings: item.servings,
 		recommendationRating: item.recommendationRating ?? null,
 		notes: item.notes ?? null,
-		sortOrder: item.sortOrder ?? index
+		sortOrder: item.sortOrder ?? index,
+		createdByUserId: actorUserId,
+		updatedByUserId: actorUserId
 	}));
 
 const loadItems = async (context: AuthenticatedContext, mealPlanIds: string[]) => {
@@ -124,9 +138,16 @@ const loadItems = async (context: AuthenticatedContext, mealPlanIds: string[]) =
 		.where(inArray(mealPlanItems.mealPlanId, mealPlanIds))
 		.orderBy(asc(mealPlanItems.sortOrder), asc(mealPlanItems.createdAt));
 
+	const userLabels = await loadUserLabels(context, rows.flatMap((item) => [item.createdByUserId, item.updatedByUserId]));
+
 	return rows.reduce((map, item) => {
 		const list = map.get(item.mealPlanId) ?? [];
-		list.push(serializeMealPlanItem(item));
+		list.push(
+			serializeMealPlanItem(item, {
+				createdBy: userLabelFrom(userLabels, item.createdByUserId),
+				updatedBy: userLabelFrom(userLabels, item.updatedByUserId)
+			})
+		);
 		map.set(item.mealPlanId, list);
 		return map;
 	}, new Map<string, SerializedMealPlanItem[]>());
@@ -212,8 +233,14 @@ export const listMealPlans = async (
 		context,
 		rows.map((mealPlan) => mealPlan.id)
 	);
+	const userLabels = await loadUserLabels(context, rows.flatMap((mealPlan) => [mealPlan.createdByUserId, mealPlan.updatedByUserId]));
 
-	return rows.map((mealPlan) => serializeMealPlan(mealPlan, itemsByMealPlan.get(mealPlan.id) ?? []));
+	return rows.map((mealPlan) =>
+		serializeMealPlan(mealPlan, itemsByMealPlan.get(mealPlan.id) ?? [], {
+			createdBy: userLabelFrom(userLabels, mealPlan.createdByUserId),
+			updatedBy: userLabelFrom(userLabels, mealPlan.updatedByUserId)
+		})
+	);
 };
 
 export const getMealPlan = async (context: AuthenticatedContext, id: string) => {
@@ -228,8 +255,12 @@ export const getMealPlan = async (context: AuthenticatedContext, id: string) => 
 	}
 
 	const itemsByMealPlan = await loadItems(context, [mealPlan.id]);
+	const userLabels = await loadUserLabels(context, [mealPlan.createdByUserId, mealPlan.updatedByUserId]);
 
-	return serializeMealPlan(mealPlan, itemsByMealPlan.get(mealPlan.id) ?? []);
+	return serializeMealPlan(mealPlan, itemsByMealPlan.get(mealPlan.id) ?? [], {
+		createdBy: userLabelFrom(userLabels, mealPlan.createdByUserId),
+		updatedBy: userLabelFrom(userLabels, mealPlan.updatedByUserId)
+	});
 };
 
 export const createMealPlan = async (context: AuthenticatedContext, input: CreateMealPlanInput) => {
@@ -247,10 +278,12 @@ export const createMealPlan = async (context: AuthenticatedContext, input: Creat
 		status: input.status,
 		startDate: input.startDate ?? null,
 		endDate: input.endDate ?? null,
-		notes: input.notes ?? null
+		notes: input.notes ?? null,
+		createdByUserId: context.user.id,
+		updatedByUserId: context.user.id
 	});
 
-	const items = itemValues(id, input.items);
+	const items = itemValues(id, input.items, context.user.id);
 
 	if (items.length > 0) {
 		await context.db.insert(mealPlanItems).values(items);
@@ -276,6 +309,7 @@ export const updateMealPlan = async (context: AuthenticatedContext, id: string, 
 			.update(mealPlans)
 			.set({
 				...values,
+				updatedByUserId: context.user.id,
 				updatedAt: sql`CURRENT_TIMESTAMP`
 			})
 			.where(and(eq(mealPlans.id, id), eq(mealPlans.spaceId, context.space.id)));
@@ -284,7 +318,7 @@ export const updateMealPlan = async (context: AuthenticatedContext, id: string, 
 	if (items !== undefined) {
 		await context.db.delete(mealPlanItems).where(eq(mealPlanItems.mealPlanId, id));
 
-		const nextItems = itemValues(id, items);
+		const nextItems = itemValues(id, items, context.user.id);
 
 		if (nextItems.length > 0) {
 			await context.db.insert(mealPlanItems).values(nextItems);
@@ -292,7 +326,7 @@ export const updateMealPlan = async (context: AuthenticatedContext, id: string, 
 
 		await context.db
 			.update(mealPlans)
-			.set({ updatedAt: sql`CURRENT_TIMESTAMP` })
+			.set({ updatedByUserId: context.user.id, updatedAt: sql`CURRENT_TIMESTAMP` })
 			.where(and(eq(mealPlans.id, id), eq(mealPlans.spaceId, context.space.id)));
 	}
 
@@ -322,9 +356,15 @@ export const updateMealPlanItemRecommendationRating = async (
 		.update(mealPlanItems)
 		.set({
 			recommendationRating,
+			updatedByUserId: context.user.id,
 			updatedAt: sql`CURRENT_TIMESTAMP`
 		})
 		.where(and(eq(mealPlanItems.id, item.id), eq(mealPlanItems.mealPlanId, current.id)));
+
+	await context.db
+		.update(mealPlans)
+		.set({ updatedByUserId: context.user.id, updatedAt: sql`CURRENT_TIMESTAMP` })
+		.where(and(eq(mealPlans.id, current.id), eq(mealPlans.spaceId, context.space.id)));
 
 	return getMealPlan(context, mealPlanId);
 };
@@ -344,6 +384,7 @@ export const archiveMealPlan = async (context: AuthenticatedContext, id: string)
 		.update(mealPlans)
 		.set({
 			status: 'archived',
+			updatedByUserId: context.user.id,
 			updatedAt: sql`CURRENT_TIMESTAMP`
 		})
 		.where(and(eq(mealPlans.id, id), eq(mealPlans.spaceId, context.space.id)));
@@ -364,7 +405,9 @@ export const duplicateMealPlan = async (context: AuthenticatedContext, id: strin
 		status: 'draft',
 		startDate: source.startDate,
 		endDate: source.endDate,
-		notes: source.notes
+		notes: source.notes,
+		createdByUserId: context.user.id,
+		updatedByUserId: context.user.id
 	});
 
 	const items = source.items.map((item) => ({
@@ -376,7 +419,7 @@ export const duplicateMealPlan = async (context: AuthenticatedContext, id: strin
 		notes: item.notes,
 		sortOrder: item.sortOrder
 	}));
-	const nextItems = itemValues(nextId, items);
+	const nextItems = itemValues(nextId, items, context.user.id);
 
 	if (nextItems.length > 0) {
 		await context.db.insert(mealPlanItems).values(nextItems);

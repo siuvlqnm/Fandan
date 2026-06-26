@@ -17,6 +17,21 @@
 	const textAreaClass =
 		'app-input min-h-20 py-3';
 	const selectClass = 'app-input h-11 text-sm';
+	const shoppingActorLabel = (item: PageData['shoppingList']['items'][number]) => {
+		if (item.checked && item.checkedBy) {
+			return `由 ${item.checkedBy.name} 标记已买`;
+		}
+
+		if (item.updatedBy) {
+			return `由 ${item.updatedBy.name} 更新`;
+		}
+
+		if (item.createdBy) {
+			return `由 ${item.createdBy.name} 添加`;
+		}
+
+		return '历史购物项，暂无操作归属';
+	};
 	const selectedOption = (value: string | null | undefined, options: readonly string[], fallback = '') => {
 		const normalized = String(value ?? '').trim();
 		if (!normalized) return '';
@@ -147,6 +162,7 @@
 										<p class="text-sm text-muted-foreground">
 											{item.quantity || '未填数量'}{item.unit ? ` ${item.unit}` : ''}{item.notes ? ` · ${item.notes}` : ''}
 										</p>
+										<p class="mt-1 text-xs text-muted-foreground">{shoppingActorLabel(item)}</p>
 									</div>
 
 									<form method="post" action="?/deleteItem" use:enhanceWithFeedback>

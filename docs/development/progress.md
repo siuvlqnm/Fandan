@@ -2,6 +2,50 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-106 - Family Operation Ownership
+
+Status: implemented locally on 2026-06-26. Requires production D1 migration `0005_sharp_pet_avengers.sql` before deploying code that writes the new ownership fields.
+
+What changed:
+
+- Added nullable creator/updater fields to `dishes`, `meal_plans`, `meal_plan_items` and `shopping_list_items`.
+- Added `checked_by_user_id` and `checked_at` to `shopping_list_items` so shared shopping can show who marked an item as bought.
+- Wrote current authenticated user IDs from the existing `requireUserSpace` context when creating or updating dishes, meal plans, meal-plan items and shopping-list items.
+- Added `src/lib/server/user-labels.ts` to resolve member display names without exposing email addresses.
+- Displayed lightweight ownership text on dish list/detail, meal-plan list/detail and shopping-list item rows.
+- Updated the family workspace smoke to apply migrations through `0005` when reconstructing a legacy pre-1.1 database.
+
+Verification completed:
+
+- `npm run db:migrate:local`
+- `npm run check`
+- `npm run build`
+- `npm run verify:family-workspace`
+- `npm run release:verify`
+- Local Worker preview at `http://localhost:4179`.
+- Mobile browser smoke at `390 x 844`: created a dish, confirmed dish detail showed the updater, created a meal and shopping list from that dish, confirmed shopping item ownership text, toggled the item as bought and confirmed the buyer label, then confirmed meal detail and meal list showed updater text.
+
+Notes for next threads:
+
+- LES-107 should build on the new `shopping_list_items.checked_by_user_id` and `checked_at` fields for shared shopping filters and clearer buyer state.
+- LES-108 still owns true version-conflict protection; LES-106 only records the latest actor under the existing update flow.
+
+## 2026-06-26 - Plan Realignment Toward Family Trial
+
+Status: documented on 2026-06-26.
+
+What changed:
+
+- Deferred LES-127 AI expansion evaluation so the product can focus on an internal family trial first.
+- Reopened Phase 10 family collaboration experience as the next implementation track.
+- Set LES-106 as the next task, followed by LES-107, LES-108 and LES-109.
+- Updated `docs/development/core-experience-ai-handoff.md` and `outputs/饭单-1.1家庭协作开发计划.md` so future threads do not resume from LES-127 by mistake.
+
+Rationale:
+
+- The core meal-planning path is now usable enough to continue into family collaboration.
+- Internal family trial needs visible operation ownership, shared shopping clarity, conflict protection and useful family activity before broader AI expansion.
+
 ## 2026-06-26 - Meal Item Recommendation Rating
 
 Status: implemented locally on 2026-06-26.

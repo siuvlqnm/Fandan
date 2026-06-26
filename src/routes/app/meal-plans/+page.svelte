@@ -121,6 +121,9 @@
 								<span class="inline-flex items-center gap-1.5"><CalendarDays class="size-4" />{mealPlan.startDate || '未设置'}{mealPlan.endDate ? ` - ${mealPlan.endDate}` : ''}</span>
 							</span>
 							<span class="block text-sm text-muted-foreground">菜品 {mealPlan.items.length} 道 · {mealPlan.statusLabel}</span>
+							<span class="block text-xs text-muted-foreground">
+								{mealPlan.updatedBy ? `由 ${mealPlan.updatedBy.name} 更新` : '历史饭单，暂无操作归属'}
+							</span>
 						</span>
 						<ArrowRight class="mt-7 size-5 shrink-0 text-muted-foreground" />
 					</a>

@@ -102,6 +102,9 @@
 							<span class="min-w-0 flex-1 space-y-1">
 								<span class="block truncate text-lg font-semibold">{dish.name}</span>
 								<span class="block text-sm text-muted-foreground">{dish.category || '未分类'} · {dish.ingredients.length} 种食材</span>
+								<span class="block text-xs text-muted-foreground">
+									{dish.updatedBy ? `由 ${dish.updatedBy.name} 更新` : '历史菜品，暂无操作归属'}
+								</span>
 							</span>
 						</a>
 

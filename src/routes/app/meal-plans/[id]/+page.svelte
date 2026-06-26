@@ -107,6 +107,9 @@
 							<span class="inline-flex items-center gap-1.5"><CalendarDays class="size-4" />{data.mealPlan.startDate || '未设置日期'}</span>
 							<span>{data.mealPlan.targetName}</span>
 						</p>
+						<p class="text-xs text-muted-foreground">
+							{data.mealPlan.updatedBy ? `最近由 ${data.mealPlan.updatedBy.name} 更新` : '历史饭单，暂无操作归属'}
+						</p>
 					</div>
 				</div>
 
@@ -227,6 +230,9 @@
 												{/if}
 											</div>
 											<p class="text-sm text-muted-foreground">{item.servings} 份 · {item.dishIngredientCount} 种食材</p>
+											<p class="text-xs text-muted-foreground">
+												{item.updatedBy ? `由 ${item.updatedBy.name} 处理` : '暂无条目归属'}
+											</p>
 											{#if item.recommendationRating}
 												<p class="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-primary">
 													<Star class="size-3.5 fill-current" />

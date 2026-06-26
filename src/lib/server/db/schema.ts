@@ -107,13 +107,17 @@ export const dishes = sqliteTable(
 		servingBasisConfirmed: integer('serving_basis_confirmed', { mode: 'boolean' }).notNull().default(false),
 		tags: text('tags', { mode: 'json' }).$type<string[]>().notNull().default(sql`'[]'`),
 		visibility: text('visibility', { enum: ['space', 'private'] }).notNull().default('space'),
+		createdByUserId: text('created_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+		updatedByUserId: text('updated_by_user_id').references(() => user.id, { onDelete: 'set null' }),
 		createdAt: createdAt(),
 		updatedAt: updatedAt()
 	},
 	(table) => [
 		index('dishes_space_idx').on(table.spaceId),
 		index('dishes_space_name_idx').on(table.spaceId, table.name),
-		index('dishes_space_category_idx').on(table.spaceId, table.category)
+		index('dishes_space_category_idx').on(table.spaceId, table.category),
+		index('dishes_created_by_idx').on(table.createdByUserId),
+		index('dishes_updated_by_idx').on(table.updatedByUserId)
 	]
 );
 
@@ -148,6 +152,8 @@ export const mealPlans = sqliteTable(
 		startDate: text('start_date'),
 		endDate: text('end_date'),
 		notes: text('notes'),
+		createdByUserId: text('created_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+		updatedByUserId: text('updated_by_user_id').references(() => user.id, { onDelete: 'set null' }),
 		createdAt: createdAt(),
 		updatedAt: updatedAt()
 	},
@@ -156,7 +162,9 @@ export const mealPlans = sqliteTable(
 		index('meal_plans_space_status_idx').on(table.spaceId, table.status),
 		index('meal_plans_space_start_date_idx').on(table.spaceId, table.startDate),
 		index('meal_plans_target_idx').on(table.targetId),
-		index('meal_plans_status_idx').on(table.status)
+		index('meal_plans_status_idx').on(table.status),
+		index('meal_plans_created_by_idx').on(table.createdByUserId),
+		index('meal_plans_updated_by_idx').on(table.updatedByUserId)
 	]
 );
 
@@ -172,6 +180,8 @@ export const mealPlanItems = sqliteTable(
 		recommendationRating: integer('recommendation_rating'),
 		notes: text('notes'),
 		sortOrder: integer('sort_order').notNull().default(0),
+		createdByUserId: text('created_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+		updatedByUserId: text('updated_by_user_id').references(() => user.id, { onDelete: 'set null' }),
 		createdAt: createdAt(),
 		updatedAt: updatedAt()
 	},
@@ -179,7 +189,9 @@ export const mealPlanItems = sqliteTable(
 		index('meal_plan_items_plan_idx').on(table.mealPlanId),
 		index('meal_plan_items_plan_sort_idx').on(table.mealPlanId, table.sortOrder),
 		index('meal_plan_items_plan_date_idx').on(table.mealPlanId, table.plannedDate),
-		index('meal_plan_items_dish_idx').on(table.dishId)
+		index('meal_plan_items_dish_idx').on(table.dishId),
+		index('meal_plan_items_created_by_idx').on(table.createdByUserId),
+		index('meal_plan_items_updated_by_idx').on(table.updatedByUserId)
 	]
 );
 
@@ -209,13 +221,20 @@ export const shoppingListItems = sqliteTable(
 		sourceDishId: text('source_dish_id').references(() => dishes.id, { onDelete: 'set null' }),
 		notes: text('notes'),
 		sortOrder: integer('sort_order').notNull().default(0),
+		createdByUserId: text('created_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+		updatedByUserId: text('updated_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+		checkedByUserId: text('checked_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+		checkedAt: text('checked_at'),
 		createdAt: createdAt(),
 		updatedAt: updatedAt()
 	},
 	(table) => [
 		index('shopping_list_items_list_idx').on(table.shoppingListId),
 		index('shopping_list_items_list_checked_idx').on(table.shoppingListId, table.checked),
-		index('shopping_list_items_source_dish_idx').on(table.sourceDishId)
+		index('shopping_list_items_source_dish_idx').on(table.sourceDishId),
+		index('shopping_list_items_created_by_idx').on(table.createdByUserId),
+		index('shopping_list_items_updated_by_idx').on(table.updatedByUserId),
+		index('shopping_list_items_checked_by_idx').on(table.checkedByUserId)
 	]
 );
 

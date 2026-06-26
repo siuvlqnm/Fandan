@@ -29,6 +29,9 @@
 			<p class="text-sm leading-6 text-muted-foreground md:max-w-2xl">
 				维护食材、标签和简单做法。后续饭单和购物清单会从这里读取菜品信息。
 			</p>
+			<p class="text-xs text-muted-foreground">
+				{dish.updatedBy ? `最近由 ${dish.updatedBy.name} 更新` : '历史菜品，暂无操作归属'}
+			</p>
 		</div>
 		<Button href={`/app/meal-plans/new?dishId=${dish.id}`} class="h-12 rounded-2xl">
 			<ClipboardPlus class="size-4" />

@@ -23,7 +23,7 @@ npm run release:verify
 
 `scripts/verify-family-workspace.mjs` creates a temporary Wrangler D1 persistence directory under the operating-system temp directory. It never reads or writes the ordinary `.wrangler/state` database and never contacts production D1.
 
-The script applies migrations `0000` and `0001`, inserts a real credential-based legacy user plus 1.0 business data, then applies `0002`. The temporary Worker uses that same database. The Worker and temporary directory are stopped and removed in `finally`, including on failed assertions.
+The script applies migrations `0000` and `0001`, inserts a real credential-based legacy user plus 1.0 business data, then applies every later migration currently needed by the Worker. The temporary Worker uses that same database. The Worker and temporary directory are stopped and removed in `finally`, including on failed assertions.
 
 The test requires `.svelte-kit/cloudflare/_worker.js`; run `npm run build` first when invoking the focused smoke directly.
 
@@ -34,6 +34,7 @@ The test requires `.svelte-kit/cloudflare/_worker.js`; run `npm run build` first
 - An anonymous invitation preview exposes the workspace name without business records.
 - A second account accepts the invitation; repeating acceptance is idempotent.
 - The member creates a dish and meal plan, generates a shopping list and checks an item; the owner sees each shared change.
+- Phase 10 ownership columns remain migration-safe for legacy rows while new dish, meal-plan and shopping-list writes record the acting member.
 - A resource in the member's personal workspace returns `404` to the owner.
 - Selecting an unrelated workspace and using owner-only invitation APIs return `403`.
 - Revoked, expired and already-consumed invitations reject acceptance with `409`.

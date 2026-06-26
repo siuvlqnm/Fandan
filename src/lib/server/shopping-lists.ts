@@ -13,6 +13,7 @@ import {
 } from './db/schema';
 import { getMealPlan } from './meal-plans';
 import type { AuthenticatedContext } from './context';
+import { loadUserLabels, userLabelFrom, type UserLabel } from './user-labels';
 
 const shoppingListStatusSchema = z.enum(['draft', 'active', 'completed']);
 const nullableTextSchema = (maxLength: number) => z.string().trim().max(maxLength).nullable().optional();
@@ -47,7 +48,14 @@ type GeneratedShoppingItem = Pick<
 type SerializedShoppingListItem = ReturnType<typeof serializeShoppingListItem>;
 type SerializedShoppingList = ReturnType<typeof serializeShoppingList>;
 
-const serializeShoppingListItem = (item: ShoppingListItem) => ({
+const serializeShoppingListItem = (
+	item: ShoppingListItem,
+	actors: { createdBy: UserLabel | null; updatedBy: UserLabel | null; checkedBy: UserLabel | null } = {
+		createdBy: null,
+		updatedBy: null,
+		checkedBy: null
+	}
+) => ({
 	id: item.id,
 	shoppingListId: item.shoppingListId,
 	name: item.name,
@@ -58,6 +66,10 @@ const serializeShoppingListItem = (item: ShoppingListItem) => ({
 	sourceDishId: item.sourceDishId,
 	notes: item.notes,
 	sortOrder: item.sortOrder,
+	createdBy: actors.createdBy,
+	updatedBy: actors.updatedBy,
+	checkedBy: actors.checkedBy,
+	checkedAt: item.checkedAt,
 	createdAt: item.createdAt,
 	updatedAt: item.updatedAt
 });
@@ -78,6 +90,7 @@ const normalizeNullable = (value: string | null | undefined) => {
 	const next = value?.trim();
 	return next ? next : null;
 };
+const nowText = () => new Date().toISOString();
 
 const parseQuantity = (value: string | null | undefined) => {
 	const normalized = value?.trim();
@@ -108,9 +121,20 @@ const loadItems = async (context: AuthenticatedContext, shoppingListIds: string[
 		.where(inArray(shoppingListItems.shoppingListId, shoppingListIds))
 		.orderBy(asc(shoppingListItems.checked), asc(shoppingListItems.category), asc(shoppingListItems.sortOrder), asc(shoppingListItems.createdAt));
 
+	const userLabels = await loadUserLabels(
+		context,
+		rows.flatMap((item) => [item.createdByUserId, item.updatedByUserId, item.checkedByUserId])
+	);
+
 	return rows.reduce((map, item) => {
 		const list = map.get(item.shoppingListId) ?? [];
-		list.push(serializeShoppingListItem(item));
+		list.push(
+			serializeShoppingListItem(item, {
+				createdBy: userLabelFrom(userLabels, item.createdByUserId),
+				updatedBy: userLabelFrom(userLabels, item.updatedByUserId),
+				checkedBy: userLabelFrom(userLabels, item.checkedByUserId)
+			})
+		);
 		map.set(item.shoppingListId, list);
 		return map;
 	}, new Map<string, SerializedShoppingListItem[]>());
@@ -170,7 +194,7 @@ const getShoppingListItemRow = async (context: AuthenticatedContext, shoppingLis
 	return item;
 };
 
-const itemValues = (shoppingListId: string, items: GeneratedShoppingItem[]): NewShoppingListItem[] =>
+const itemValues = (shoppingListId: string, items: GeneratedShoppingItem[], actorUserId: string): NewShoppingListItem[] =>
 	items.map((item, index) => ({
 		id: crypto.randomUUID(),
 		shoppingListId,
@@ -181,7 +205,11 @@ const itemValues = (shoppingListId: string, items: GeneratedShoppingItem[]): New
 		checked: item.checked ?? false,
 		sourceDishId: item.sourceDishId ?? null,
 		notes: item.notes ?? null,
-		sortOrder: item.sortOrder ?? index
+		sortOrder: item.sortOrder ?? index,
+		createdByUserId: actorUserId,
+		updatedByUserId: actorUserId,
+		checkedByUserId: item.checked ? actorUserId : null,
+		checkedAt: item.checked ? nowText() : null
 	}));
 
 const buildGeneratedItems = async (context: AuthenticatedContext, mealPlanId: string) => {
@@ -367,7 +395,7 @@ export const generateShoppingList = async (context: AuthenticatedContext, mealPl
 		await context.db.delete(shoppingListItems).where(eq(shoppingListItems.shoppingListId, shoppingListId));
 	}
 
-	const items = itemValues(shoppingListId, generatedItems);
+	const items = itemValues(shoppingListId, generatedItems, context.user.id);
 
 	if (items.length > 0) {
 		await context.db.insert(shoppingListItems).values(items);
@@ -402,7 +430,11 @@ export const createShoppingListItem = async (
 		checked: input.checked,
 		sourceDishId: input.sourceDishId ?? null,
 		notes: input.notes ?? null,
-		sortOrder: input.sortOrder ?? (lastItem ? lastItem.sortOrder + 1 : 0)
+		sortOrder: input.sortOrder ?? (lastItem ? lastItem.sortOrder + 1 : 0),
+		createdByUserId: context.user.id,
+		updatedByUserId: context.user.id,
+		checkedByUserId: input.checked ? context.user.id : null,
+		checkedAt: input.checked ? nowText() : null
 	});
 
 	return getShoppingList(context, shoppingListId);
@@ -422,7 +454,10 @@ export const updateShoppingListItem = async (
 	) as Partial<NewShoppingListItem>;
 	const nextValues = {
 		...values,
-		...(input.category === null ? { category: '其他' } : {})
+		...(input.category === null ? { category: '其他' } : {}),
+		updatedByUserId: context.user.id,
+		...(input.checked === true ? { checkedByUserId: context.user.id, checkedAt: nowText() } : {}),
+		...(input.checked === false ? { checkedByUserId: null, checkedAt: null } : {})
 	};
 
 	if (Object.keys(nextValues).length > 0) {

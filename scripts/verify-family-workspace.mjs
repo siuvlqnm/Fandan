@@ -393,6 +393,8 @@ try {
 	await seedLegacyData(persistPath);
 	await applyMigrationFile(persistPath, '0002_rainy_mindworm.sql');
 	await applyMigrationFile(persistPath, '0003_worried_luminals.sql');
+	await applyMigrationFile(persistPath, '0004_simple_ultimatum.sql');
+	await applyMigrationFile(persistPath, '0005_sharp_pet_avengers.sql');
 	await runWrangler(persistPath, ['--command', `
 INSERT INTO space_invitations (id, space_id, token, role, status, invited_by_user_id, expires_at)
 VALUES ('smoke-les102-expired-id', '${legacySpaceId}', '${expiredToken}', 'member', 'pending', '${legacyUserId}', '2000-01-01T00:00:00.000Z');
