@@ -137,7 +137,7 @@ const loadShareLinkBundle = async (context: RequestContext, token: string) => {
 	}
 
 	if (isExpired(row.shareLink.expiresAt)) {
-		throw apiError('FORBIDDEN', 'Share link has expired');
+		throw apiError('FORBIDDEN', '分享链接已过期，请联系创建者重新发起确认');
 	}
 
 	return row;

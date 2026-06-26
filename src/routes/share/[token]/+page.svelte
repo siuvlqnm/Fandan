@@ -130,6 +130,10 @@
 				<div class="rounded-2xl bg-secondary/60 p-4 text-sm leading-6 text-secondary-foreground">
 					这份饭单已经确认，反馈已停止收集。如需调整，请联系饭单创建者重新发起确认。
 				</div>
+			{:else if !canFeedback}
+				<div class="rounded-2xl bg-muted/60 p-4 text-sm leading-6 text-muted-foreground">
+					创建者这次只开放查看或最终确认，没有开放菜品反馈。
+				</div>
 			{:else}
 			<form method="post" action="?/feedback" use:enhanceWithFeedback={{ pendingLabel: '提交中...' }} class="space-y-5">
 				<div class="grid gap-4 md:grid-cols-2">

@@ -18,8 +18,10 @@ Behavior:
 - Lets guests add a freeform note per dish.
 - Lets guests add a global dietary note.
 - Lets guests confirm the meal plan with an optional note.
+- Hides dish feedback controls when the share link disables feedback.
+- Hides the final confirmation form when the share link disables confirmation.
 - Shows success feedback after submitting feedback or confirmation.
-- Shows an inline unavailable state for expired, missing or disabled share links.
+- Shows an inline unavailable state for expired, missing or disabled share links, with an explicit expired-link message.
 
 ## Form Actions
 
@@ -42,5 +44,7 @@ Writes confirmation through `confirmShare`. Confirmation also moves `draft` or `
 
 - LES-96 can build creator-side aggregation by reading the `feedback` rows created here.
 - The creator meal-plan confirmation panel creates, copies, opens and disables the current share link.
+- LES-110 exposes the existing share-link permissions in the creator panel: creators can allow feedback, allow final confirmation and choose permanent, 24-hour, 3-day, 7-day or custom expiry.
+- Custom expiry dates close at 23:59 Asia/Shanghai and are stored as ISO timestamps in `share_links.expires_at`.
 - Creating a new link disables older links for the same meal plan so only one visitor URL remains active.
 - Confirmed or completed meal plans render a completed state and stop accepting additional visitor feedback or duplicate confirmations.

@@ -13,6 +13,7 @@
 		CalendarDays,
 		CheckCircle2,
 		ChefHat,
+		Clock3,
 		ClipboardList,
 		Copy,
 		ExternalLink,
@@ -49,6 +50,20 @@
 	const shoppingCount = $derived(data.shoppingList?.items.length ?? 0);
 	const activeShare = $derived(data.shareLinks.find((shareLink) => shareLink.active) ?? null);
 	const activeShareUrl = $derived(activeShare ? `${data.origin}${activeShare.path}` : '');
+	const formatShareExpiry = (value: string | null) =>
+		value
+			? new Intl.DateTimeFormat('zh-CN', {
+					dateStyle: 'medium',
+					timeStyle: 'short',
+					timeZone: 'Asia/Shanghai'
+				}).format(new Date(value))
+			: '永久有效';
+	const sharePermissionSummary = (shareLink: { canFeedback: boolean; canConfirm: boolean }) => {
+		if (shareLink.canFeedback && shareLink.canConfirm) return '可反馈，可最终确认';
+		if (shareLink.canFeedback) return '仅收集反馈';
+		if (shareLink.canConfirm) return '仅允许最终确认';
+		return '仅查看菜单';
+	};
 	const flowChipClass = (tone: string) =>
 		tone === 'attention'
 			? 'bg-destructive/10 text-destructive'
@@ -66,6 +81,13 @@
 		{ value: 3, label: '3 星可选' },
 		{ value: 2, label: '2 星普通' },
 		{ value: 1, label: '1 星备选' }
+	];
+	const shareExpiryOptions = [
+		{ value: 'never', label: '永久有效' },
+		{ value: '24h', label: '24 小时' },
+		{ value: '3d', label: '3 天' },
+		{ value: '7d', label: '7 天' },
+		{ value: 'custom', label: '自定义日期' }
 	];
 	const panels = $derived<{ id: Panel; label: string; helper: string }[]>([
 		{ id: 'menu', label: '菜单', helper: `${dishCount} 道菜` },
@@ -322,6 +344,16 @@
 					<div class="space-y-3 rounded-2xl bg-secondary/45 p-3">
 						<Label for="active-share-link">当前分享链接</Label>
 						<Input id="active-share-link" value={activeShareUrl} readonly class="app-input bg-white text-sm" />
+						<div class="grid gap-2 text-sm md:grid-cols-2">
+							<p class="rounded-2xl bg-white p-3">
+								<span class="mb-1 flex items-center gap-1.5 text-xs text-muted-foreground"><MessageSquareText class="size-3.5" />权限</span>
+								<span class="font-medium">{sharePermissionSummary(activeShare)}</span>
+							</p>
+							<p class="rounded-2xl bg-white p-3">
+								<span class="mb-1 flex items-center gap-1.5 text-xs text-muted-foreground"><Clock3 class="size-3.5" />到期</span>
+								<span class="font-medium">{formatShareExpiry(activeShare.expiresAt)}</span>
+							</p>
+						</div>
 						<div class="grid grid-cols-2 gap-2">
 							<Button type="button" onclick={() => copyShareLink(activeShare.id, activeShareUrl)} class="h-11 rounded-2xl">
 								<Copy class="size-4" />
@@ -347,8 +379,43 @@
 						</form>
 					</div>
 				{:else}
-					<form method="post" action="?/createShareLink" use:enhanceWithFeedback>
+					<form method="post" action="?/createShareLink" use:enhanceWithFeedback class="space-y-4">
 						<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+						<input type="hidden" name="shareOptionsSubmitted" value="1" />
+						<div class="grid gap-3 text-sm md:grid-cols-2">
+							<label class="flex min-h-14 items-center gap-3 rounded-2xl border border-border bg-white px-3 py-2 font-medium">
+								<input type="checkbox" name="canFeedback" checked class="size-5 rounded" />
+								<span>
+									<span class="block">允许反馈</span>
+									<span class="text-xs font-normal text-muted-foreground">家人可标记喜欢、换菜和忌口</span>
+								</span>
+							</label>
+							<label class="flex min-h-14 items-center gap-3 rounded-2xl border border-border bg-white px-3 py-2 font-medium">
+								<input type="checkbox" name="canConfirm" checked class="size-5 rounded" />
+								<span>
+									<span class="block">允许最终确认</span>
+									<span class="text-xs font-normal text-muted-foreground">家人可点击确认这顿饭</span>
+								</span>
+							</label>
+						</div>
+						<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+							<div class="space-y-2">
+								<Label for="share-expiry-preset">有效期</Label>
+								<select id="share-expiry-preset" name="expiryPreset" class={selectClass} disabled={isArchived}>
+									{#each shareExpiryOptions as option}
+										<option value={option.value} selected={option.value === 'never'}>{option.label}</option>
+									{/each}
+								</select>
+							</div>
+							<div class="space-y-2">
+								<Label for="share-custom-expires-on">自定义到期日期</Label>
+								<Input id="share-custom-expires-on" name="customExpiresOn" type="date" class="app-input" disabled={isArchived} />
+								{#if form?.action === 'createShareLink' && errors.customExpiresOn?.[0]}
+									<p class="text-sm text-destructive">{errors.customExpiresOn[0]}</p>
+								{/if}
+							</div>
+						</div>
+						<p class="text-xs leading-5 text-muted-foreground">自定义日期会在北京时间当天 23:59 到期。直接创建时沿用当前一键分享：可反馈、可确认、永久有效。</p>
 						<Button type="submit" class="h-12 w-full rounded-2xl text-base" disabled={isArchived} data-pending-label="创建中...">
 							<Link2 class="size-4" />
 							发给家人确认

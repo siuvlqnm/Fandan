@@ -2,6 +2,35 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-110 - Share Link Permissions And Expiry
+
+Status: implemented locally on 2026-06-26. No database migration required; this exposes existing `share_links.can_feedback`, `share_links.can_confirm` and `share_links.expires_at` fields in the creator meal-plan confirmation panel.
+
+What changed:
+
+- Added creator-side share settings for allowing dish feedback, allowing final confirmation and choosing permanent, 24-hour, 3-day, 7-day or custom expiry.
+- Kept the default one-tap share behavior as feedback enabled, confirmation enabled and no expiry.
+- Displayed the active share link permissions and expiry time next to copy/open/revoke actions.
+- Converted custom expiry dates to Asia/Shanghai end-of-day before storing the ISO timestamp.
+- Hid guest feedback controls when feedback is disabled and hid the final confirmation form when confirmation is disabled.
+- Changed expired public share pages to show an explicit expired-link message.
+- Updated `docs/development/share-pages.md` with the creator settings and guest permission behavior.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run verify:share-links`
+- `npm run verify:family-workspace`
+- `npm run db:migrate:local` confirmed no pending local migrations.
+- Local Worker preview at `http://127.0.0.1:4180`.
+- Mobile browser smoke at `390 x 844`: created a temporary meal, opened the confirmation panel, confirmed share permission and expiry controls render, created a 24-hour link with feedback disabled, confirmed active-link permission/expiry summary, copy/open/revoke actions remained visible, `scrollWidth` equaled `clientWidth` and no browser console errors were reported.
+
+Notes for next threads:
+
+- LES-111 is next.
+- LES-110 intentionally does not add new share-link database columns or workspace invitation changes.
+
 ## LES-109 - Family Activity And Pending Tasks
 
 Status: implemented locally on 2026-06-26. No database migration required; the dashboard is derived from existing workspace-scoped meal-plan, dish, shopping-list and invitation records.

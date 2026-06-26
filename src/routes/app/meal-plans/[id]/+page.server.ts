@@ -73,6 +73,44 @@ const recommendationRatingFormSchema = z.object({
 	recommendationRating: z.preprocess(emptyStringToNull, z.coerce.number().int().min(1).max(5).nullable().optional())
 });
 
+const shareExpiryPresetSchema = z.enum(['never', '24h', '3d', '7d', 'custom']);
+const shareLinkFormSchema = z
+	.object({
+		canFeedback: z.boolean(),
+		canConfirm: z.boolean(),
+		expiryPreset: shareExpiryPresetSchema,
+		customExpiresOn: formNullableTextSchema(10)
+	})
+	.superRefine((value, context) => {
+		if (value.expiryPreset !== 'custom') return;
+		if (!value.customExpiresOn) {
+			context.addIssue({
+				code: 'custom',
+				path: ['customExpiresOn'],
+				message: '请选择自定义到期日期'
+			});
+			return;
+		}
+
+		const expiresAt = shanghaiDateEndToIso(value.customExpiresOn);
+		if (!expiresAt) {
+			context.addIssue({
+				code: 'custom',
+				path: ['customExpiresOn'],
+				message: '请选择有效日期'
+			});
+			return;
+		}
+
+		if (Date.parse(expiresAt) <= Date.now()) {
+			context.addIssue({
+				code: 'custom',
+				path: ['customExpiresOn'],
+				message: '到期时间必须晚于当前时间'
+			});
+		}
+	});
+
 type MealPlan = Awaited<ReturnType<typeof getMealPlan>>;
 type MealPlanItem = MealPlan['items'][number];
 type FormAction =
@@ -86,6 +124,10 @@ type FormAction =
 	| 'generateShoppingList'
 	| 'createShareLink'
 	| 'revokeShareLink';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const SHANGHAI_OFFSET_MS = 8 * 60 * 60 * 1000;
+const dateKeyPattern = /^\d{4}-\d{2}-\d{2}$/;
 
 const requireContext = async (event: RequestEvent) => {
 	if (!event.locals.user || !event.locals.session) {
@@ -201,6 +243,36 @@ const readExpectedVersions = async (request: Request) => {
 	return {
 		expectedUpdatedAt: expectedUpdatedAtFrom(formData),
 		expectedShoppingListUpdatedAt: formString(formData, 'expectedShoppingListUpdatedAt')
+	};
+};
+
+const shanghaiDateEndToIso = (dateKey: string | null | undefined) => {
+	if (!dateKey || !dateKeyPattern.test(dateKey)) return null;
+
+	const timestamp = Date.parse(`${dateKey}T23:59:59.999+08:00`);
+	return Number.isNaN(timestamp) ? null : new Date(timestamp).toISOString();
+};
+
+const shareExpiresAtFrom = (value: z.infer<typeof shareLinkFormSchema>) => {
+	if (value.expiryPreset === 'never') return null;
+	if (value.expiryPreset === 'custom') return shanghaiDateEndToIso(value.customExpiresOn);
+
+	const days = value.expiryPreset === '24h' ? 1 : value.expiryPreset === '3d' ? 3 : 7;
+	return new Date(Date.now() + days * DAY_MS).toISOString();
+};
+
+const todayInShanghai = () => new Date(Date.now() + SHANGHAI_OFFSET_MS).toISOString().slice(0, 10);
+
+const readShareLinkForm = async (request: Request) => {
+	const formData = await request.formData();
+	const hasShareOptions = formData.has('shareOptionsSubmitted');
+
+	return {
+		expectedUpdatedAt: expectedUpdatedAtFrom(formData),
+		canFeedback: hasShareOptions ? formData.get('canFeedback') === 'on' : true,
+		canConfirm: hasShareOptions ? formData.get('canConfirm') === 'on' : true,
+		expiryPreset: formString(formData, 'expiryPreset', 'never'),
+		customExpiresOn: formString(formData, 'customExpiresOn', todayInShanghai())
 	};
 };
 
@@ -521,7 +593,12 @@ export const actions: Actions = {
 
 	createShareLink: async (event) => {
 		const context = await requireContext(event);
-		const values = await readExpectedVersions(event.request);
+		const values = await readShareLinkForm(event.request);
+		const result = shareLinkFormSchema.safeParse(values);
+
+		if (!result.success) {
+			return fail(400, { action: 'createShareLink', values, errors: fieldErrors(result.error) });
+		}
 
 		try {
 			const mealPlan = await getMealPlan(context, event.params.id);
@@ -531,7 +608,15 @@ export const actions: Actions = {
 					expectedUpdatedAt: values.expectedUpdatedAt
 				});
 			}
-			await createMealPlanShareLink(context, event.params.id, createShareLinkSchema.parse({}));
+			await createMealPlanShareLink(
+				context,
+				event.params.id,
+				createShareLinkSchema.parse({
+					canFeedback: result.data.canFeedback,
+					canConfirm: result.data.canConfirm,
+					expiresAt: shareExpiresAtFrom(result.data)
+				})
+			);
 			redirectToPanel(event, 'confirm');
 		} catch (cause) {
 			return actionError('createShareLink', cause, values);

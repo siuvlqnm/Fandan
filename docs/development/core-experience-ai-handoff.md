@@ -4,13 +4,13 @@
 
 ## 新对话从这里开始
 
-LES-121、LES-122、LES-123、LES-125、LES-124 和 LES-126 已完成。2026-06-25 用户完成实际流程后反馈“还是感觉哪里别扭”，随后完成主路径重排、首页日期/餐次快选和单菜推荐星级。2026-06-26 计划调整：先暂停 [LES-127](https://linear.app/less-lab/issue/LES-127) 后续 AI 机会评估，优先恢复 Phase 10 家庭协作体验，让内部家庭能先试用。LES-106、LES-107、LES-108 和 LES-109 已完成，Phase 10 收尾。
+LES-121、LES-122、LES-123、LES-125、LES-124 和 LES-126 已完成。2026-06-25 用户完成实际流程后反馈“还是感觉哪里别扭”，随后完成主路径重排、首页日期/餐次快选和单菜推荐星级。2026-06-26 计划调整：先暂停 [LES-127](https://linear.app/less-lab/issue/LES-127) 后续 AI 机会评估，优先恢复 Phase 10 家庭协作体验，让内部家庭能先试用。LES-106、LES-107、LES-108 和 LES-109 已完成，Phase 10 收尾。LES-110 已完成，分享确认面板现在可以配置反馈权限、最终确认权限和有效期。
 
-不要重新做产品规划。当前方向是先把“安排一顿饭 -> 决定吃什么 -> 知道买什么 -> 家人一起确认/采购”的家庭试用闭环做稳。LES-127 保持 Backlog；AI 仍只作为已落地的菜品草稿和饭单草稿助手存在，不新增 AI 中心或扩展入口。下一步从 [LES-110](https://linear.app/less-lab/issue/LES-110) 进入 Phase 11。
+不要重新做产品规划。当前方向是先把“安排一顿饭 -> 决定吃什么 -> 知道买什么 -> 家人一起确认/采购”的家庭试用闭环做稳。LES-127 保持 Backlog；AI 仍只作为已落地的菜品草稿和饭单草稿助手存在，不新增 AI 中心或扩展入口。下一步继续 Phase 11，从 [LES-111](https://linear.app/less-lab/issue/LES-111) 补齐账号设置、邮箱验证与密码恢复。
 
 建议的新对话首句：
 
-> 先阅读 `docs/development/core-experience-ai-handoff.md`，确认 LES-127 已后置、LES-106 至 LES-109 已完成，然后从 LES-110 开始进入 Phase 11。目标是补齐分享面板的权限与有效期设置，不改变已经落地的家庭协作闭环。验证、更新文档并提交后，继续下一个已解除阻塞的任务。
+> 先阅读 `docs/development/core-experience-ai-handoff.md`，确认 LES-127 已后置、LES-106 至 LES-110 已完成，然后从 LES-111 继续 Phase 11。目标是补齐账号设置、邮箱验证与密码恢复，不改变已经落地的家庭协作闭环。验证、更新文档并提交后，继续下一个已解除阻塞的任务。
 
 ## 已确认的产品方向
 
@@ -74,8 +74,8 @@ LES-106 至 LES-109 原先由 LES-120 阻塞。当前核心流程已达到可继
 
 | 顺序 | 任务 | 目的 | 状态 |
 |---|---|---|---|
-| 1 | [LES-110](https://linear.app/less-lab/issue/LES-110) | 在分享面板提供权限和有效期设置 | 下一步 |
-| 2 | [LES-111](https://linear.app/less-lab/issue/LES-111) | 补齐账号设置、邮箱验证与密码恢复 | 待排 |
+| 1 | [LES-110](https://linear.app/less-lab/issue/LES-110) | 在分享面板提供权限和有效期设置 | 已完成 |
+| 2 | [LES-111](https://linear.app/less-lab/issue/LES-111) | 补齐账号设置、邮箱验证与密码恢复 | 下一步 |
 | 3 | [LES-112](https://linear.app/less-lab/issue/LES-112) | 建立购物清单中心和历史入口 | 待排 |
 | 4 | [LES-114](https://linear.app/less-lab/issue/LES-114) | 完善可观测性、自定义域名和数据保护 | 待排 |
 | 5 | [LES-113](https://linear.app/less-lab/issue/LES-113) | 建立自动化浏览器回归和发布门禁 | 待排 |
