@@ -42,7 +42,8 @@
 		cancelHref = '/app/dishes',
 		action,
 		message,
-		aiUncertainFields = []
+		aiUncertainFields = [],
+		expectedUpdatedAt
 	}: {
 		values?: DishFormValues;
 		errors?: DishFormErrors;
@@ -51,6 +52,7 @@
 		action?: string;
 		message?: string;
 		aiUncertainFields?: string[];
+		expectedUpdatedAt?: string | null;
 	} = $props();
 
 	const emptyIngredient = (): IngredientFormValues => ({
@@ -113,6 +115,9 @@
 </script>
 
 <form method="post" {action} use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-6">
+	{#if expectedUpdatedAt}
+		<input type="hidden" name="expectedUpdatedAt" value={expectedUpdatedAt} />
+	{/if}
 	<div class="grid gap-4 md:grid-cols-[1fr_180px_160px]">
 		<div class="space-y-2">
 			<Label for="dish-name">菜品名称</Label>

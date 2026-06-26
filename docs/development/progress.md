@@ -2,9 +2,35 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-108 - Shared Edit Conflict Protection
+
+Status: implemented locally on 2026-06-26. No database migration required; this uses existing `updated_at` values as optimistic write versions.
+
+What changed:
+
+- Added a shared optimistic-concurrency helper with a high-precision SQLite timestamp and a single user-facing conflict message.
+- Added optional `expectedUpdatedAt` support to dish and meal-plan update schemas.
+- Guarded dish edits, meal-plan detail edits, meal-plan item rating updates and meal-plan archiving with version checks.
+- Guarded shopping-list regeneration with both meal-plan and shopping-list versions.
+- Touched `shopping_lists.updated_at` when shopping items are added, edited, checked, unchecked or deleted so regeneration can detect stale shopping-list pages.
+- Added hidden version fields to dish edit, meal-plan detail and shopping-list regeneration forms.
+- Returned page-level conflict feedback instead of silently overwriting or sending the user to a generic error page.
+- Extended the family workspace smoke with stale dish edit, stale meal-plan edit and stale shopping-list regeneration conflict assertions.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run verify:family-workspace`
+
+Notes for next threads:
+
+- LES-109 is next and should build family activity and pending-work surfaces from real workspace events; do not add notification complexity until the activity surface is clear.
+- LES-108 intentionally does not add a new version column or migration.
+
 ## LES-107 - Shared Shopping Filters And Buyer Labels
 
-Status: implemented locally on 2026-06-26. No database migration required; this builds on the `checked_by_user_id` and `checked_at` fields from LES-106.
+Status: completed on 2026-06-26. No database migration required; this builds on the `checked_by_user_id` and `checked_at` fields from LES-106.
 
 What changed:
 
@@ -24,7 +50,6 @@ Verification completed:
 
 Notes for next threads:
 
-- LES-108 is next and should add true multi-user version/conflict protection around shared edits.
 - LES-107 intentionally leaves notification/activity aggregation to LES-109.
 
 ## LES-106 - Family Operation Ownership

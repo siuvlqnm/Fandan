@@ -35,6 +35,7 @@ The test requires `.svelte-kit/cloudflare/_worker.js`; run `npm run build` first
 - A second account accepts the invitation; repeating acceptance is idempotent.
 - The member creates a dish and meal plan, generates a shopping list and checks an item; the owner sees each shared change.
 - Phase 10 ownership columns remain migration-safe for legacy rows while new dish, meal-plan and shopping-list writes record the acting member.
+- Versioned edits reject stale dish updates, stale meal-plan updates and stale shopping-list regeneration with `409` instead of silently overwriting another member's work.
 - A resource in the member's personal workspace returns `404` to the owner.
 - Selecting an unrelated workspace and using owner-only invitation APIs return `403`.
 - Revoked, expired and already-consumed invitations reject acceptance with `409`.

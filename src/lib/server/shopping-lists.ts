@@ -13,6 +13,7 @@ import {
 } from './db/schema';
 import { getMealPlan } from './meal-plans';
 import type { AuthenticatedContext } from './context';
+import { assertExpectedUpdatedAt, normalizeExpectedUpdatedAt, staleWriteError, versionedNow } from './optimistic-concurrency';
 import { loadUserLabels, userLabelFrom, type UserLabel } from './user-labels';
 
 const shoppingListStatusSchema = z.enum(['draft', 'active', 'completed']);
@@ -91,6 +92,13 @@ const normalizeNullable = (value: string | null | undefined) => {
 	return next ? next : null;
 };
 const nowText = () => new Date().toISOString();
+
+const touchShoppingList = async (context: AuthenticatedContext, shoppingListId: string) => {
+	await context.db
+		.update(shoppingLists)
+		.set({ updatedAt: versionedNow })
+		.where(eq(shoppingLists.id, shoppingListId));
+};
 
 const parseQuantity = (value: string | null | undefined) => {
 	const normalized = value?.trim();
@@ -365,8 +373,13 @@ export const getMealPlanShoppingList = async (context: AuthenticatedContext, mea
 	return getShoppingList(context, shoppingList.id);
 };
 
-export const generateShoppingList = async (context: AuthenticatedContext, mealPlanId: string) => {
+export const generateShoppingList = async (
+	context: AuthenticatedContext,
+	mealPlanId: string,
+	options: { expectedMealPlanUpdatedAt?: string | null; expectedShoppingListUpdatedAt?: string | null } = {}
+) => {
 	const mealPlan = await getMealPlan(context, mealPlanId);
+	assertExpectedUpdatedAt(mealPlan.updatedAt, options.expectedMealPlanUpdatedAt);
 	const generatedItems = await buildGeneratedItems(context, mealPlanId);
 	const [existing] = await context.db
 		.select()
@@ -375,6 +388,7 @@ export const generateShoppingList = async (context: AuthenticatedContext, mealPl
 		.orderBy(desc(shoppingLists.updatedAt), desc(shoppingLists.createdAt))
 		.limit(1);
 	const shoppingListId = existing?.id ?? crypto.randomUUID();
+	const expectedShoppingListUpdatedAt = normalizeExpectedUpdatedAt(options.expectedShoppingListUpdatedAt);
 
 	if (!existing) {
 		await context.db.insert(shoppingLists).values({
@@ -384,14 +398,25 @@ export const generateShoppingList = async (context: AuthenticatedContext, mealPl
 			status: 'active'
 		});
 	} else {
-		await context.db
+		const rows = await context.db
 			.update(shoppingLists)
 			.set({
 				title: `${mealPlan.title} 购物清单`,
 				status: shoppingListStatusSchema.parse(existing.status) === 'completed' ? 'active' : existing.status,
-				updatedAt: sql`CURRENT_TIMESTAMP`
+				updatedAt: versionedNow
 			})
-			.where(eq(shoppingLists.id, shoppingListId));
+			.where(
+				and(
+					eq(shoppingLists.id, shoppingListId),
+					...(expectedShoppingListUpdatedAt ? [eq(shoppingLists.updatedAt, expectedShoppingListUpdatedAt)] : [])
+				)
+			)
+			.returning({ id: shoppingLists.id });
+
+		if (rows.length === 0) {
+			throw staleWriteError();
+		}
+
 		await context.db.delete(shoppingListItems).where(eq(shoppingListItems.shoppingListId, shoppingListId));
 	}
 
@@ -436,6 +461,7 @@ export const createShoppingListItem = async (
 		checkedByUserId: input.checked ? context.user.id : null,
 		checkedAt: input.checked ? nowText() : null
 	});
+	await touchShoppingList(context, shoppingListId);
 
 	return getShoppingList(context, shoppingListId);
 };
@@ -468,6 +494,7 @@ export const updateShoppingListItem = async (
 				updatedAt: sql`CURRENT_TIMESTAMP`
 			})
 			.where(and(eq(shoppingListItems.id, itemId), eq(shoppingListItems.shoppingListId, shoppingListId)));
+		await touchShoppingList(context, shoppingListId);
 	}
 
 	return getShoppingList(context, shoppingListId);
@@ -479,6 +506,7 @@ export const deleteShoppingListItem = async (context: AuthenticatedContext, shop
 	await context.db
 		.delete(shoppingListItems)
 		.where(and(eq(shoppingListItems.id, itemId), eq(shoppingListItems.shoppingListId, shoppingListId)));
+	await touchShoppingList(context, shoppingListId);
 
 	return { deleted: true, id: itemId, shoppingListId };
 };

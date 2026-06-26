@@ -99,6 +99,15 @@ const readToggleForm = async (request: Request) => {
 	};
 };
 
+const readExpectedVersions = async (request: Request) => {
+	const formData = await request.formData();
+
+	return {
+		expectedMealPlanUpdatedAt: formString(formData, 'expectedMealPlanUpdatedAt'),
+		expectedShoppingListUpdatedAt: formString(formData, 'expectedShoppingListUpdatedAt')
+	};
+};
+
 const redirectBack = (event: RequestEvent): never => {
 	throw redirect(303, event.url.pathname);
 };
@@ -252,14 +261,15 @@ export const actions: Actions = {
 
 	regenerate: async (event) => {
 		const context = await requireContext(event);
+		const values = await readExpectedVersions(event.request);
 
 		try {
 			const shoppingList = await getShoppingList(context, event.params.id);
-			const nextShoppingList = await generateShoppingList(context, shoppingList.mealPlanId);
+			const nextShoppingList = await generateShoppingList(context, shoppingList.mealPlanId, values);
 
 			return redirect(303, `/app/shopping-lists/${nextShoppingList.id}`);
 		} catch (cause) {
-			return actionError('regenerate', cause);
+			return actionError('regenerate', cause, values);
 		}
 	}
 };

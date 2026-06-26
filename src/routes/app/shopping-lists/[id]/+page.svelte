@@ -72,6 +72,8 @@
 				<p class="text-sm leading-6 text-muted-foreground">来自 {data.mealPlan.title} · 待买 {data.summary.pending} 项</p>
 			</div>
 			<form method="post" action="?/regenerate" use:enhanceWithFeedback>
+				<input type="hidden" name="expectedMealPlanUpdatedAt" value={data.mealPlan.updatedAt} />
+				<input type="hidden" name="expectedShoppingListUpdatedAt" value={data.shoppingList.updatedAt} />
 				<Button
 					type="submit"
 					variant="outline"

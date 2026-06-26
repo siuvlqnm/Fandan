@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { apiError } from './api/errors';
 import {
@@ -11,6 +11,7 @@ import {
 } from './db/schema';
 import type { AuthenticatedContext } from './context';
 import { normalizeDishTags } from '$lib/domain/food-options';
+import { normalizeExpectedUpdatedAt, staleWriteError, versionedNow } from './optimistic-concurrency';
 import { loadUserLabels, userLabelFrom, type UserLabel } from './user-labels';
 
 const dishVisibilitySchema = z.enum(['space', 'private']);
@@ -35,6 +36,7 @@ const ingredientSchema = z.object({
 });
 
 const dishFieldsSchema = z.object({
+	expectedUpdatedAt: z.string().trim().min(1).optional(),
 	name: z.string().trim().min(1, '请输入菜品名称').max(80),
 	category: nullableTextSchema(40),
 	instructions: nullableTextSchema(4000),
@@ -55,7 +57,9 @@ export const createDishSchema = dishFieldsSchema.extend({
 
 export const updateDishSchema = dishFieldsSchema
 	.partial()
-	.refine((value) => Object.keys(value).length > 0, { message: 'At least one field is required' });
+	.refine((value) => Object.keys(value).some((key) => key !== 'expectedUpdatedAt'), {
+		message: 'At least one field is required'
+	});
 
 export const dishFormSchema = z.object({
 	name: z.string().trim().min(1, '请输入菜品名称').max(80),
@@ -249,7 +253,7 @@ export const createDish = async (context: AuthenticatedContext, input: CreateDis
 export const updateDish = async (context: AuthenticatedContext, id: string, input: UpdateDishInput) => {
 	await getDish(context, id);
 
-	const { ingredients, ...dishInput } = input;
+	const { expectedUpdatedAt, ingredients, ...dishInput } = input;
 	const values = Object.fromEntries(
 		Object.entries(dishInput).filter(([, value]) => value !== undefined)
 	) as Partial<NewDish>;
@@ -257,15 +261,29 @@ export const updateDish = async (context: AuthenticatedContext, id: string, inpu
 		values.servingBasisConfirmed = true;
 	}
 
-	if (Object.keys(values).length > 0) {
-		await context.db
+	const shouldTouchDish = Object.keys(values).length > 0 || ingredients !== undefined;
+	const expected = normalizeExpectedUpdatedAt(expectedUpdatedAt);
+
+	if (shouldTouchDish) {
+		const rows = await context.db
 			.update(dishes)
 			.set({
 				...values,
 				updatedByUserId: context.user.id,
-				updatedAt: sql`CURRENT_TIMESTAMP`
+				updatedAt: versionedNow
 			})
-			.where(and(eq(dishes.id, id), eq(dishes.spaceId, context.space.id)));
+			.where(
+				and(
+					eq(dishes.id, id),
+					eq(dishes.spaceId, context.space.id),
+					...(expected ? [eq(dishes.updatedAt, expected)] : [])
+				)
+			)
+			.returning({ id: dishes.id });
+
+		if (rows.length === 0) {
+			throw staleWriteError();
+		}
 	}
 
 	if (ingredients !== undefined) {
@@ -276,11 +294,6 @@ export const updateDish = async (context: AuthenticatedContext, id: string, inpu
 		if (nextIngredients.length > 0) {
 			await context.db.insert(dishIngredients).values(nextIngredients);
 		}
-
-		await context.db
-			.update(dishes)
-			.set({ updatedByUserId: context.user.id, updatedAt: sql`CURRENT_TIMESTAMP` })
-			.where(and(eq(dishes.id, id), eq(dishes.spaceId, context.space.id)));
 	}
 
 	return getDish(context, id);

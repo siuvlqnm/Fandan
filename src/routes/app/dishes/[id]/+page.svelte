@@ -45,7 +45,7 @@
 				<h2 class="text-xl font-semibold">菜品资料</h2>
 				<p class="text-sm text-muted-foreground">保存后会立即用于后续创建饭单和购物清单。</p>
 			</div>
-			<DishForm {values} {errors} {message} action="?/update" submitLabel="保存修改" />
+			<DishForm {values} {errors} {message} action="?/update" submitLabel="保存修改" expectedUpdatedAt={dish.updatedAt} />
 		</section>
 
 		<div class="space-y-4">

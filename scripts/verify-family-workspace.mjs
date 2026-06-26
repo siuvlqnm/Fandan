@@ -254,6 +254,18 @@ const verifyCollaboration = async () => {
 	})).data.data.dish;
 	const ownerDishes = (await owner.request('/api/dishes')).data.data.dishes;
 	assert(ownerDishes.some((dish) => dish.id === collaborativeDish.id), 'Owner cannot see the member-created dish');
+	const originalDishVersion = collaborativeDish.updatedAt;
+	const memberDishUpdate = (await member.request(`/api/dishes/${collaborativeDish.id}`, {
+		method: 'PATCH',
+		json: { name: '成员更新炖鸡', expectedUpdatedAt: originalDishVersion }
+	})).data.data.dish;
+	assert(memberDishUpdate.name === '成员更新炖鸡', 'First versioned dish update failed');
+	const staleDishUpdate = await owner.request(`/api/dishes/${collaborativeDish.id}`, {
+		method: 'PATCH',
+		json: { category: '下饭菜', expectedUpdatedAt: originalDishVersion },
+		expectedStatus: 409
+	});
+	assert(staleDishUpdate.data?.error?.message.includes('内容已被其他成员更新'), 'Stale dish update did not return a conflict message');
 
 	const collaborativePlan = (await member.request('/api/meal-plans', {
 		method: 'POST',
@@ -265,6 +277,18 @@ const verifyCollaboration = async () => {
 		},
 		expectedStatus: 201
 	})).data.data.mealPlan;
+	const originalMealPlanVersion = collaborativePlan.updatedAt;
+	const memberMealPlanUpdate = (await member.request(`/api/meal-plans/${collaborativePlan.id}`, {
+		method: 'PATCH',
+		json: { notes: '成员先保存的备注', expectedUpdatedAt: originalMealPlanVersion }
+	})).data.data.mealPlan;
+	assert(memberMealPlanUpdate.notes === '成员先保存的备注', 'First versioned meal-plan update failed');
+	const staleMealPlanUpdate = await owner.request(`/api/meal-plans/${collaborativePlan.id}`, {
+		method: 'PATCH',
+		json: { notes: '旧页面覆盖备注', expectedUpdatedAt: originalMealPlanVersion },
+		expectedStatus: 409
+	});
+	assert(staleMealPlanUpdate.data?.error?.message.includes('内容已被其他成员更新'), 'Stale meal-plan update did not return a conflict message');
 	const generatedList = (await member.request(`/api/meal-plans/${collaborativePlan.id}/shopping-list/generate`, {
 		method: 'POST',
 		expectedStatus: 201
@@ -313,6 +337,16 @@ const verifyCollaboration = async () => {
 	const ownerCheckedItem = ownerList.items.find((item) => item.id === checkedItemId);
 	assert(ownerCheckedItem?.checked === true, 'Owner cannot see the member shopping-list update');
 	assert(ownerCheckedItem.checkedBy?.name === '协作成员' && ownerCheckedItem.checkedAt, 'Owner cannot see the member shopping-list actor');
+	const currentMealPlanForRegen = (await owner.request(`/api/meal-plans/${collaborativePlan.id}`)).data.data.mealPlan;
+	const staleRegeneration = await owner.request(`/api/meal-plans/${collaborativePlan.id}/shopping-list/generate`, {
+		method: 'POST',
+		json: {
+			expectedMealPlanUpdatedAt: currentMealPlanForRegen.updatedAt,
+			expectedShoppingListUpdatedAt: regeneratedList.updatedAt
+		},
+		expectedStatus: 409
+	});
+	assert(staleRegeneration.data?.error?.message.includes('内容已被其他成员更新'), 'Stale shopping-list regeneration did not return a conflict message');
 	const checkedShoppingPage = String((await owner.request(`/app/shopping-lists/${regeneratedList.id}?filter=checked`)).data);
 	assert(checkedShoppingPage.includes('由 协作成员 标记已买') && checkedShoppingPage.includes('购物项筛选'), 'Checked shopping filter did not show member handling');
 	const uncheckedList = (await owner.request(
@@ -322,7 +356,7 @@ const verifyCollaboration = async () => {
 	const uncheckedItem = uncheckedList.items.find((item) => item.id === checkedItemId);
 	assert(uncheckedItem?.checked === false, 'Shopping-list uncheck was not stored');
 	assert(!uncheckedItem.checkedBy && !uncheckedItem.checkedAt, 'Shopping-list uncheck did not clear the buyer actor');
-	console.log('✓ shared dish, meal plan and shopping-list collaboration');
+	console.log('✓ shared dish, meal plan, shopping-list collaboration and conflict protection');
 
 	await member.request(`/api/workspaces/${memberPersonalSpaceId}/select`, { method: 'POST' });
 	const personalTarget = (await member.request('/api/targets', {

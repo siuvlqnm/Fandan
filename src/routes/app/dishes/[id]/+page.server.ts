@@ -21,6 +21,18 @@ const toPageError = (cause: unknown): never => {
 	throw cause;
 };
 
+const actionError = (cause: unknown, values: Record<string, unknown>) => {
+	if (cause instanceof ApiError && cause.code === 'CONFLICT') {
+		return fail(cause.status, {
+			values,
+			errors: {},
+			message: cause.message
+		});
+	}
+
+	return toPageError(cause);
+};
+
 export const load: PageServerLoad = async (event) => {
 	if (!event.locals.user || !event.locals.session) {
 		return redirect(302, `/login?next=${encodeURIComponent(event.url.pathname)}`);
@@ -59,7 +71,10 @@ export const actions: Actions = {
 		}
 
 		try {
-			const dish = await updateDish(context, id, dishFormToUpdateInput(result.data as DishFormInput));
+			const dish = await updateDish(context, id, {
+				...dishFormToUpdateInput(result.data as DishFormInput),
+				expectedUpdatedAt: values.expectedUpdatedAt
+			});
 
 			return {
 				values: {
@@ -69,7 +84,7 @@ export const actions: Actions = {
 				message: '已保存菜品'
 			};
 		} catch (cause) {
-			toPageError(cause);
+			return actionError(cause, values);
 		}
 	},
 

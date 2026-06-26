@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { apiError } from './api/errors';
 import {
@@ -12,6 +12,7 @@ import {
 	type NewMealPlanItem
 } from './db/schema';
 import type { AuthenticatedContext } from './context';
+import { normalizeExpectedUpdatedAt, staleWriteError, versionedNow } from './optimistic-concurrency';
 import { loadUserLabels, userLabelFrom, type UserLabel } from './user-labels';
 
 const mealPlanTypeSchema = z.enum(['single_meal', 'day', 'week', 'gathering']);
@@ -31,6 +32,7 @@ const itemSchema = z.object({
 });
 
 const mealPlanFieldsSchema = z.object({
+	expectedUpdatedAt: z.string().trim().min(1).optional(),
 	title: z.string().trim().min(1, '请输入饭单标题').max(120),
 	targetId: nullableIdSchema,
 	type: mealPlanTypeSchema.optional(),
@@ -49,7 +51,9 @@ export const createMealPlanSchema = mealPlanFieldsSchema.extend({
 
 export const updateMealPlanSchema = mealPlanFieldsSchema
 	.partial()
-	.refine((value) => Object.keys(value).length > 0, { message: 'At least one field is required' });
+	.refine((value) => Object.keys(value).some((key) => key !== 'expectedUpdatedAt'), {
+		message: 'At least one field is required'
+	});
 
 export const mealPlanFormSchema = z.object({
 	title: z.string().trim().min(1, '请输入饭单标题').max(120),
@@ -299,20 +303,33 @@ export const updateMealPlan = async (context: AuthenticatedContext, id: string, 
 	await assertTargetInSpace(context, input.targetId);
 	await assertDishesInSpace(context, input.items);
 
-	const { items, ...mealPlanInput } = input;
+	const { expectedUpdatedAt, items, ...mealPlanInput } = input;
 	const values = Object.fromEntries(
 		Object.entries(mealPlanInput).filter(([, value]) => value !== undefined)
 	) as Partial<NewMealPlan>;
+	const expected = normalizeExpectedUpdatedAt(expectedUpdatedAt);
+	const shouldTouchMealPlan = Object.keys(values).length > 0 || items !== undefined;
 
-	if (Object.keys(values).length > 0) {
-		await context.db
+	if (shouldTouchMealPlan) {
+		const rows = await context.db
 			.update(mealPlans)
 			.set({
 				...values,
 				updatedByUserId: context.user.id,
-				updatedAt: sql`CURRENT_TIMESTAMP`
+				updatedAt: versionedNow
 			})
-			.where(and(eq(mealPlans.id, id), eq(mealPlans.spaceId, context.space.id)));
+			.where(
+				and(
+					eq(mealPlans.id, id),
+					eq(mealPlans.spaceId, context.space.id),
+					...(expected ? [eq(mealPlans.updatedAt, expected)] : [])
+				)
+			)
+			.returning({ id: mealPlans.id });
+
+		if (rows.length === 0) {
+			throw staleWriteError();
+		}
 	}
 
 	if (items !== undefined) {
@@ -323,11 +340,6 @@ export const updateMealPlan = async (context: AuthenticatedContext, id: string, 
 		if (nextItems.length > 0) {
 			await context.db.insert(mealPlanItems).values(nextItems);
 		}
-
-		await context.db
-			.update(mealPlans)
-			.set({ updatedByUserId: context.user.id, updatedAt: sql`CURRENT_TIMESTAMP` })
-			.where(and(eq(mealPlans.id, id), eq(mealPlans.spaceId, context.space.id)));
 	}
 
 	return getMealPlan(context, id);
@@ -337,7 +349,8 @@ export const updateMealPlanItemRecommendationRating = async (
 	context: AuthenticatedContext,
 	mealPlanId: string,
 	itemId: string,
-	recommendationRating: number | null
+	recommendationRating: number | null,
+	options: { expectedUpdatedAt?: string | null } = {}
 ) => {
 	const current = await getMealPlan(context, mealPlanId);
 	assertEditable(current);
@@ -352,19 +365,31 @@ export const updateMealPlanItemRecommendationRating = async (
 		throw apiError('NOT_FOUND', 'Meal plan item not found');
 	}
 
+	const expected = normalizeExpectedUpdatedAt(options.expectedUpdatedAt);
+	const rows = await context.db
+		.update(mealPlans)
+		.set({ updatedByUserId: context.user.id, updatedAt: versionedNow })
+		.where(
+			and(
+				eq(mealPlans.id, current.id),
+				eq(mealPlans.spaceId, context.space.id),
+				...(expected ? [eq(mealPlans.updatedAt, expected)] : [])
+			)
+		)
+		.returning({ id: mealPlans.id });
+
+	if (rows.length === 0) {
+		throw staleWriteError();
+	}
+
 	await context.db
 		.update(mealPlanItems)
 		.set({
 			recommendationRating,
 			updatedByUserId: context.user.id,
-			updatedAt: sql`CURRENT_TIMESTAMP`
+			updatedAt: versionedNow
 		})
 		.where(and(eq(mealPlanItems.id, item.id), eq(mealPlanItems.mealPlanId, current.id)));
-
-	await context.db
-		.update(mealPlans)
-		.set({ updatedByUserId: context.user.id, updatedAt: sql`CURRENT_TIMESTAMP` })
-		.where(and(eq(mealPlans.id, current.id), eq(mealPlans.spaceId, context.space.id)));
 
 	return getMealPlan(context, mealPlanId);
 };
@@ -377,17 +402,33 @@ export const deleteMealPlan = async (context: AuthenticatedContext, id: string) 
 	return { deleted: true, id };
 };
 
-export const archiveMealPlan = async (context: AuthenticatedContext, id: string) => {
+export const archiveMealPlan = async (
+	context: AuthenticatedContext,
+	id: string,
+	options: { expectedUpdatedAt?: string | null } = {}
+) => {
 	await getMealPlan(context, id);
+	const expected = normalizeExpectedUpdatedAt(options.expectedUpdatedAt);
 
-	await context.db
+	const rows = await context.db
 		.update(mealPlans)
 		.set({
 			status: 'archived',
 			updatedByUserId: context.user.id,
-			updatedAt: sql`CURRENT_TIMESTAMP`
+			updatedAt: versionedNow
 		})
-		.where(and(eq(mealPlans.id, id), eq(mealPlans.spaceId, context.space.id)));
+		.where(
+			and(
+				eq(mealPlans.id, id),
+				eq(mealPlans.spaceId, context.space.id),
+				...(expected ? [eq(mealPlans.updatedAt, expected)] : [])
+			)
+		)
+		.returning({ id: mealPlans.id });
+
+	if (rows.length === 0) {
+		throw staleWriteError();
+	}
 
 	return getMealPlan(context, id);
 };

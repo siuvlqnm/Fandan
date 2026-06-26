@@ -73,7 +73,8 @@ export const _readDishForm = async (request: Request) => {
 		tagsText: selectedTags.join(', '),
 		tags: selectedTags,
 		visibility: String(formData.get('visibility') ?? 'space'),
-		ingredients
+		ingredients,
+		expectedUpdatedAt: String(formData.get('expectedUpdatedAt') ?? '')
 	};
 };
 

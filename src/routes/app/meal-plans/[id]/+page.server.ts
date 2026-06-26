@@ -119,11 +119,13 @@ const fieldErrors = (error: { issues: { path: PropertyKey[]; message: string }[]
 	}, {});
 
 const formString = (formData: FormData, name: string, fallback = '') => String(formData.get(name) ?? fallback);
+const expectedUpdatedAtFrom = (formData: FormData) => formString(formData, 'expectedUpdatedAt');
 
 const readMetaForm = async (request: Request) => {
 	const formData = await request.formData();
 
 	return {
+		expectedUpdatedAt: expectedUpdatedAtFrom(formData),
 		title: formString(formData, 'title'),
 		targetId: formString(formData, 'targetId'),
 		type: formString(formData, 'type', 'single_meal'),
@@ -137,6 +139,7 @@ const readAddDishForm = async (request: Request) => {
 	const formData = await request.formData();
 
 	return {
+		expectedUpdatedAt: expectedUpdatedAtFrom(formData),
 		dishId: formString(formData, 'dishId'),
 		mealSlot: formString(formData, 'mealSlot'),
 		plannedDate: formString(formData, 'plannedDate'),
@@ -150,6 +153,7 @@ const readQuickDishForm = async (request: Request) => {
 	const formData = await request.formData();
 
 	return {
+		expectedUpdatedAt: expectedUpdatedAtFrom(formData),
 		name: formString(formData, 'name'),
 		category: formString(formData, 'category'),
 		mealSlot: formString(formData, 'mealSlot'),
@@ -164,7 +168,10 @@ const getItemId = async (request: Request) => {
 	const formData = await request.formData();
 	const itemId = formData.get('itemId');
 
-	return typeof itemId === 'string' && itemId ? itemId : null;
+	return {
+		itemId: typeof itemId === 'string' && itemId ? itemId : null,
+		expectedUpdatedAt: expectedUpdatedAtFrom(formData)
+	};
 };
 
 const readMoveForm = async (request: Request) => {
@@ -173,6 +180,7 @@ const readMoveForm = async (request: Request) => {
 	const direction = formData.get('direction');
 
 	return {
+		expectedUpdatedAt: expectedUpdatedAtFrom(formData),
 		itemId: typeof itemId === 'string' && itemId ? itemId : null,
 		direction: direction === 'up' || direction === 'down' ? direction : null
 	};
@@ -182,7 +190,17 @@ const readStatusForm = async (request: Request) => {
 	const formData = await request.formData();
 
 	return {
+		expectedUpdatedAt: expectedUpdatedAtFrom(formData),
 		status: formString(formData, 'status')
+	};
+};
+
+const readExpectedVersions = async (request: Request) => {
+	const formData = await request.formData();
+
+	return {
+		expectedUpdatedAt: expectedUpdatedAtFrom(formData),
+		expectedShoppingListUpdatedAt: formString(formData, 'expectedShoppingListUpdatedAt')
 	};
 };
 
@@ -314,7 +332,10 @@ export const actions: Actions = {
 		}
 
 		try {
-			await updateMealPlan(context, event.params.id, result.data);
+			await updateMealPlan(context, event.params.id, {
+				...result.data,
+				expectedUpdatedAt: values.expectedUpdatedAt
+			});
 			redirectBack(event);
 		} catch (cause) {
 			return actionError('updateMeta', cause, values);
@@ -342,7 +363,7 @@ export const actions: Actions = {
 				notes: result.data.notes ?? null,
 				sortOrder: items.length
 			});
-			await updateMealPlan(context, event.params.id, { items });
+			await updateMealPlan(context, event.params.id, { items, expectedUpdatedAt: values.expectedUpdatedAt });
 			redirectBack(event);
 		} catch (cause) {
 			return actionError('addDish', cause, values);
@@ -377,7 +398,7 @@ export const actions: Actions = {
 				notes: result.data.notes ?? null,
 				sortOrder: items.length
 			});
-			await updateMealPlan(context, event.params.id, { items });
+			await updateMealPlan(context, event.params.id, { items, expectedUpdatedAt: values.expectedUpdatedAt });
 			redirectBack(event);
 		} catch (cause) {
 			return actionError('quickAddDish', cause, values);
@@ -388,6 +409,7 @@ export const actions: Actions = {
 		const context = await requireContext(event);
 		const formData = await event.request.formData();
 		const values = {
+			expectedUpdatedAt: expectedUpdatedAtFrom(formData),
 			itemId: formString(formData, 'itemId'),
 			recommendationRating: formString(formData, 'recommendationRating')
 		};
@@ -402,7 +424,8 @@ export const actions: Actions = {
 				context,
 				event.params.id,
 				result.data.itemId,
-				result.data.recommendationRating ?? null
+				result.data.recommendationRating ?? null,
+				{ expectedUpdatedAt: values.expectedUpdatedAt }
 			);
 			redirectBack(event);
 		} catch (cause) {
@@ -412,21 +435,21 @@ export const actions: Actions = {
 
 	removeItem: async (event) => {
 		const context = await requireContext(event);
-		const itemId = await getItemId(event.request);
+		const values = await getItemId(event.request);
 
-		if (!itemId) {
+		if (!values.itemId) {
 			return fail(400, { action: 'removeItem', values: {}, errors: {}, message: '缺少菜品条目 ID' });
 		}
 
 		try {
 			const mealPlan = await getMealPlan(context, event.params.id);
 			const items = orderedItems(mealPlan)
-				.filter((item) => item.id !== itemId)
+				.filter((item) => item.id !== values.itemId)
 				.map(toItemInput);
-			await updateMealPlan(context, event.params.id, { items });
+			await updateMealPlan(context, event.params.id, { items, expectedUpdatedAt: values.expectedUpdatedAt });
 			redirectBack(event);
 		} catch (cause) {
-			return actionError('removeItem', cause, { itemId });
+			return actionError('removeItem', cause, values);
 		}
 	},
 
@@ -446,7 +469,7 @@ export const actions: Actions = {
 
 			if (index >= 0 && nextIndex >= 0 && nextIndex < items.length) {
 				[items[index], items[nextIndex]] = [items[nextIndex], items[index]];
-				await updateMealPlan(context, event.params.id, { items: items.map(toItemInput) });
+				await updateMealPlan(context, event.params.id, { items: items.map(toItemInput), expectedUpdatedAt: values.expectedUpdatedAt });
 			}
 
 			redirectBack(event);
@@ -466,9 +489,12 @@ export const actions: Actions = {
 
 		try {
 			if (result.data.status === 'archived') {
-				await archiveMealPlan(context, event.params.id);
+				await archiveMealPlan(context, event.params.id, { expectedUpdatedAt: values.expectedUpdatedAt });
 			} else {
-				await updateMealPlan(context, event.params.id, { status: result.data.status });
+				await updateMealPlan(context, event.params.id, {
+					status: result.data.status,
+					expectedUpdatedAt: values.expectedUpdatedAt
+				});
 			}
 
 			redirectToPanel(event, 'confirm');
@@ -479,28 +505,36 @@ export const actions: Actions = {
 
 	generateShoppingList: async (event) => {
 		const context = await requireContext(event);
+		const values = await readExpectedVersions(event.request);
 
 		try {
-			const shoppingList = await generateShoppingList(context, event.params.id);
+			const shoppingList = await generateShoppingList(context, event.params.id, {
+				expectedMealPlanUpdatedAt: values.expectedUpdatedAt,
+				expectedShoppingListUpdatedAt: values.expectedShoppingListUpdatedAt
+			});
 
 			return redirect(303, `/app/shopping-lists/${shoppingList.id}`);
 		} catch (cause) {
-			return actionError('generateShoppingList', cause);
+			return actionError('generateShoppingList', cause, values);
 		}
 	},
 
 	createShareLink: async (event) => {
 		const context = await requireContext(event);
+		const values = await readExpectedVersions(event.request);
 
 		try {
 			const mealPlan = await getMealPlan(context, event.params.id);
 			if (mealPlan.status === 'confirmed' || mealPlan.status === 'completed') {
-				await updateMealPlan(context, event.params.id, { status: 'pending_confirmation' });
+				await updateMealPlan(context, event.params.id, {
+					status: 'pending_confirmation',
+					expectedUpdatedAt: values.expectedUpdatedAt
+				});
 			}
 			await createMealPlanShareLink(context, event.params.id, createShareLinkSchema.parse({}));
 			redirectToPanel(event, 'confirm');
 		} catch (cause) {
-			return actionError('createShareLink', cause);
+			return actionError('createShareLink', cause, values);
 		}
 	},
 

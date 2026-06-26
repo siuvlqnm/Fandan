@@ -119,13 +119,14 @@
 					<p><span class="block text-2xl font-semibold">{shoppingCount}</span><span class="text-xs text-muted-foreground">清单项</span></p>
 				</div>
 
-				<div class="grid grid-cols-[1fr_1.35fr] gap-3">
+					<div class="grid grid-cols-[1fr_1.35fr] gap-3">
 					<Button onclick={() => (activePanel = 'menu')} variant="outline" class="h-12 rounded-2xl bg-white">
 						<ChefHat class="size-4" />
 						看菜单
 					</Button>
 					{#if data.mealPlan.flow.step === 'confirm' && !activeShare}
 						<form method="post" action="?/createShareLink" use:enhanceWithFeedback>
+							<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 							<Button type="submit" class="h-12 w-full rounded-2xl text-base" disabled={isArchived} data-pending-label="创建中...">
 								<Link2 class="size-4" />
 								发给家人确认
@@ -143,6 +144,8 @@
 						</Button>
 					{:else if data.mealPlan.flow.step === 'shop'}
 						<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback>
+							<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+							<input type="hidden" name="expectedShoppingListUpdatedAt" value={data.shoppingList?.updatedAt ?? ''} />
 							<Button type="submit" class="h-12 w-full rounded-2xl text-base" data-pending-label="生成中...">
 								<ShoppingCart class="size-4" />
 								生成购物清单
@@ -246,6 +249,7 @@
 									</div>
 									<div class="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
 										<form method="post" action="?/updateRecommendationRating" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+											<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 											<input type="hidden" name="itemId" value={item.id} />
 											<div class="space-y-1">
 												<Label for={`recommendation-${item.id}`} class="text-xs text-muted-foreground">推荐星级</Label>
@@ -262,6 +266,7 @@
 										</form>
 										<div class="flex flex-wrap justify-end gap-2">
 										<form method="post" action="?/moveItem">
+											<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 											<input type="hidden" name="itemId" value={item.id} />
 											<input type="hidden" name="direction" value="up" />
 											<Button type="submit" variant="outline" size="icon-sm" class="size-11 rounded-xl bg-white" disabled={isArchived || !item.canMoveUp} aria-label="上移">
@@ -269,6 +274,7 @@
 											</Button>
 										</form>
 										<form method="post" action="?/moveItem">
+											<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 											<input type="hidden" name="itemId" value={item.id} />
 											<input type="hidden" name="direction" value="down" />
 											<Button type="submit" variant="outline" size="icon-sm" class="size-11 rounded-xl bg-white" disabled={isArchived || !item.canMoveDown} aria-label="下移">
@@ -279,6 +285,7 @@
 											<Button href={`/app/dishes/${item.dishId}`} variant="ghost" size="sm" class="h-11">菜品</Button>
 										{/if}
 										<form method="post" action="?/removeItem" use:enhanceWithFeedback>
+											<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 											<input type="hidden" name="itemId" value={item.id} />
 											<Button
 												type="submit"
@@ -341,6 +348,7 @@
 					</div>
 				{:else}
 					<form method="post" action="?/createShareLink" use:enhanceWithFeedback>
+						<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 						<Button type="submit" class="h-12 w-full rounded-2xl text-base" disabled={isArchived} data-pending-label="创建中...">
 							<Link2 class="size-4" />
 							发给家人确认
@@ -370,6 +378,7 @@
 					<div class="flex gap-2 overflow-x-auto pb-1">
 						{#each data.statusOptions as option}
 							<form method="post" action="?/setStatus" use:enhanceWithFeedback class="shrink-0">
+								<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 								<input type="hidden" name="status" value={option.value} />
 								<Button
 									type="submit"
@@ -478,6 +487,8 @@
 						</Button>
 					{/if}
 					<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback>
+						<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+						<input type="hidden" name="expectedShoppingListUpdatedAt" value={data.shoppingList?.updatedAt ?? ''} />
 						<Button
 							type="submit"
 							variant={data.shoppingList ? 'outline' : 'default'}
@@ -515,6 +526,7 @@
 					基础信息
 				</summary>
 				<form method="post" action="?/updateMeta" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-4 p-5">
+					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 					<div class="space-y-2">
 						<Label for="meal-plan-title">饭单标题</Label>
 						<Input id="meal-plan-title" name="title" value={data.mealPlan.title} placeholder="例如：周三晚餐" required disabled={isArchived} class="app-input" />
@@ -575,6 +587,7 @@
 					添加已有菜品
 				</summary>
 				<form method="post" action="?/addDish" use:enhanceWithFeedback={{ pendingLabel: '添加中...' }} class="space-y-4 p-5">
+					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 					<div class="space-y-2">
 						<Label for="dish-id">菜品</Label>
 						<select id="dish-id" name="dishId" class={selectClass} disabled={isArchived || data.dishes.length === 0} required>
@@ -638,6 +651,7 @@
 					快速新建菜品
 				</summary>
 				<form method="post" action="?/quickAddDish" use:enhanceWithFeedback={{ pendingLabel: '新建中...' }} class="space-y-4 p-5">
+					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 					<div class="space-y-2">
 						<Label for="quick-dish-name">菜品名称</Label>
 						<Input id="quick-dish-name" name="name" placeholder="例如：番茄炒蛋" disabled={isArchived} required class="app-input" />
