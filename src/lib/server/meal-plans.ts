@@ -24,6 +24,7 @@ const itemSchema = z.object({
 	mealSlot: nullableTextSchema(40),
 	plannedDate: nullableTextSchema(20),
 	servings: z.number().int().min(1).max(999).optional().default(1),
+	recommendationRating: z.number().int().min(1).max(5).nullable().optional(),
 	notes: nullableTextSchema(1000),
 	sortOrder: z.number().int().min(0).max(9999).optional()
 });
@@ -78,6 +79,7 @@ const serializeMealPlanItem = (item: MealPlanItem) => ({
 	mealSlot: item.mealSlot,
 	plannedDate: item.plannedDate,
 	servings: item.servings,
+	recommendationRating: item.recommendationRating,
 	notes: item.notes,
 	sortOrder: item.sortOrder,
 	createdAt: item.createdAt,
@@ -106,6 +108,7 @@ const itemValues = (mealPlanId: string, items: MealPlanItemInput[]): NewMealPlan
 		mealSlot: item.mealSlot ?? null,
 		plannedDate: item.plannedDate ?? null,
 		servings: item.servings,
+		recommendationRating: item.recommendationRating ?? null,
 		notes: item.notes ?? null,
 		sortOrder: item.sortOrder ?? index
 	}));
@@ -296,6 +299,36 @@ export const updateMealPlan = async (context: AuthenticatedContext, id: string, 
 	return getMealPlan(context, id);
 };
 
+export const updateMealPlanItemRecommendationRating = async (
+	context: AuthenticatedContext,
+	mealPlanId: string,
+	itemId: string,
+	recommendationRating: number | null
+) => {
+	const current = await getMealPlan(context, mealPlanId);
+	assertEditable(current);
+
+	const [item] = await context.db
+		.select({ id: mealPlanItems.id })
+		.from(mealPlanItems)
+		.where(and(eq(mealPlanItems.id, itemId), eq(mealPlanItems.mealPlanId, current.id)))
+		.limit(1);
+
+	if (!item) {
+		throw apiError('NOT_FOUND', 'Meal plan item not found');
+	}
+
+	await context.db
+		.update(mealPlanItems)
+		.set({
+			recommendationRating,
+			updatedAt: sql`CURRENT_TIMESTAMP`
+		})
+		.where(and(eq(mealPlanItems.id, item.id), eq(mealPlanItems.mealPlanId, current.id)));
+
+	return getMealPlan(context, mealPlanId);
+};
+
 export const deleteMealPlan = async (context: AuthenticatedContext, id: string) => {
 	await getMealPlan(context, id);
 
@@ -339,6 +372,7 @@ export const duplicateMealPlan = async (context: AuthenticatedContext, id: strin
 		mealSlot: item.mealSlot,
 		plannedDate: item.plannedDate,
 		servings: item.servings,
+		recommendationRating: item.recommendationRating,
 		notes: item.notes,
 		sortOrder: item.sortOrder
 	}));

@@ -13,6 +13,7 @@ Behavior:
 - Shows meal-plan title, type, status, date range, target summary and dish count.
 - Shows target taste notes, dietary restrictions and budget notes when present.
 - Groups dishes by planned date and meal slot.
+- Shows creator recommendation ratings on meal-plan items when present.
 - Lets guests select `喜欢`, `不喜欢`, `想替换` or `备注` per dish.
 - Lets guests add a freeform note per dish.
 - Lets guests add a global dietary note.

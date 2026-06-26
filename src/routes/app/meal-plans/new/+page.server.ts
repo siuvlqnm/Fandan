@@ -193,6 +193,7 @@ const createMealAction = async (event: RequestEvent) => {
 				mealSlot: result.data.mealSlot,
 				plannedDate: result.data.plannedDate,
 				servings: result.data.servings,
+				recommendationRating: null,
 				sortOrder: index
 			}))
 		});

@@ -72,6 +72,7 @@ export const createQuickStartMealPlan = async (
 			mealSlot: slot.mealSlot,
 			plannedDate: input.quickStartDate,
 			servings: 2,
+			recommendationRating: 4,
 			sortOrder: index
 		}))
 	});

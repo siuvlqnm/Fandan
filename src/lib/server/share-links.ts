@@ -159,6 +159,7 @@ const loadPublicItems = async (context: RequestContext, mealPlanId: string) =>
 			mealSlot: mealPlanItems.mealSlot,
 			plannedDate: mealPlanItems.plannedDate,
 			servings: mealPlanItems.servings,
+			recommendationRating: mealPlanItems.recommendationRating,
 			notes: mealPlanItems.notes,
 			sortOrder: mealPlanItems.sortOrder
 		})

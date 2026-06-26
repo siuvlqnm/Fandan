@@ -2,6 +2,24 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## 2026-06-26 - Meal Item Recommendation Rating
+
+Status: implemented locally on 2026-06-26.
+
+What changed:
+
+- Added optional `meal_plan_items.recommendation_rating` as a per-selected-dish 1-5 star field.
+- Let creators set the rating when adding an existing dish or quick-creating a dish from the meal detail page.
+- Let creators update the rating on already selected dishes without removing the item.
+- Show the rating in the creator meal detail and public share page.
+- Dashboard quick-start recommendations default to 4 stars; manual and AI meal creation leave the field blank unless set later.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run db:migrate:local`
+
 ## 2026-06-25 - Date And Meal Slot Quick Start
 
 Status: implemented locally on 2026-06-25.

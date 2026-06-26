@@ -27,8 +27,9 @@ LES-90 adds creator-side pages for listing meal plans and creating the first dra
 - List actions support opening, duplicating, archiving and deleting a meal plan.
 - The detail page can update title, target, type, date range and notes.
 - The detail page shows the selected target's people count, taste notes, dietary restrictions and budget notes.
-- The detail page can add an existing dish with date, meal slot, servings and item notes.
+- The detail page can add an existing dish with date, meal slot, servings, recommendation rating and item notes.
 - The detail page can quickly create a name-only dish and add it to the current meal plan in one action.
+- The detail page can update a selected item's recommendation rating without removing and re-adding the dish.
 - Meal-plan items are grouped by planned date and meal slot, then ordered by `sortOrder`.
 - Item move and remove actions auto-save the meal plan by replacing the full item list through `updateMealPlan`.
 - Detail status actions support draft, pending confirmation, confirmed, completed and archived.
@@ -46,3 +47,5 @@ LES-90 adds creator-side pages for listing meal plans and creating the first dra
 - Shopping-list generation on the detail page reuses `src/lib/server/shopping-lists.ts`.
 - Detail item actions keep the LES-89 API contract: item changes are persisted as a complete replacement list on the parent meal plan.
 - The item list uses current item IDs only to compute remove and move actions; saved replacement rows receive fresh IDs from the service layer.
+- Recommendation rating updates are the exception: they update the existing `meal_plan_items` row directly so item IDs and existing dish-level feedback remain stable.
+- `meal_plan_items.recommendation_rating` belongs to the selected meal item, not the reusable dish, so recommendation strength can vary per meal plan and is safe to expose on public share pages.

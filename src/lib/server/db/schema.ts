@@ -169,6 +169,7 @@ export const mealPlanItems = sqliteTable(
 		mealSlot: text('meal_slot'),
 		plannedDate: text('planned_date'),
 		servings: integer('servings').notNull().default(1),
+		recommendationRating: integer('recommendation_rating'),
 		notes: text('notes'),
 		sortOrder: integer('sort_order').notNull().default(0),
 		createdAt: createdAt(),

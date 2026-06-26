@@ -5,7 +5,7 @@ import { ApiError } from '$lib/server/api/errors';
 import { requireUserSpace } from '$lib/server/context';
 import { createDish, createDishSchema, listDishes } from '$lib/server/dishes';
 import { emptyItemFeedback, getMealPlanFeedbackSummary } from '$lib/server/feedback';
-import { archiveMealPlan, getMealPlan, updateMealPlan } from '$lib/server/meal-plans';
+import { archiveMealPlan, getMealPlan, updateMealPlan, updateMealPlanItemRecommendationRating } from '$lib/server/meal-plans';
 import {
 	createMealPlanShareLink,
 	createShareLinkSchema,
@@ -55,6 +55,7 @@ const addDishFormSchema = z.object({
 	mealSlot: formNullableTextSchema(40),
 	plannedDate: formNullableTextSchema(20),
 	servings: z.coerce.number().int().min(1, '份数至少为 1').max(999),
+	recommendationRating: z.preprocess(emptyStringToNull, z.coerce.number().int().min(1).max(5).nullable().optional()),
 	notes: formNullableTextSchema(1000)
 });
 
@@ -67,12 +68,18 @@ const statusFormSchema = z.object({
 	status: mealPlanStatusSchema
 });
 
+const recommendationRatingFormSchema = z.object({
+	itemId: z.string().trim().min(1, '缺少菜品条目 ID'),
+	recommendationRating: z.preprocess(emptyStringToNull, z.coerce.number().int().min(1).max(5).nullable().optional())
+});
+
 type MealPlan = Awaited<ReturnType<typeof getMealPlan>>;
 type MealPlanItem = MealPlan['items'][number];
 type FormAction =
 	| 'updateMeta'
 	| 'addDish'
 	| 'quickAddDish'
+	| 'updateRecommendationRating'
 	| 'removeItem'
 	| 'moveItem'
 	| 'setStatus'
@@ -134,6 +141,7 @@ const readAddDishForm = async (request: Request) => {
 		mealSlot: formString(formData, 'mealSlot'),
 		plannedDate: formString(formData, 'plannedDate'),
 		servings: formString(formData, 'servings', '1'),
+		recommendationRating: formString(formData, 'recommendationRating'),
 		notes: formString(formData, 'notes')
 	};
 };
@@ -147,6 +155,7 @@ const readQuickDishForm = async (request: Request) => {
 		mealSlot: formString(formData, 'mealSlot'),
 		plannedDate: formString(formData, 'plannedDate'),
 		servings: formString(formData, 'servings', '1'),
+		recommendationRating: formString(formData, 'recommendationRating'),
 		notes: formString(formData, 'notes')
 	};
 };
@@ -182,6 +191,7 @@ const toItemInput = (item: MealPlanItem, index: number) => ({
 	mealSlot: item.mealSlot,
 	plannedDate: item.plannedDate,
 	servings: item.servings,
+	recommendationRating: item.recommendationRating,
 	notes: item.notes,
 	sortOrder: index
 });
@@ -328,6 +338,7 @@ export const actions: Actions = {
 				mealSlot: result.data.mealSlot ?? null,
 				plannedDate: result.data.plannedDate ?? null,
 				servings: result.data.servings,
+				recommendationRating: result.data.recommendationRating ?? null,
 				notes: result.data.notes ?? null,
 				sortOrder: items.length
 			});
@@ -362,6 +373,7 @@ export const actions: Actions = {
 				mealSlot: result.data.mealSlot ?? null,
 				plannedDate: result.data.plannedDate ?? null,
 				servings: result.data.servings,
+				recommendationRating: result.data.recommendationRating ?? null,
 				notes: result.data.notes ?? null,
 				sortOrder: items.length
 			});
@@ -369,6 +381,32 @@ export const actions: Actions = {
 			redirectBack(event);
 		} catch (cause) {
 			return actionError('quickAddDish', cause, values);
+		}
+	},
+
+	updateRecommendationRating: async (event) => {
+		const context = await requireContext(event);
+		const formData = await event.request.formData();
+		const values = {
+			itemId: formString(formData, 'itemId'),
+			recommendationRating: formString(formData, 'recommendationRating')
+		};
+		const result = recommendationRatingFormSchema.safeParse(values);
+
+		if (!result.success) {
+			return fail(400, { action: 'updateRecommendationRating', values, errors: fieldErrors(result.error) });
+		}
+
+		try {
+			await updateMealPlanItemRecommendationRating(
+				context,
+				event.params.id,
+				result.data.itemId,
+				result.data.recommendationRating ?? null
+			);
+			redirectBack(event);
+		} catch (cause) {
+			return actionError('updateRecommendationRating', cause, values);
 		}
 	},
 

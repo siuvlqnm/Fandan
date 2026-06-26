@@ -23,6 +23,7 @@
 		RefreshCw,
 		ShoppingCart,
 		ShieldOff,
+		Star,
 		ThumbsDown,
 		Trash2,
 		UsersRound
@@ -58,6 +59,14 @@
 					: 'bg-white text-primary';
 	const selectClass = 'app-input h-11 text-sm';
 	const textAreaClass = 'app-input min-h-24 py-3';
+	const recommendationOptions = [
+		{ value: '', label: '不标注' },
+		{ value: 5, label: '5 星强推荐' },
+		{ value: 4, label: '4 星推荐' },
+		{ value: 3, label: '3 星可选' },
+		{ value: 2, label: '2 星普通' },
+		{ value: 1, label: '1 星备选' }
+	];
 	const panels = $derived<{ id: Panel; label: string; helper: string }[]>([
 		{ id: 'menu', label: '菜单', helper: `${dishCount} 道菜` },
 		{ id: 'confirm', label: '确认', helper: `${data.feedbackSummary.total} 条反馈` },
@@ -218,12 +227,34 @@
 												{/if}
 											</div>
 											<p class="text-sm text-muted-foreground">{item.servings} 份 · {item.dishIngredientCount} 种食材</p>
+											{#if item.recommendationRating}
+												<p class="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-primary">
+													<Star class="size-3.5 fill-current" />
+													主理人推荐 {item.recommendationRating} 星
+												</p>
+											{/if}
 											{#if item.notes}
 												<p class="rounded-xl bg-muted/60 p-2 text-sm text-muted-foreground">{item.notes}</p>
 											{/if}
 										</div>
 									</div>
-									<div class="mt-3 flex flex-wrap justify-end gap-2">
+									<div class="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+										<form method="post" action="?/updateRecommendationRating" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+											<input type="hidden" name="itemId" value={item.id} />
+											<div class="space-y-1">
+												<Label for={`recommendation-${item.id}`} class="text-xs text-muted-foreground">推荐星级</Label>
+												<select id={`recommendation-${item.id}`} name="recommendationRating" class={selectClass} disabled={isArchived}>
+													{#each recommendationOptions as option}
+														<option value={option.value} selected={item.recommendationRating === option.value || (!item.recommendationRating && option.value === '')}>{option.label}</option>
+													{/each}
+												</select>
+											</div>
+											<Button type="submit" variant="outline" size="sm" class="mt-5 h-11 rounded-xl bg-white" disabled={isArchived} data-pending-label="保存中...">
+												<Star class="size-4" />
+												保存
+											</Button>
+										</form>
+										<div class="flex flex-wrap justify-end gap-2">
 										<form method="post" action="?/moveItem">
 											<input type="hidden" name="itemId" value={item.id} />
 											<input type="hidden" name="direction" value="up" />
@@ -255,6 +286,7 @@
 												<Trash2 class="size-4" />
 											</Button>
 										</form>
+										</div>
 									</div>
 								</article>
 							{/each}
@@ -575,6 +607,15 @@
 					</div>
 
 					<div class="space-y-2">
+						<Label for="add-recommendation-rating">推荐星级</Label>
+						<select id="add-recommendation-rating" name="recommendationRating" class={selectClass} disabled={isArchived}>
+							{#each recommendationOptions as option}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
+					</div>
+
+					<div class="space-y-2">
 						<Label for="add-notes">条目备注</Label>
 						<textarea id="add-notes" name="notes" class={textAreaClass} disabled={isArchived}></textarea>
 					</div>
@@ -623,6 +664,15 @@
 					<div class="space-y-2">
 						<Label for="quick-servings">份数</Label>
 						<Input id="quick-servings" name="servings" type="number" min="1" max="999" value="1" disabled={isArchived} class="app-input" />
+					</div>
+
+					<div class="space-y-2">
+						<Label for="quick-recommendation-rating">推荐星级</Label>
+						<select id="quick-recommendation-rating" name="recommendationRating" class={selectClass} disabled={isArchived}>
+							{#each recommendationOptions as option}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
 					</div>
 
 					<div class="space-y-2">

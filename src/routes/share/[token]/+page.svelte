@@ -13,6 +13,7 @@
 		MessageSquareText,
 		RefreshCw,
 		Send,
+		Star,
 		ThumbsDown,
 		UsersRound,
 		Utensils
@@ -178,6 +179,12 @@
 															<span class="rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">{item.dishCategory}</span>
 														{/if}
 													</div>
+													{#if item.recommendationRating}
+														<p class="mt-1 inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-primary">
+															<Star class="size-3.5 fill-current" />
+															主理人推荐 {item.recommendationRating} 星
+														</p>
+													{/if}
 													<p class="text-sm text-muted-foreground">
 														{item.servings} 份{item.notes ? ` · ${item.notes}` : ''}
 													</p>
