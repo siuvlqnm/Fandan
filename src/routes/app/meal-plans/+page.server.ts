@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { getMealFlowState } from '$lib/domain/meal-flow';
 import { requireUserSpace } from '$lib/server/context';
 import { archiveMealPlan, deleteMealPlan, duplicateMealPlan, listMealPlans } from '$lib/server/meal-plans';
 import { listTargets } from '$lib/server/targets';
@@ -58,7 +59,8 @@ export const load: PageServerLoad = async (event) => {
 			...mealPlan,
 			typeLabel: typeLabels[mealPlan.type],
 			statusLabel: statusLabels[mealPlan.status],
-			targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知对象') : '未选择对象'
+			targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知对象') : '当前家庭',
+			flow: getMealFlowState({ status: mealPlan.status, itemCount: mealPlan.items.length })
 		})),
 		targets,
 		typeOptions: [

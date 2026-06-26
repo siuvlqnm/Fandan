@@ -1,9 +1,12 @@
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
+import { getMealFlowState } from '$lib/domain/meal-flow';
+import { addDateKeyDays } from '$lib/domain/meal-quick-start';
 import { requireUserSpace } from '$lib/server/context';
 import { listDishes } from '$lib/server/dishes';
+import { createQuickStartMealPlan, getQuickStartViewData, quickStartMealSchema } from '$lib/server/meal-quick-start';
 import { listMealPlans } from '$lib/server/meal-plans';
 import { listTargets } from '$lib/server/targets';
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 
 const typeLabels: Record<string, string> = {
 	single_meal: '单餐',
@@ -27,22 +30,10 @@ const targetTypeLabels: Record<string, string> = {
 	other: '其他'
 };
 
-const pad = (value: number) => value.toString().padStart(2, '0');
-
-const toDateKey = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-const startOfWeek = (date: Date) => {
-	const result = new Date(date);
-	const daysFromMonday = (result.getDay() + 6) % 7;
-	result.setHours(0, 0, 0, 0);
-	result.setDate(result.getDate() - daysFromMonday);
-	return result;
-};
-
-const endOfWeek = (date: Date) => {
-	const result = new Date(date);
-	result.setDate(result.getDate() + 6);
-	return result;
+const startOfShanghaiWeek = (dateKey: string) => {
+	const day = new Date(`${dateKey}T00:00:00+08:00`).getUTCDay();
+	const daysFromMonday = (day + 6) % 7;
+	return addDateKeyDays(dateKey, -daysFromMonday);
 };
 
 const dateRangeLabel = (startDate: string | null, endDate: string | null) => {
@@ -92,19 +83,19 @@ export const load: PageServerLoad = async (event) => {
 		listMealPlans(context)
 	]);
 	const targetById = new Map(targets.map((target) => [target.id, target]));
-	const today = new Date();
-	const weekStart = startOfWeek(today);
-	const todayKey = toDateKey(today);
-	const weekStartKey = toDateKey(weekStart);
-	const weekEndKey = toDateKey(endOfWeek(weekStart));
+	const quickStart = getQuickStartViewData();
+	const todayKey = quickStart.today;
+	const weekStartKey = startOfShanghaiWeek(todayKey);
+	const weekEndKey = addDateKeyDays(weekStartKey, 6);
 
 	const enrichedMealPlans = mealPlans
 		.map((mealPlan) => ({
 			...mealPlan,
 			typeLabel: typeLabels[mealPlan.type],
 			statusLabel: statusLabels[mealPlan.status],
-			targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知对象') : '未选择对象',
-			dateRangeLabel: dateRangeLabel(mealPlan.startDate, mealPlan.endDate)
+			targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知对象') : '当前家庭',
+			dateRangeLabel: dateRangeLabel(mealPlan.startDate, mealPlan.endDate),
+			flow: getMealFlowState({ status: mealPlan.status, itemCount: mealPlan.items.length })
 		}))
 		.sort((left, right) => planStart(left).localeCompare(planStart(right)));
 
@@ -133,6 +124,7 @@ export const load: PageServerLoad = async (event) => {
 		},
 		isNewUser: targets.length === 0 && dishes.length === 0 && mealPlans.length === 0,
 		todayKey,
+		quickStart,
 		weekRangeLabel: `${weekStartKey} - ${weekEndKey}`,
 		pendingMealPlans,
 		todayMealPlans,
@@ -144,4 +136,26 @@ export const load: PageServerLoad = async (event) => {
 		})),
 		recentDishes: dishes.slice(0, 4)
 	};
+};
+
+export const actions: Actions = {
+	quickStart: async (event) => {
+		const context = await requireUserSpace(event);
+		const result = quickStartMealSchema.safeParse(Object.fromEntries(await event.request.formData()));
+
+		if (!result.success) {
+			return fail(400, { quickStartError: result.error.issues[0]?.message ?? '请选择日期和餐别' });
+		}
+
+		let mealPlan: Awaited<ReturnType<typeof createQuickStartMealPlan>>;
+		try {
+			mealPlan = await createQuickStartMealPlan(context, result.data);
+		} catch (error) {
+			return fail(400, {
+				quickStartError: error instanceof Error ? error.message : '暂时无法创建这顿饭，请换个餐别再试。'
+			});
+		}
+
+		throw redirect(303, `/app/meal-plans/${mealPlan.id}`);
+	}
 };

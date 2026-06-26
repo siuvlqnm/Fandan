@@ -1,5 +1,6 @@
 import { fail, redirect, error as kitError } from '@sveltejs/kit';
 import { z } from 'zod';
+import { getMealFlowState } from '$lib/domain/meal-flow';
 import { ApiError } from '$lib/server/api/errors';
 import { requireUserSpace } from '$lib/server/context';
 import { createDish, createDishSchema, listDishes } from '$lib/server/dishes';
@@ -257,13 +258,22 @@ export const load: PageServerLoad = async (event) => {
 				)
 				.values()
 		);
+		const activeShare = shareLinkList.some((shareLink) => shareLink.active);
 
 		return {
 			mealPlan: {
 				...mealPlan,
 				typeLabel: typeLabels[mealPlan.type],
 				statusLabel: statusLabels[mealPlan.status],
-				targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知对象') : '未选择对象'
+				targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知对象') : '当前家庭',
+				flow: getMealFlowState({
+					status: mealPlan.status,
+					itemCount: mealPlan.items.length,
+					hasShoppingList: Boolean(shoppingList),
+					shoppingItemCount: shoppingList?.items.length ?? 0,
+					shareState: activeShare ? 'active' : 'none',
+					feedbackCount: feedbackSummary.total
+				})
 			},
 			target: mealPlan.targetId ? (targetById.get(mealPlan.targetId) ?? null) : null,
 			targets,
@@ -423,7 +433,7 @@ export const actions: Actions = {
 				await updateMealPlan(context, event.params.id, { status: result.data.status });
 			}
 
-			redirectBack(event);
+			redirectToPanel(event, 'confirm');
 		} catch (cause) {
 			return actionError('setStatus', cause, values);
 		}
@@ -445,6 +455,10 @@ export const actions: Actions = {
 		const context = await requireContext(event);
 
 		try {
+			const mealPlan = await getMealPlan(context, event.params.id);
+			if (mealPlan.status === 'confirmed' || mealPlan.status === 'completed') {
+				await updateMealPlan(context, event.params.id, { status: 'pending_confirmation' });
+			}
 			await createMealPlanShareLink(context, event.params.id, createShareLinkSchema.parse({}));
 			redirectToPanel(event, 'confirm');
 		} catch (cause) {

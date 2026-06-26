@@ -3,10 +3,27 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
-	import { ArrowRight, CalendarDays, ClipboardCopy, ClipboardList, Plus, Search, Trash2, UsersRound } from 'lucide-svelte';
+	import { ArrowRight, CalendarDays, ChevronDown, ClipboardCopy, ClipboardList, Plus, Search, Trash2 } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+
+	type MealPlanRow = PageData['mealPlans'][number];
+
+	const mealPlanHref = (mealPlan: MealPlanRow) =>
+		mealPlan.flow.step === 'confirm'
+			? `/app/meal-plans/${mealPlan.id}?panel=confirm`
+			: mealPlan.flow.step === 'shop'
+				? `/app/meal-plans/${mealPlan.id}?panel=shopping`
+				: `/app/meal-plans/${mealPlan.id}`;
+	const flowChipClass = (tone: string) =>
+		tone === 'attention'
+			? 'bg-destructive/10 text-destructive'
+			: tone === 'success'
+				? 'bg-secondary text-primary'
+				: tone === 'muted'
+					? 'bg-muted text-muted-foreground'
+					: 'bg-white text-primary';
 </script>
 
 <svelte:head>
@@ -90,61 +107,73 @@
 		{:else}
 			{#each data.mealPlans as mealPlan}
 				<article class="p-4" data-testid={`meal-plan-card-${mealPlan.id}`}>
-					<a href={`/app/meal-plans/${mealPlan.id}`} class="flex items-start gap-3">
-						<span class="mt-1 h-16 w-1 shrink-0 rounded-full {mealPlan.status === 'pending_confirmation' ? 'bg-destructive' : mealPlan.status === 'confirmed' ? 'bg-primary' : mealPlan.status === 'archived' ? 'bg-muted-foreground/40' : 'bg-[oklch(0.76_0.16_72)]'}"></span>
+					<a href={mealPlanHref(mealPlan)} class="flex items-start gap-3">
+						<span class="mt-1 h-16 w-1 shrink-0 rounded-full {mealPlan.flow.tone === 'attention' ? 'bg-destructive' : mealPlan.flow.tone === 'success' ? 'bg-primary' : mealPlan.flow.tone === 'muted' ? 'bg-muted-foreground/40' : 'bg-[oklch(0.76_0.16_72)]'}"></span>
 						<span class="min-w-0 flex-1 space-y-2">
 							<span class="flex items-center gap-2">
 								<span class="truncate text-lg font-semibold">{mealPlan.title}</span>
-								<span class="app-chip shrink-0 {mealPlan.status === 'pending_confirmation' ? 'bg-destructive/10 text-destructive' : 'bg-secondary text-primary'}">
-									{mealPlan.statusLabel}
+								<span class="app-chip shrink-0 {flowChipClass(mealPlan.flow.tone)}">
+									{mealPlan.flow.label}
 								</span>
 							</span>
+							<span class="block text-sm leading-6 text-muted-foreground">{mealPlan.flow.summary}</span>
 							<span class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-								<span class="inline-flex items-center gap-1.5"><UsersRound class="size-4" />{mealPlan.targetName}</span>
 								<span class="inline-flex items-center gap-1.5"><CalendarDays class="size-4" />{mealPlan.startDate || '未设置'}{mealPlan.endDate ? ` - ${mealPlan.endDate}` : ''}</span>
 							</span>
-							<span class="block text-sm text-muted-foreground">菜品 {mealPlan.items.length} 道 · {mealPlan.notes || mealPlan.typeLabel}</span>
+							<span class="block text-sm text-muted-foreground">菜品 {mealPlan.items.length} 道 · {mealPlan.statusLabel}</span>
 						</span>
 						<ArrowRight class="mt-7 size-5 shrink-0 text-muted-foreground" />
 					</a>
-					<div class="mt-3 flex items-center justify-end gap-2">
-						<form method="post" action="?/duplicate" use:enhanceWithFeedback={{ pendingLabel: '复制中...' }}>
-							<input type="hidden" name="id" value={mealPlan.id} />
-							<Button type="submit" variant="ghost" size="sm" class="h-11" data-pending-label="复制中...">
-								<ClipboardCopy class="size-4" />
-								复制
-							</Button>
-						</form>
-						{#if mealPlan.status !== 'archived'}
-							<form method="post" action="?/archive" use:enhanceWithFeedback>
+					<details class="group mt-3 rounded-2xl bg-muted/45">
+						<summary class="flex min-h-11 cursor-pointer list-none items-center justify-between px-3 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
+							<span>管理这份饭单</span>
+							<ChevronDown class="size-4 transition-transform group-open:rotate-180" />
+						</summary>
+						<div class="grid grid-cols-3 gap-2 border-t border-border/70 p-2">
+							<form method="post" action="?/duplicate" use:enhanceWithFeedback={{ pendingLabel: '复制中...' }}>
 								<input type="hidden" name="id" value={mealPlan.id} />
 								<Button
 									type="submit"
 									variant="ghost"
 									size="sm"
-									class="h-11"
-									data-confirm={`归档饭单「${mealPlan.title}」？归档后详情页会保持只读。`}
-									data-pending-label="归档中..."
+									class="h-11 w-full"
+									data-pending-label="复制中..."
 								>
-									归档
+									<ClipboardCopy class="size-4" />
+									复制
 								</Button>
 							</form>
-						{/if}
-						<form method="post" action="?/delete" use:enhanceWithFeedback>
-							<input type="hidden" name="id" value={mealPlan.id} />
-							<Button
-								type="submit"
-								variant="destructive"
-								size="sm"
-								class="h-11"
-								data-confirm={`删除饭单「${mealPlan.title}」？关联的饭单条目、购物清单和反馈会一并移除。`}
-								data-pending-label="删除中..."
-							>
-								<Trash2 class="size-4" />
-								删除
-							</Button>
-						</form>
-					</div>
+							{#if mealPlan.status !== 'archived'}
+								<form method="post" action="?/archive" use:enhanceWithFeedback>
+									<input type="hidden" name="id" value={mealPlan.id} />
+									<Button
+										type="submit"
+										variant="ghost"
+										size="sm"
+										class="h-11 w-full"
+										data-confirm={`归档饭单「${mealPlan.title}」？归档后详情页会保持只读。`}
+										data-pending-label="归档中..."
+									>
+										归档
+									</Button>
+								</form>
+							{/if}
+							<form method="post" action="?/delete" use:enhanceWithFeedback>
+								<input type="hidden" name="id" value={mealPlan.id} />
+								<Button
+									type="submit"
+									variant="destructive"
+									size="sm"
+									class="h-11 w-full"
+									data-confirm={`删除饭单「${mealPlan.title}」？关联的饭单条目、购物清单和反馈会一并移除。`}
+									data-pending-label="删除中..."
+								>
+									<Trash2 class="size-4" />
+									删除
+								</Button>
+							</form>
+						</div>
+					</details>
 				</article>
 			{/each}
 		{/if}

@@ -108,11 +108,11 @@
 	</section>
 
 	<section class="space-y-3">
-		<h2 class="text-xl font-semibold">常用功能</h2>
+		<h2 class="text-xl font-semibold">家庭工具</h2>
 		<div class="grid grid-cols-3 gap-2">
 			<a href="/app/dishes" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><ChefHat class="size-5 text-primary" />菜品库</a>
-			<a href="/app/targets" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><Target class="size-5 text-primary" />用餐档案</a>
-			<a href={isOwner ? '/app/invitations' : '#family-members'} class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><UsersRound class="size-5 text-primary" />家庭成员</a>
+			<a href="/app/targets" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><Target class="size-5 text-primary" />偏好档案</a>
+			<a href={isOwner ? '/app/invitations' : '#family-members'} class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><UsersRound class="size-5 text-primary" />邀请家人</a>
 		</div>
 	</section>
 

@@ -13,6 +13,7 @@ import {
 	MealDraftError,
 	type MealDraft
 } from '$lib/server/ai/meal-drafts';
+import type { RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 const emptyStringToNull = (value: unknown) => (value === '' ? null : value);
@@ -128,7 +129,7 @@ const parseSuggestedDishDrafts = (value: string | null | undefined) => {
 	}
 };
 
-const createMealAction = async (event: Parameters<Actions['default']>[0]) => {
+const createMealAction = async (event: RequestEvent) => {
 	const context = await requireUserSpace(event);
 	const values = await readForm(event.request);
 	const result = arrangeMealSchema.safeParse(values);

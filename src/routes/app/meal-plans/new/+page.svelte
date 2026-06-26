@@ -7,6 +7,7 @@
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+
 	const values = $derived(form?.values ?? data.values);
 	const errors = $derived((form?.errors ?? {}) as Record<string, string[]>);
 	const dishes = $derived(form?.dishes ?? data.dishes);
@@ -32,7 +33,7 @@
 		<div class="space-y-2">
 			<p class="app-chip bg-secondary text-primary"><Utensils class="size-3.5" />今晚吃什么</p>
 			<h1 class="text-3xl font-semibold leading-tight">安排一顿饭</h1>
-			<p class="text-sm leading-6 text-muted-foreground">写下想吃的菜，已有菜品也可以直接勾选。其他资料以后再补。</p>
+			<p class="text-sm leading-6 text-muted-foreground">继续补菜、人数和细节。日期和餐别快捷入口在首页。</p>
 		</div>
 	</section>
 
@@ -77,13 +78,6 @@
 		<input type="hidden" name="draftPrompt" value={mealAi?.prompt ?? ''} />
 		<input type="hidden" name="suggestedDishDraftsJson" value={values.suggestedDishDraftsJson ?? ''} />
 		<section class="app-panel space-y-5 p-5">
-			<div class="space-y-2">
-				<Label for="dish-names" class="text-base font-semibold">这顿想吃什么？</Label>
-				<textarea id="dish-names" name="dishNamesText" class="app-input min-h-28 py-3" placeholder="例如：番茄炒蛋、清炒时蔬">{values.dishNamesText ?? ''}</textarea>
-				<p class="text-sm text-muted-foreground">用逗号或换行分隔。AI 新菜会带可编辑食材草稿；手动输入的新菜可之后补食材。</p>
-				{#if errors.dishNamesText?.[0]}<p class="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{errors.dishNamesText[0]}</p>{/if}
-			</div>
-
 			{#if mealAi?.status === 'draft'}
 				<div class="grid gap-3 rounded-2xl bg-white p-4 text-sm">
 					{#if selectedDishes.length > 0}
@@ -151,9 +145,15 @@
 			</div>
 		</section>
 
-		<details class="app-panel overflow-hidden">
+		<details class="app-panel overflow-hidden" open={Boolean(errors.dishNamesText?.[0])}>
 			<summary class="flex min-h-12 cursor-pointer items-center justify-between px-5 py-3 font-medium">更多设置 <ChevronDown class="size-4" /></summary>
 			<div class="space-y-4 border-t border-border/70 p-5">
+				<div class="space-y-2">
+					<Label for="dish-names">这顿想吃什么？</Label>
+					<textarea id="dish-names" name="dishNamesText" class="app-input min-h-28 py-3" placeholder="例如：番茄炒蛋、清炒时蔬">{values.dishNamesText ?? ''}</textarea>
+					<p class="text-sm text-muted-foreground">用逗号或换行分隔。AI 新菜会带可编辑食材草稿；手动输入的新菜可之后补食材。</p>
+					{#if errors.dishNamesText?.[0]}<p class="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{errors.dishNamesText[0]}</p>{/if}
+				</div>
 				<div class="space-y-2"><Label for="planned-date">日期</Label><Input id="planned-date" name="plannedDate" type="date" value={values.plannedDate ?? ''} class={controlClass} /></div>
 				<div class="space-y-2"><Label for="meal-slot">时间</Label><Input id="meal-slot" name="mealSlot" value={values.mealSlot ?? '晚餐'} class={controlClass} /></div>
 				<div class="space-y-2"><Label for="title">名称（可选）</Label><Input id="title" name="title" value={values.title ?? ''} placeholder="例如：周末家庭晚餐" class={controlClass} /></div>

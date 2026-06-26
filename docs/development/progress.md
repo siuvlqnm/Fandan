@@ -2,6 +2,67 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## 2026-06-25 - Date And Meal Slot Quick Start
+
+Status: implemented locally on 2026-06-25.
+
+Why:
+
+- The first action after tapping `安排一顿饭` should match how families think: choose a day, choose breakfast/lunch/dinner/late night, then refine the meal.
+- Today's meal-slot choices must respect the current time, so users do not create a breakfast or lunch plan from the evening by mistake.
+
+What changed:
+
+- Add a date selector at the top of `/app/meal-plans/new`: today, tomorrow and custom date.
+- Add four meal-slot buttons below it: breakfast, lunch, dinner and late night.
+- Disable already-passed slots for today based on Asia/Shanghai time.
+- Clicking an available slot creates a pending-confirmation meal plan with deterministic recommended dishes and opens the meal detail.
+- Keep the existing AI/manual form below as the editable fallback.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- Local Worker preview at `http://localhost:4178`.
+- Mobile browser smoke at `390 x 844`: quick-start date selector, disabled slots for today at 21:00 Asia/Shanghai time, tomorrow slots all available, late-night meal creation, meal detail redirect, recommended dishes present and no horizontal overflow.
+
+Follow-up on 2026-06-26:
+
+- Moved the quick-start module from `/app/meal-plans/new` to the top of the dashboard `/app`, because selecting date and meal slot is the home-screen entry decision.
+- Kept `/app/meal-plans/new` as the secondary editor flow and moved the freeform `这顿想吃什么？` input into more settings.
+
+## 2026-06-25 - Main Flow Realignment
+
+Status: implemented locally on 2026-06-25.
+
+Why:
+
+- After a full production walkthrough, the core flow worked but still felt awkward because the UI kept switching between household meal language and system-management concepts.
+- This round narrows the app around `安排一顿饭 -> 决定吃什么 -> 知道买什么`, while keeping dish library, meal profiles, invitations and workspace controls available as secondary tools.
+
+What changed:
+
+- Keep the fixed mobile navigation to `首页`, `饭单` and `我的`.
+- Added a shared meal-flow helper that translates raw meal statuses into household next actions: `继续安排`, `发给家人确认`, `继续确认`, `生成购物清单`, `去买菜` and `查看这顿饭`.
+- Made `/app` focus on the next meal and one primary household action instead of stats-heavy workspace management.
+- Made `/app/meal-plans` rows lead with the next user action, while copy/archive/delete live under a collapsed management area.
+- Made meal detail use the next household action as the primary CTA and moved raw status transitions into `高级状态`.
+- Changed creating a share link from confirmed/completed meals to reopen `待确认`, so `发给家人确认` does not require manual status work.
+- Kept `菜品库`, `偏好档案`, `邀请家人` and `家庭设置` in `我的`.
+- Preserve AI as an embedded draft helper only; do not add a separate AI area.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- Local Worker preview at `http://localhost:4178`.
+- Mobile browser smoke at `390 x 844` with a fresh local account: new dashboard, manual meal creation, existing-user dashboard, meal list, meal detail confirmation panel and settings hierarchy.
+- Confirmed no horizontal overflow on the checked mobile routes.
+
+Known notes:
+
+- `npm run build` succeeds, but Vite reports the local Node.js runtime is `22.9.0`; the configured Vite version prefers `20.19+`, `22.12+` or newer.
+
 ## 2026-06-25 - Production Walkthrough Fixes For AI Drafts
 
 Status: implemented locally on 2026-06-25.

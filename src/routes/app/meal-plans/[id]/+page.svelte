@@ -48,6 +48,14 @@
 	const shoppingCount = $derived(data.shoppingList?.items.length ?? 0);
 	const activeShare = $derived(data.shareLinks.find((shareLink) => shareLink.active) ?? null);
 	const activeShareUrl = $derived(activeShare ? `${data.origin}${activeShare.path}` : '');
+	const flowChipClass = (tone: string) =>
+		tone === 'attention'
+			? 'bg-destructive/10 text-destructive'
+			: tone === 'success'
+				? 'bg-secondary text-primary'
+				: tone === 'muted'
+					? 'bg-muted text-muted-foreground'
+					: 'bg-white text-primary';
 	const selectClass = 'app-input h-11 text-sm';
 	const textAreaClass = 'app-input min-h-24 py-3';
 	const panels = $derived<{ id: Panel; label: string; helper: string }[]>([
@@ -81,13 +89,14 @@
 			<div class="space-y-4 bg-[linear-gradient(135deg,oklch(1_0_0),oklch(0.975_0.025_151))] p-5">
 				<div class="flex items-start justify-between gap-3">
 					<div class="min-w-0 space-y-2">
-						<p class="app-chip {data.mealPlan.status === 'pending_confirmation' ? 'bg-destructive/10 text-destructive' : 'bg-secondary text-primary'}">
-							{data.mealPlan.statusLabel}
+						<p class="app-chip {flowChipClass(data.mealPlan.flow.tone)}">
+							{data.mealPlan.flow.label}
 						</p>
 						<h1 class="break-words text-3xl font-semibold leading-tight">{data.mealPlan.title}</h1>
+						<p class="text-sm leading-6 text-muted-foreground">{data.mealPlan.flow.summary}</p>
 						<p class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-							<span class="inline-flex items-center gap-1.5"><UsersRound class="size-4" />{data.mealPlan.targetName}</span>
 							<span class="inline-flex items-center gap-1.5"><CalendarDays class="size-4" />{data.mealPlan.startDate || '未设置日期'}</span>
+							<span>{data.mealPlan.targetName}</span>
 						</p>
 					</div>
 				</div>
@@ -98,23 +107,40 @@
 					<p><span class="block text-2xl font-semibold">{shoppingCount}</span><span class="text-xs text-muted-foreground">清单项</span></p>
 				</div>
 
-				<div class="flex items-center gap-3">
-					<Button onclick={() => (activePanel = 'confirm')} variant="ghost" class="h-11 rounded-2xl">
-						<MessageSquareText class="size-4" />
-						确认反馈
+				<div class="grid grid-cols-[1fr_1.35fr] gap-3">
+					<Button onclick={() => (activePanel = 'menu')} variant="outline" class="h-12 rounded-2xl bg-white">
+						<ChefHat class="size-4" />
+						看菜单
 					</Button>
-					{#if data.shoppingList}
-						<Button href={`/app/shopping-lists/${data.shoppingList.id}`} class="h-12 flex-1 rounded-2xl">
-							<ShoppingCart class="size-4" />
-							打开清单
-						</Button>
-					{:else}
-						<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback class="flex-1">
-							<Button type="submit" class="h-12 w-full rounded-2xl" data-pending-label="生成中...">
-								<ShoppingCart class="size-4" />
-								生成清单
+					{#if data.mealPlan.flow.step === 'confirm' && !activeShare}
+						<form method="post" action="?/createShareLink" use:enhanceWithFeedback>
+							<Button type="submit" class="h-12 w-full rounded-2xl text-base" disabled={isArchived} data-pending-label="创建中...">
+								<Link2 class="size-4" />
+								发给家人确认
 							</Button>
 						</form>
+					{:else if data.mealPlan.flow.step === 'confirm'}
+						<Button onclick={() => (activePanel = 'confirm')} class="h-12 rounded-2xl text-base">
+							<MessageSquareText class="size-4" />
+							继续确认
+						</Button>
+					{:else if data.mealPlan.flow.step === 'shop' && data.shoppingList}
+						<Button href={`/app/shopping-lists/${data.shoppingList.id}`} class="h-12 rounded-2xl text-base">
+							<ShoppingCart class="size-4" />
+							去买菜
+						</Button>
+					{:else if data.mealPlan.flow.step === 'shop'}
+						<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback>
+							<Button type="submit" class="h-12 w-full rounded-2xl text-base" data-pending-label="生成中...">
+								<ShoppingCart class="size-4" />
+								生成购物清单
+							</Button>
+						</form>
+					{:else}
+						<Button onclick={() => (activePanel = 'edit')} class="h-12 rounded-2xl text-base">
+							<Plus class="size-4" />
+							继续安排
+						</Button>
 					{/if}
 				</div>
 			</div>
@@ -242,8 +268,8 @@
 			<section class="app-panel space-y-4 p-4" data-testid="meal-plan-share">
 				<div class="flex items-start justify-between gap-3">
 					<div>
-						<h2 class="flex items-center gap-2 text-xl font-semibold"><Link2 class="size-5 text-primary" />分享确认</h2>
-						<p class="mt-1 text-sm leading-6 text-muted-foreground">把链接发给用餐对象，收集菜品意见、忌口和最终确认。</p>
+						<h2 class="flex items-center gap-2 text-xl font-semibold"><Link2 class="size-5 text-primary" />发给家人确认</h2>
+						<p class="mt-1 text-sm leading-6 text-muted-foreground">把链接发给家人，收集忌口、换菜和最终确认。</p>
 					</div>
 				</div>
 
@@ -279,51 +305,57 @@
 					<form method="post" action="?/createShareLink" use:enhanceWithFeedback>
 						<Button type="submit" class="h-12 w-full rounded-2xl text-base" disabled={isArchived} data-pending-label="创建中...">
 							<Link2 class="size-4" />
-							创建分享链接
+							发给家人确认
 						</Button>
 					</form>
 				{/if}
 			</section>
 
-			<div class="app-panel p-4">
-				<div class="mb-4 flex items-center justify-between gap-3">
-					<div>
-						<h2 class="text-xl font-semibold">确认状态</h2>
-						<p class="text-sm text-muted-foreground">切换饭单状态，查看访客反馈。</p>
+			<details class="app-panel overflow-hidden">
+				<summary class="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
+					<span>高级状态</span>
+					<span>{data.mealPlan.statusLabel}</span>
+				</summary>
+				<div class="border-t border-border/70 p-4">
+					<div class="mb-4 flex items-center justify-between gap-3">
+						<div>
+							<h2 class="text-xl font-semibold">系统状态</h2>
+							<p class="text-sm text-muted-foreground">通常不用手动改；需要结束反馈或归档时再处理。</p>
+						</div>
+						{#if data.feedbackSummary.latestConfirmation}
+							<span class="app-chip bg-secondary text-primary">
+								<CheckCircle2 class="size-4" />
+								{data.feedbackSummary.latestConfirmation.guestName} 已确认
+							</span>
+						{/if}
 					</div>
-					{#if data.feedbackSummary.latestConfirmation}
-						<span class="app-chip bg-secondary text-primary">
-							<CheckCircle2 class="size-4" />
-							{data.feedbackSummary.latestConfirmation.guestName} 已确认
-						</span>
-					{/if}
+					<div class="flex gap-2 overflow-x-auto pb-1">
+						{#each data.statusOptions as option}
+							<form method="post" action="?/setStatus" use:enhanceWithFeedback class="shrink-0">
+								<input type="hidden" name="status" value={option.value} />
+								<Button
+									type="submit"
+									variant={data.mealPlan.status === option.value ? 'secondary' : 'outline'}
+									size="sm"
+									class="rounded-xl bg-white"
+									disabled={isArchived || data.mealPlan.status === option.value}
+									data-confirm={option.value === 'archived' ? '归档后详情页会保持只读，确认归档这份饭单？' : undefined}
+									data-pending-label="更新中..."
+								>
+									{#if option.value === 'archived'}
+										<Archive class="size-4" />
+									{:else if option.value === 'completed'}
+										<CheckCircle2 class="size-4" />
+									{:else}
+										<ClipboardList class="size-4" />
+									{/if}
+									{option.label}
+								</Button>
+							</form>
+						{/each}
+					</div>
 				</div>
-				<div class="flex gap-2 overflow-x-auto pb-1">
-					{#each data.statusOptions as option}
-						<form method="post" action="?/setStatus" use:enhanceWithFeedback class="shrink-0">
-							<input type="hidden" name="status" value={option.value} />
-							<Button
-								type="submit"
-								variant={data.mealPlan.status === option.value ? 'secondary' : 'outline'}
-								size="sm"
-								class="rounded-xl bg-white"
-								disabled={isArchived || data.mealPlan.status === option.value}
-								data-confirm={option.value === 'archived' ? '归档后详情页会保持只读，确认归档这份饭单？' : undefined}
-								data-pending-label="更新中..."
-							>
-								{#if option.value === 'archived'}
-									<Archive class="size-4" />
-								{:else if option.value === 'completed'}
-									<CheckCircle2 class="size-4" />
-								{:else}
-									<ClipboardList class="size-4" />
-								{/if}
-								{option.label}
-							</Button>
-						</form>
-					{/each}
-				</div>
-			</div>
+			</details>
 
 			<div class="app-soft-panel grid grid-cols-4 divide-x divide-border/70 p-3 text-center">
 				<p><Heart class="mx-auto mb-1 size-5 text-primary" /><span class="block text-2xl font-semibold">{feedbackTotals.like}</span><span class="text-xs text-muted-foreground">喜欢</span></p>
@@ -427,14 +459,14 @@
 					<UsersRound class="size-5 text-primary" />
 					<h2 class="text-xl font-semibold">对象偏好</h2>
 				</div>
-				{#if data.target}
-					<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">人数</span>{data.target.peopleCount} 人</p>
-					<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">口味</span>{data.target.tasteNotes || '未记录'}</p>
-					<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">忌口</span>{data.target.dietaryRestrictions || '未记录'}</p>
-					<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">预算备注</span>{data.target.budgetNotes || '未记录'}</p>
-					<Button href={`/app/targets/${data.target.id}`} variant="outline" class="h-11 rounded-2xl bg-white">打开对象</Button>
+					{#if data.target}
+						<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">人数</span>{data.target.peopleCount} 人</p>
+						<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">口味</span>{data.target.tasteNotes || '未记录'}</p>
+						<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">忌口</span>{data.target.dietaryRestrictions || '未记录'}</p>
+						<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">预算备注</span>{data.target.budgetNotes || '未记录'}</p>
+					<Button href={`/app/targets/${data.target.id}`} variant="outline" class="h-11 rounded-2xl bg-white">打开用餐档案</Button>
 				{:else}
-					<p class="rounded-2xl bg-white p-3 text-muted-foreground">未选择用餐对象。</p>
+					<p class="rounded-2xl bg-white p-3 text-muted-foreground">默认使用当前家庭。需要客户、聚餐或特殊偏好时，再补充用餐档案。</p>
 				{/if}
 			</div>
 		</section>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import {
 		ArrowRight,
 		CalendarDays,
@@ -8,14 +9,15 @@
 		ClipboardList,
 		MessageCircle,
 		Plus,
-		Send,
 		ShoppingBag,
 		UsersRound,
 		UserPlus
 	} from 'lucide-svelte';
-	import type { PageData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let dateMode = $state<'today' | 'tomorrow' | 'custom'>('today');
+	let customDate = $state('');
 
 	const displayName = $derived(data.user.name || data.user.email.split('@')[0] || '饭单创建者');
 	const priorityMealPlans = $derived(
@@ -30,17 +32,53 @@
 		(data.todayMealPlans.length > 0 ? data.todayMealPlans : data.recentMealPlans).slice(0, 3)
 	);
 	const selectedDishCount = $derived(heroMealPlan?.items.length ?? data.stats.dishes);
+	const heroActionHref = $derived(
+		heroMealPlan
+			? heroMealPlan.flow.step === 'confirm'
+				? `/app/meal-plans/${heroMealPlan.id}?panel=confirm`
+				: heroMealPlan.flow.step === 'shop'
+					? `/app/meal-plans/${heroMealPlan.id}?panel=shopping`
+					: `/app/meal-plans/${heroMealPlan.id}`
+			: '/app/meal-plans/new'
+	);
 	const flow = $derived([
-		{ label: '菜品', detail: '搭配菜单', icon: ChefHat, active: selectedDishCount > 0 },
-		{ label: '确认', detail: '收集反馈', icon: UsersRound, active: heroMealPlan?.status === 'pending_confirmation' || heroMealPlan?.status === 'confirmed' },
-		{ label: '清单', detail: '采购准备', icon: ClipboardList, active: Boolean(heroMealPlan && selectedDishCount > 0) }
+		{ label: '选菜', detail: selectedDishCount > 0 ? `${selectedDishCount} 道菜` : '先决定吃什么', icon: ChefHat, active: selectedDishCount > 0 },
+		{
+			label: '确认',
+			detail: heroMealPlan?.flow.step === 'confirm' ? '正在确认' : '家人看一眼',
+			icon: UsersRound,
+			active: Boolean(heroMealPlan && ['confirm', 'shop', 'done'].includes(heroMealPlan.flow.step))
+		},
+		{
+			label: '买菜',
+			detail: heroMealPlan?.flow.step === 'shop' ? '清单就绪' : '生成清单',
+			icon: ClipboardList,
+			active: Boolean(heroMealPlan && ['shop', 'done'].includes(heroMealPlan.flow.step))
+		}
 	]);
-	const stats = $derived([
-		{ label: '饭单总数', value: data.stats.mealPlans, icon: ClipboardList },
-		{ label: '待确认', value: data.pendingMealPlans.length, icon: MessageCircle },
-		{ label: '菜品数量', value: data.stats.dishes, icon: ChefHat },
-		{ label: '对象', value: data.stats.targets, icon: UsersRound }
+	const weekSummary = $derived([
+		{ label: '本周安排', value: data.weekMealPlans.length, icon: CalendarDays },
+		{ label: '等待确认', value: data.pendingMealPlans.length, icon: MessageCircle },
+		{ label: '饭单总数', value: data.stats.mealPlans, icon: ClipboardList }
 	]);
+	const customQuickDate = $derived(customDate || data.quickStart.today);
+	const selectedQuickDate = $derived(
+		dateMode === 'today' ? data.quickStart.today : dateMode === 'tomorrow' ? data.quickStart.tomorrow : customQuickDate
+	);
+	const flowChipClass = (tone: string) =>
+		tone === 'attention'
+			? 'bg-destructive/10 text-destructive'
+			: tone === 'success'
+				? 'bg-secondary text-primary'
+				: tone === 'muted'
+					? 'bg-muted text-muted-foreground'
+					: 'bg-white text-primary';
+	const shortDate = (value: string) => {
+		const [, month, day] = value.split('-');
+		return `${month}-${day}`;
+	};
+	const isSlotDisabled = (slot: PageData['quickStart']['slots'][number]) =>
+		selectedQuickDate === data.quickStart.today && slot.disabledToday;
 </script>
 
 <svelte:head>
@@ -75,35 +113,101 @@
 		<h1 class="text-2xl font-semibold leading-tight">你好，{displayName}</h1>
 	</section>
 
-	{#if data.isNewUser}
-		<section class="app-panel overflow-hidden">
-			<div class="space-y-4 bg-secondary/70 p-5">
-				<p class="app-chip bg-white text-primary">第一次使用</p>
-				<div class="space-y-2">
-					<h2 class="text-2xl font-semibold">先安排一顿饭</h2>
-					<p class="text-sm leading-6 text-muted-foreground">
-						只要写下想吃的菜和人数，就能直接得到这一顿的购物清单。
-					</p>
-				</div>
-				<Button href="/app/meal-plans/new" class="h-12 w-full rounded-2xl text-base">
-					<Plus class="size-4" />
-					安排一顿饭
-				</Button>
+	<section class="app-panel space-y-5 p-5">
+		<div class="space-y-2">
+			<p class="app-chip bg-secondary text-primary">先安排一顿饭</p>
+			<h2 class="text-2xl font-semibold leading-tight">哪天吃，吃哪顿？</h2>
+			<p class="text-sm leading-6 text-muted-foreground">
+				现在是北京时间 {data.quickStart.currentHour}:00。今天已经过了的餐别会自动变灰。
+			</p>
+		</div>
+
+		<div class="grid grid-cols-3 gap-2">
+			<button
+				type="button"
+				class="min-h-14 rounded-2xl border px-3 text-left text-sm transition {dateMode === 'today' ? 'border-primary bg-secondary text-primary' : 'border-border bg-white text-foreground'}"
+				onclick={() => (dateMode = 'today')}
+			>
+				<span class="block font-semibold">今天</span>
+				<span class="text-xs text-muted-foreground">{shortDate(data.quickStart.today)}</span>
+			</button>
+			<button
+				type="button"
+				class="min-h-14 rounded-2xl border px-3 text-left text-sm transition {dateMode === 'tomorrow' ? 'border-primary bg-secondary text-primary' : 'border-border bg-white text-foreground'}"
+				onclick={() => (dateMode = 'tomorrow')}
+			>
+				<span class="block font-semibold">明天</span>
+				<span class="text-xs text-muted-foreground">{shortDate(data.quickStart.tomorrow)}</span>
+			</button>
+			<button
+				type="button"
+				class="min-h-14 rounded-2xl border px-3 text-left text-sm transition {dateMode === 'custom' ? 'border-primary bg-secondary text-primary' : 'border-border bg-white text-foreground'}"
+				onclick={() => (dateMode = 'custom')}
+			>
+				<span class="block font-semibold">选日期</span>
+				<span class="text-xs text-muted-foreground">{dateMode === 'custom' ? shortDate(customQuickDate) : '自定义'}</span>
+			</button>
+		</div>
+
+		{#if dateMode === 'custom'}
+			<div class="space-y-2">
+				<label for="quick-start-date" class="text-sm font-medium">选择日期</label>
+				<input
+					id="quick-start-date"
+					type="date"
+					value={customQuickDate}
+					min={data.quickStart.today}
+					class="app-input h-12"
+					oninput={(event) => (customDate = event.currentTarget.value)}
+				/>
 			</div>
-		</section>
-	{:else if heroMealPlan}
+		{/if}
+
+		{#if form?.quickStartError}
+			<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive" role="alert">{form.quickStartError}</p>
+		{/if}
+
+		<div class="grid grid-cols-2 gap-3">
+			{#each data.quickStart.slots as slot}
+				{@const disabled = isSlotDisabled(slot)}
+				<form method="post" action="?/quickStart" use:enhanceWithFeedback={{ pendingLabel: '正在生成饭单...' }}>
+					<input type="hidden" name="quickStartDate" value={selectedQuickDate} />
+					<input type="hidden" name="quickStartSlot" value={slot.id} />
+					<Button
+						type="submit"
+						variant={disabled ? 'outline' : 'default'}
+						class="min-h-28 w-full min-w-0 flex-col items-start justify-start whitespace-normal rounded-2xl p-4 text-left {disabled ? 'bg-muted text-muted-foreground' : ''}"
+						disabled={disabled}
+						data-pending-label="正在生成饭单..."
+					>
+						<span class="flex w-full items-center justify-between gap-2">
+							<span class="text-base font-semibold">{slot.label}</span>
+							{#if disabled}<span class="text-xs">已过</span>{/if}
+						</span>
+						<span class="w-full min-w-0 break-words text-xs font-normal leading-5 opacity-80">{slot.helper}</span>
+						<span class="line-clamp-2 w-full min-w-0 break-words text-xs font-normal leading-5 opacity-80">
+							推荐：{slot.recommendedNames.join('、')}
+						</span>
+					</Button>
+				</form>
+			{/each}
+		</div>
+	</section>
+
+	{#if !data.isNewUser && heroMealPlan}
 		<section class="app-panel overflow-hidden border-destructive/20">
 			<div class="space-y-4 bg-[linear-gradient(135deg,oklch(1_0_0),oklch(0.975_0.025_151))] p-4">
 				<div class="flex items-start justify-between gap-4">
 					<div class="min-w-0 space-y-3">
-						<p class="app-chip bg-destructive/10 text-destructive">
-							{heroMealPlan.statusLabel === '待确认' ? '待确认饭单' : heroMealPlan.statusLabel}
+						<p class="app-chip {flowChipClass(heroMealPlan.flow.tone)}">
+							{heroMealPlan.flow.label}
 						</p>
 						<div class="space-y-2">
 							<h2 class="break-words text-2xl font-semibold leading-tight">{heroMealPlan.title}</h2>
-							<p class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-								<span class="inline-flex items-center gap-1.5"><UsersRound class="size-4" />{heroMealPlan.targetName}</span>
+							<p class="text-sm leading-6 text-muted-foreground">{heroMealPlan.flow.summary}</p>
+							<p class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
 								<span class="inline-flex items-center gap-1.5"><CalendarDays class="size-4" />{heroMealPlan.dateRangeLabel}</span>
+								<span>{heroMealPlan.items.length} 道菜</span>
 							</p>
 						</div>
 					</div>
@@ -113,19 +217,19 @@
 				</div>
 
 				<div class="grid grid-cols-3 divide-x divide-border/70 rounded-2xl bg-white p-3 text-center text-sm">
-					<p><span class="block text-2xl font-semibold">{heroMealPlan.items.length}</span><span class="text-xs text-muted-foreground">菜品</span></p>
-					<p><span class="block font-semibold">{heroMealPlan.typeLabel}</span><span class="text-xs text-muted-foreground">类型</span></p>
-					<p><span class="block font-semibold">{heroMealPlan.statusLabel}</span><span class="text-xs text-muted-foreground">状态</span></p>
+					<p><span class="block text-2xl font-semibold">{heroMealPlan.items.length}</span><span class="text-xs text-muted-foreground">道菜</span></p>
+					<p><span class="block font-semibold">{heroMealPlan.targetName}</span><span class="text-xs text-muted-foreground">用餐</span></p>
+					<p><span class="block font-semibold">{heroMealPlan.statusLabel}</span><span class="text-xs text-muted-foreground">系统状态</span></p>
 				</div>
 
 				<div class="grid grid-cols-[1fr_1.25fr] gap-3">
-					<Button href={`/app/meal-plans/${heroMealPlan.id}?panel=confirm`} variant="outline" class="h-12 rounded-2xl bg-white">
-						<MessageCircle class="size-4" />
-						查看反馈
+					<Button href="/app/meal-plans/new" variant="outline" class="h-12 rounded-2xl bg-white">
+						<Plus class="size-4" />
+						再安排一顿
 					</Button>
-					<Button href={`/app/meal-plans/${heroMealPlan.id}?panel=confirm`} class="h-12 rounded-2xl bg-destructive text-base text-white hover:bg-destructive/90">
-						<Send class="size-4" />
-						分享确认
+					<Button href={heroActionHref} class="h-12 rounded-2xl text-base">
+						<ArrowRight class="size-4" />
+						{heroMealPlan.flow.primaryLabel}
 					</Button>
 				</div>
 			</div>
@@ -165,9 +269,9 @@
 						<span class="h-16 w-1 shrink-0 rounded-full {mealPlan.status === 'pending_confirmation' ? 'bg-destructive' : mealPlan.status === 'confirmed' ? 'bg-primary' : 'bg-[oklch(0.76_0.16_72)]'}"></span>
 						<span class="min-w-0 flex-1 space-y-1">
 							<span class="block truncate text-lg font-semibold">{mealPlan.title}</span>
-							<span class="block truncate text-sm text-muted-foreground">{mealPlan.targetName} · {mealPlan.dateRangeLabel}</span>
-							<span class="block text-sm {mealPlan.status === 'pending_confirmation' ? 'text-destructive' : 'text-primary'}">
-								{mealPlan.statusLabel}
+							<span class="block truncate text-sm text-muted-foreground">{mealPlan.dateRangeLabel} · {mealPlan.items.length} 道菜</span>
+							<span class="block text-sm {mealPlan.flow.tone === 'attention' ? 'text-destructive' : 'text-primary'}">
+								{mealPlan.flow.label}
 							</span>
 						</span>
 						<ArrowRight class="size-5 shrink-0 text-muted-foreground" />
@@ -178,9 +282,9 @@
 		</section>
 
 		<section class="space-y-3">
-		<h2 class="text-xl font-semibold">本周概览</h2>
-		<div class="app-soft-panel grid grid-cols-4 divide-x divide-border/70 p-3 text-center">
-			{#each stats as item}
+		<h2 class="text-xl font-semibold">本周节奏</h2>
+		<div class="app-soft-panel grid grid-cols-3 divide-x divide-border/70 p-3 text-center">
+			{#each weekSummary as item}
 				{@const Icon = item.icon}
 				<div class="space-y-1 px-1">
 					<Icon class="mx-auto size-5 text-primary" />
@@ -193,15 +297,15 @@
 
 		<section class="app-panel flex items-center justify-between gap-3 bg-[oklch(0.98_0.025_88)] p-5">
 		<div class="space-y-1">
-			<p class="text-lg font-semibold">准备购物清单</p>
-			<p class="text-sm text-muted-foreground">{heroMealPlan ? `当前饭单有 ${selectedDishCount} 道菜` : '先创建饭单并添加带食材的菜品'}</p>
+			<p class="text-lg font-semibold">想换一顿？</p>
+			<p class="text-sm text-muted-foreground">直接写下人数和想吃的菜，手动或 AI 草稿都在同一个入口。</p>
 		</div>
 		<Button
-			href={heroMealPlan ? `/app/meal-plans/${heroMealPlan.id}` : '/app/meal-plans/new'}
-			variant={heroMealPlan ? 'outline' : 'default'}
-			class="h-11 rounded-2xl {heroMealPlan ? 'bg-white' : ''}"
+			href="/app/meal-plans/new"
+			variant="outline"
+			class="h-11 rounded-2xl bg-white"
 		>
-			生成清单
+			安排
 			<ShoppingBag class="size-4" />
 		</Button>
 		</section>

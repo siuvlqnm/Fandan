@@ -20,6 +20,17 @@ The selected Product Design direction is `Shared Meal Room`:
 - Navigation: app routes use a fixed three-item mobile bottom nav: `首页`, `饭单`, `我的`.
 - Typography: compact but readable mobile product scale, with 14-16px body text.
 
+## 2026-06-25 Flow Realignment
+
+The product should feel like a household meal flow before it feels like a data management app.
+
+- `首页` is the operational surface for the next meal: arrange, confirm, buy or resume.
+- `饭单` is the history and planning surface. Rows lead with the user-facing next action, then secondary metadata.
+- `我的` is the home for account, family, dish library, meal profiles, invitations and advanced settings.
+- `菜品` and `对象` stay available, but they are not fixed navigation items and should not be presented as prerequisites.
+- Sharing language should say `发给家人确认` / `等待反馈` / `已确认，可以去买菜` before exposing raw statuses.
+- AI entry points stay embedded in the current task flow. Do not add an AI tab, assistant home or separate chat surface.
+
 ## Updated Surfaces
 
 - Public home page now introduces the product through menu confirmation and shopping-list generation.
