@@ -33,6 +33,7 @@ const itemFormSchema = z.object({
 type FormAction = 'addItem' | 'updateItem' | 'toggleItem' | 'deleteItem' | 'regenerate';
 type ShoppingList = Awaited<ReturnType<typeof getShoppingList>>;
 type ShoppingListItem = ShoppingList['items'][number];
+type ItemFilter = 'pending' | 'checked' | 'all';
 
 const requireContext = async (event: RequestEvent) => {
 	if (!event.locals.user || !event.locals.session) {
@@ -123,6 +124,21 @@ const groupItems = (items: ShoppingListItem[]) =>
 			.values()
 	);
 
+const readItemFilter = (value: string | null): ItemFilter =>
+	value === 'checked' || value === 'all' ? value : 'pending';
+
+const filterItems = (items: ShoppingListItem[], filter: ItemFilter) => {
+	if (filter === 'checked') {
+		return items.filter((item) => item.checked);
+	}
+
+	if (filter === 'pending') {
+		return items.filter((item) => !item.checked);
+	}
+
+	return items;
+};
+
 export const load: PageServerLoad = async (event) => {
 	const context = await requireContext(event);
 	const id = event.params.id;
@@ -135,13 +151,16 @@ export const load: PageServerLoad = async (event) => {
 		const shoppingList = await getShoppingList(context, id);
 		const mealPlan = await getMealPlan(context, shoppingList.mealPlanId);
 		const checkedCount = shoppingList.items.filter((item) => item.checked).length;
+		const filter = readItemFilter(event.url.searchParams.get('filter'));
+		const visibleItems = filterItems(shoppingList.items, filter);
 
 		return {
 			shoppingList,
 			mealPlan,
 			firstUse: event.url.searchParams.get('first') === '1',
 			canInvite: context.membership.role === 'owner',
-			groups: groupItems(shoppingList.items),
+			filter,
+			groups: groupItems(visibleItems),
 			summary: {
 				total: shoppingList.items.length,
 				checked: checkedCount,

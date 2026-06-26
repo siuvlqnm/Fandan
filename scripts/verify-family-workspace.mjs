@@ -306,9 +306,22 @@ const verifyCollaboration = async () => {
 		`/api/shopping-lists/${regeneratedList.id}/items/${checkedItemId}`,
 		{ method: 'PATCH', json: { checked: true } }
 	)).data.data.shoppingList;
-	assert(checkedList.items.find((item) => item.id === checkedItemId)?.checked === true, 'Member shopping-list update was not stored');
-	const ownerList = (await owner.request(`/api/shopping-lists/${generatedList.id}`)).data.data.shoppingList;
-	assert(ownerList.items.some((item) => item.checked === true), 'Owner cannot see the member shopping-list update');
+	const checkedItem = checkedList.items.find((item) => item.id === checkedItemId);
+	assert(checkedItem?.checked === true, 'Member shopping-list update was not stored');
+	assert(checkedItem.checkedBy?.name === '协作成员' && checkedItem.checkedAt, 'Member shopping-list actor was not stored');
+	const ownerList = (await owner.request(`/api/shopping-lists/${regeneratedList.id}`)).data.data.shoppingList;
+	const ownerCheckedItem = ownerList.items.find((item) => item.id === checkedItemId);
+	assert(ownerCheckedItem?.checked === true, 'Owner cannot see the member shopping-list update');
+	assert(ownerCheckedItem.checkedBy?.name === '协作成员' && ownerCheckedItem.checkedAt, 'Owner cannot see the member shopping-list actor');
+	const checkedShoppingPage = String((await owner.request(`/app/shopping-lists/${regeneratedList.id}?filter=checked`)).data);
+	assert(checkedShoppingPage.includes('由 协作成员 标记已买') && checkedShoppingPage.includes('购物项筛选'), 'Checked shopping filter did not show member handling');
+	const uncheckedList = (await owner.request(
+		`/api/shopping-lists/${regeneratedList.id}/items/${checkedItemId}`,
+		{ method: 'PATCH', json: { checked: false } }
+	)).data.data.shoppingList;
+	const uncheckedItem = uncheckedList.items.find((item) => item.id === checkedItemId);
+	assert(uncheckedItem?.checked === false, 'Shopping-list uncheck was not stored');
+	assert(!uncheckedItem.checkedBy && !uncheckedItem.checkedAt, 'Shopping-list uncheck did not clear the buyer actor');
 	console.log('✓ shared dish, meal plan and shopping-list collaboration');
 
 	await member.request(`/api/workspaces/${memberPersonalSpaceId}/select`, { method: 'POST' });

@@ -14,12 +14,28 @@
 	const addValues = $derived((form?.action === 'addItem' ? (form.values ?? {}) : {}) as Record<string, unknown>);
 	const completionLabel = $derived(`${data.summary.checked}/${data.summary.total}`);
 	const completionPercent = $derived(data.summary.total === 0 ? 0 : Math.round((data.summary.checked / data.summary.total) * 100));
+	const filterOptions = $derived([
+		{ id: 'pending' as const, label: '待买', count: data.summary.pending },
+		{ id: 'checked' as const, label: '已买', count: data.summary.checked },
+		{ id: 'all' as const, label: '全部', count: data.summary.total }
+	]);
 	const textAreaClass =
 		'app-input min-h-20 py-3';
 	const selectClass = 'app-input h-11 text-sm';
+	const filterHref = (filter: PageData['filter']) => {
+		const params = new URLSearchParams({ filter });
+		if (data.firstUse) params.set('first', '1');
+		return `?${params.toString()}`;
+	};
+	const formatShoppingTime = (value: string | null) => {
+		if (!value) return '';
+		const normalized = value.replace('T', ' ').replace(/\.\d+Z?$/, '').replace(/Z$/, '');
+		return normalized.length >= 16 ? normalized.slice(5, 16) : normalized;
+	};
 	const shoppingActorLabel = (item: PageData['shoppingList']['items'][number]) => {
 		if (item.checked && item.checkedBy) {
-			return `由 ${item.checkedBy.name} 标记已买`;
+			const timeLabel = formatShoppingTime(item.checkedAt);
+			return timeLabel ? `由 ${item.checkedBy.name} 标记已买 · ${timeLabel}` : `由 ${item.checkedBy.name} 标记已买`;
 		}
 
 		if (item.updatedBy) {
@@ -112,7 +128,20 @@
 		<p class="rounded-2xl border border-border/80 bg-secondary/40 p-4 text-sm leading-6 text-muted-foreground">
 			数量按每道菜的“饭单份数 ÷ 食材基准份数”计算；文本数量、缺失数量和单位冲突不会猜测。每项下方会显示计算依据，可展开编辑确认。
 		</p>
-		{#if data.groups.length === 0}
+		<div class="grid grid-cols-3 gap-2 rounded-2xl bg-white p-1 shadow-sm" aria-label="购物项筛选">
+			{#each filterOptions as option}
+				<Button
+					href={filterHref(option.id)}
+					variant={data.filter === option.id ? 'default' : 'ghost'}
+					class="h-12 rounded-xl px-2 text-sm"
+					aria-current={data.filter === option.id ? 'page' : undefined}
+				>
+					<span>{option.label}</span>
+					<span class={data.filter === option.id ? 'text-primary-foreground/80' : 'text-muted-foreground'}>{option.count}</span>
+				</Button>
+			{/each}
+		</div>
+		{#if data.shoppingList.items.length === 0}
 			<div class="app-panel space-y-4 p-5">
 				<div class="flex size-12 items-center justify-center rounded-2xl bg-secondary text-primary">
 					<ShoppingBag class="size-6" />
@@ -125,6 +154,18 @@
 					<ClipboardList class="size-4" />
 					打开饭单
 				</Button>
+			</div>
+		{:else if data.groups.length === 0}
+			<div class="app-panel space-y-4 p-5">
+				<div class="flex size-12 items-center justify-center rounded-2xl bg-secondary text-primary">
+					<CheckCircle2 class="size-6" />
+				</div>
+				<div class="space-y-1">
+					<h2 class="text-xl font-semibold">{data.filter === 'checked' ? '还没有已买项' : '没有待买项'}</h2>
+					<p class="text-sm leading-6 text-muted-foreground">
+						{data.filter === 'checked' ? '家人勾选后会显示在这里，包含处理人和时间。' : '当前清单已经都处理完了，可以切到已买或全部查看。'}
+					</p>
+				</div>
 			</div>
 		{:else}
 			{#each data.groups as group}

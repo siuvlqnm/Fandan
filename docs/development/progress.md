@@ -2,9 +2,34 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-107 - Shared Shopping Filters And Buyer Labels
+
+Status: implemented locally on 2026-06-26. No database migration required; this builds on the `checked_by_user_id` and `checked_at` fields from LES-106.
+
+What changed:
+
+- Added shopping-list filters for `待买`, `已买` and `全部`, defaulting the page to pending items for one-handed buying.
+- Kept the overall completion summary visible while filtering the item list.
+- Displayed buyer and checked time for bought items, while preserving creator/updater fallback labels for unbought or historical items.
+- Added empty states for filtered views, including the all-bought pending state.
+- Extended the family workspace smoke to assert buyer attribution, cross-member refresh visibility, checked-time presence and actor cleanup when an item is unchecked.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run verify:family-workspace`
+- Local Worker preview at `http://127.0.0.1:4179`.
+- Mobile browser smoke at `390 x 844`: opened an empty shopping list, confirmed filter counts and empty state, added a temporary item, marked it bought, confirmed the checked filter showed buyer/time text, confirmed the pending filter showed the all-bought empty state and confirmed no horizontal overflow.
+
+Notes for next threads:
+
+- LES-108 is next and should add true multi-user version/conflict protection around shared edits.
+- LES-107 intentionally leaves notification/activity aggregation to LES-109.
+
 ## LES-106 - Family Operation Ownership
 
-Status: implemented locally on 2026-06-26. Requires production D1 migration `0005_sharp_pet_avengers.sql` before deploying code that writes the new ownership fields.
+Status: completed on 2026-06-26. Production D1 migration `0005_sharp_pet_avengers.sql` was applied before commit `46f830380462b10e5489ce279febdd45b5e0ae67` was pushed to `main`.
 
 What changed:
 
@@ -27,7 +52,6 @@ Verification completed:
 
 Notes for next threads:
 
-- LES-107 should build on the new `shopping_list_items.checked_by_user_id` and `checked_at` fields for shared shopping filters and clearer buyer state.
 - LES-108 still owns true version-conflict protection; LES-106 only records the latest actor under the existing update flow.
 
 ## 2026-06-26 - Plan Realignment Toward Family Trial
