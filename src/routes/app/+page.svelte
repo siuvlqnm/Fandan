@@ -3,10 +3,14 @@
 	import { Button } from '$lib/components/ui/button';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import {
+		Activity,
 		ArrowRight,
 		CalendarDays,
 		ChefHat,
+		CheckCircle2,
 		ClipboardList,
+		Clock3,
+		ListTodo,
 		MessageCircle,
 		Plus,
 		ShoppingBag,
@@ -79,6 +83,18 @@
 	};
 	const isSlotDisabled = (slot: PageData['quickStart']['slots'][number]) =>
 		selectedQuickDate === data.quickStart.today && slot.disabledToday;
+	const formatTime = (value: string) =>
+		new Intl.DateTimeFormat('zh-CN', {
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false
+		}).format(new Date(value.includes('T') ? value : `${value.replace(' ', 'T')}Z`));
+	const taskIcon = (type: PageData['pendingTasks'][number]['type']) =>
+		type === 'confirm' ? MessageCircle : type === 'shop' ? ShoppingBag : type === 'generate' ? ClipboardList : UserPlus;
+	const activityIcon = (type: PageData['activityItems'][number]['type']) =>
+		type === 'meal_plan' ? ClipboardList : type === 'dish' ? ChefHat : type === 'shopping' ? CheckCircle2 : UserPlus;
 </script>
 
 <svelte:head>
@@ -112,6 +128,69 @@
 		<p class="text-xs text-muted-foreground">{data.todayKey}</p>
 		<h1 class="text-2xl font-semibold leading-tight">你好，{displayName}</h1>
 	</section>
+
+	{#if !data.isNewUser}
+		<section class="space-y-3">
+		<div class="flex items-center justify-between">
+			<h2 class="text-xl font-semibold">待处理事项</h2>
+			<span class="inline-flex items-center gap-1 text-sm text-muted-foreground"><ListTodo class="size-4" />{data.pendingTasks.length}</span>
+		</div>
+		<div class="app-panel divide-y divide-border/70 overflow-hidden" data-testid="dashboard-pending-tasks">
+			{#if data.pendingTasks.length === 0}
+				<div class="flex items-center gap-3 p-4 text-sm leading-6 text-muted-foreground">
+					<span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary"><CheckCircle2 class="size-5" /></span>
+					<span>当前没有需要家人马上处理的饭单、采购或邀请。</span>
+				</div>
+			{:else}
+				{#each data.pendingTasks as task}
+					{@const Icon = taskIcon(task.type)}
+					<a href={task.href} class="flex min-h-20 items-center gap-3 p-4 transition hover:bg-muted/50" data-testid={`pending-task-${task.type}`}>
+						<span class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary">
+							<Icon class="size-5" />
+						</span>
+						<span class="min-w-0 flex-1 space-y-1">
+							<span class="block truncate text-base font-semibold">{task.title}</span>
+							<span class="block truncate text-sm text-muted-foreground">{task.detail}</span>
+						</span>
+						<ArrowRight class="size-5 shrink-0 text-muted-foreground" />
+					</a>
+				{/each}
+			{/if}
+		</div>
+		</section>
+
+		<section class="space-y-3">
+		<div class="flex items-center justify-between">
+			<h2 class="text-xl font-semibold">家庭动态</h2>
+			<span class="inline-flex items-center gap-1 text-sm text-muted-foreground"><Activity class="size-4" />最近</span>
+		</div>
+		<div class="app-panel divide-y divide-border/70 overflow-hidden" data-testid="dashboard-activity">
+			{#if data.activityItems.length === 0}
+				<div class="flex items-center gap-3 p-4 text-sm leading-6 text-muted-foreground">
+					<span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Clock3 class="size-5" /></span>
+					<span>还没有家庭协作动态。创建饭单、采购或邀请家人后会出现在这里。</span>
+				</div>
+			{:else}
+				{#each data.activityItems as item}
+					{@const Icon = activityIcon(item.type)}
+					<a href={item.href} class="flex min-h-20 items-center gap-3 p-4 transition hover:bg-muted/50" data-testid={`activity-${item.type}`}>
+						<span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-primary">
+							<Icon class="size-5" />
+						</span>
+						<span class="min-w-0 flex-1 space-y-1">
+							<span class="flex min-w-0 items-center gap-2">
+								<span class="truncate text-base font-semibold">{item.title}</span>
+								<span class="shrink-0 text-xs text-muted-foreground">{formatTime(item.timestamp)}</span>
+							</span>
+							<span class="block truncate text-sm text-muted-foreground">{item.actorName} · {item.detail}</span>
+						</span>
+						<ArrowRight class="size-5 shrink-0 text-muted-foreground" />
+					</a>
+				{/each}
+			{/if}
+		</div>
+		</section>
+	{/if}
 
 	<section class="app-panel space-y-5 p-5">
 		<div class="space-y-2">

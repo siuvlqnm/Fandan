@@ -420,7 +420,11 @@ const verifyCollaboration = async () => {
 
 	const ownerPage = await owner.request('/app');
 	const memberSettings = await member.request('/app/settings');
-	assert(String(ownerPage.data).includes('旧账号家庭空间'), 'Owner app page did not render the shared workspace');
+	const ownerDashboard = String(ownerPage.data);
+	assert(ownerDashboard.includes('旧账号家庭空间'), 'Owner app page did not render the shared workspace');
+	assert(ownerDashboard.includes('待处理事项') && ownerDashboard.includes('家庭动态'), 'Dashboard did not render family task and activity surfaces');
+	assert(ownerDashboard.includes('继续采购') && ownerDashboard.includes('家庭协作晚餐'), 'Dashboard did not surface the real pending shopping task');
+	assert(ownerDashboard.includes('协作成员') && ownerDashboard.includes('成员更新炖鸡'), 'Dashboard did not surface real member activity');
 	assert(String(memberSettings.data).includes('协作成员'), 'Member settings page did not render');
 	console.log('✓ two independent authenticated application sessions');
 };

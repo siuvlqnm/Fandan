@@ -3,6 +3,7 @@ import { getMealFlowState } from '$lib/domain/meal-flow';
 import { addDateKeyDays } from '$lib/domain/meal-quick-start';
 import { requireUserSpace } from '$lib/server/context';
 import { listDishes } from '$lib/server/dishes';
+import { getFamilyWorkspaceDashboard } from '$lib/server/family-workspace-dashboard';
 import { createQuickStartMealPlan, getQuickStartViewData, quickStartMealSchema } from '$lib/server/meal-quick-start';
 import { listMealPlans } from '$lib/server/meal-plans';
 import { listTargets } from '$lib/server/targets';
@@ -106,6 +107,10 @@ export const load: PageServerLoad = async (event) => {
 	const recentMealPlans = [...currentMealPlans]
 		.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
 		.slice(0, 4);
+	const familyDashboard = await getFamilyWorkspaceDashboard(context, {
+		mealPlans: enrichedMealPlans,
+		dishes
+	});
 
 	return {
 		user: {
@@ -127,6 +132,8 @@ export const load: PageServerLoad = async (event) => {
 		quickStart,
 		weekRangeLabel: `${weekStartKey} - ${weekEndKey}`,
 		pendingMealPlans,
+		pendingTasks: familyDashboard.pendingTasks,
+		activityItems: familyDashboard.activityItems,
 		todayMealPlans,
 		weekMealPlans,
 		recentMealPlans,

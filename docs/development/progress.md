@@ -2,6 +2,33 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-109 - Family Activity And Pending Tasks
+
+Status: implemented locally on 2026-06-26. No database migration required; the dashboard is derived from existing workspace-scoped meal-plan, dish, shopping-list and invitation records.
+
+What changed:
+
+- Added `src/lib/server/family-workspace-dashboard.ts` to aggregate recent family activity and pending tasks from real workspace events.
+- Included meal-plan, dish, shopping-item and invitation activity with workspace filtering, actor labels and timestamp ordering.
+- Summarized pending confirmation meal plans, active shopping lists with unchecked items, confirmed meal plans that still need a shopping list and owner-visible pending invitations.
+- Added compact mobile-first `待处理事项` and `家庭动态` sections near the top of the app dashboard, each linking directly to the target meal plan, shopping list or invitation page.
+- Kept dashboard empty states honest; no fake activity is generated when there are no real records.
+- Extended the family workspace smoke to assert that the owner dashboard surfaces real member-created shopping tasks and member activity.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run verify:family-workspace`
+- `npm run release:verify`
+- Local Worker preview at `http://127.0.0.1:4179`.
+- Mobile browser smoke at `390 x 844`: confirmed pending tasks and activity are visible in the first viewport, direct dashboard sections render from real local data and `scrollWidth` equals `clientWidth`.
+
+Notes for next threads:
+
+- Phase 10 is complete. The next documented task is LES-110 in Phase 11.
+- LES-109 intentionally does not add notification delivery, unread state or a separate activity table.
+
 ## LES-108 - Shared Edit Conflict Protection
 
 Status: implemented locally on 2026-06-26. No database migration required; this uses existing `updated_at` values as optimistic write versions.
