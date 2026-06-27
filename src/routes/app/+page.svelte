@@ -159,6 +159,21 @@
 		</div>
 		</section>
 
+		<section class="app-panel flex items-center justify-between gap-3 p-4" data-testid="dashboard-shopping-list-entry">
+			<a href="/app/shopping-lists" class="flex min-w-0 flex-1 items-center gap-3">
+				<span class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary">
+					<ShoppingBag class="size-5" />
+				</span>
+				<span class="min-w-0 space-y-1">
+					<span class="block text-lg font-semibold">当前采购</span>
+					<span class="block truncate text-sm text-muted-foreground">查看待买清单，或翻回历史采购记录。</span>
+				</span>
+			</a>
+			<Button href="/app/shopping-lists" variant="outline" class="h-11 shrink-0 rounded-2xl bg-white px-3">
+				打开
+			</Button>
+		</section>
+
 		<section class="space-y-3">
 		<div class="flex items-center justify-between">
 			<h2 class="text-xl font-semibold">家庭动态</h2>

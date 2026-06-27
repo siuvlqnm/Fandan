@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { ClipboardList, Home, UserRound } from 'lucide-svelte';
+	import { ClipboardList, Home, ShoppingBag, UserRound } from 'lucide-svelte';
 
 	const navItems = [
 		{ label: '首页', href: '/app', icon: Home, match: (path: string) => path === '/app' },
 		{ label: '饭单', href: '/app/meal-plans', icon: ClipboardList, match: (path: string) => path.startsWith('/app/meal-plans') },
+		{ label: '清单', href: '/app/shopping-lists', icon: ShoppingBag, match: (path: string) => path.startsWith('/app/shopping-lists') },
 		{
 			label: '我的',
 			href: '/app/settings',
@@ -22,7 +23,7 @@
 	class="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-white/95 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_oklch(0.3_0.04_155_/_8%)] backdrop-blur md:hidden"
 	aria-label="移动端主导航"
 >
-	<div class="mx-auto grid max-w-md grid-cols-3 gap-2">
+	<div class="mx-auto grid max-w-md grid-cols-4 gap-2">
 		{#each navItems as item}
 			{@const Icon = item.icon}
 			{@const active = item.match(page.url.pathname)}

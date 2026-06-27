@@ -325,6 +325,36 @@ const verifyCollaboration = async () => {
 		expectedStatus: 201
 	})).data.data.shoppingList;
 	assert(scaledList.items.find((item) => item.name === '鸡腿')?.quantity === '4', 'Numeric quantity did not scale by meal/base servings');
+	const shoppingCenterPage = String((await owner.request('/app/shopping-lists')).data);
+	const dashboardPage = String((await owner.request('/app')).data);
+	assert(
+		shoppingCenterPage.includes('要买的东西，都在这里') &&
+			shoppingCenterPage.includes('家庭协作晚餐 购物清单') &&
+			shoppingCenterPage.includes('待买'),
+		'Shopping-list center did not show the current workspace pending lists'
+	);
+	assert(dashboardPage.includes('当前采购') && dashboardPage.includes('/app/shopping-lists'), 'Dashboard does not link to the shopping-list center');
+	let completedScaledList = scaledList;
+	for (const item of scaledList.items) {
+		completedScaledList = (await member.request(`/api/shopping-lists/${scaledList.id}/items/${item.id}`, {
+			method: 'PATCH',
+			json: { checked: true }
+		})).data.data.shoppingList;
+	}
+	assert(completedScaledList.items.every((item) => item.checked), 'Could not complete the history shopping list');
+	const historyShoppingCenterPage = String((await owner.request('/app/shopping-lists?status=history')).data);
+	const currentShoppingCenterPage = String((await owner.request('/app/shopping-lists')).data);
+	const mealPlanFilteredShoppingPage = String((await owner.request(`/app/shopping-lists?mealPlanId=${collaborativePlan.id}`)).data);
+	assert(
+		historyShoppingCenterPage.includes('家庭协作加倍晚餐 购物清单') && historyShoppingCenterPage.includes('历史'),
+		'Completed shopping lists were not separated into history'
+	);
+	assert(!currentShoppingCenterPage.includes('家庭协作加倍晚餐 购物清单'), 'Completed shopping list leaked into the default current list');
+	assert(
+		mealPlanFilteredShoppingPage.includes('家庭协作晚餐 购物清单') &&
+			!mealPlanFilteredShoppingPage.includes('家庭协作加倍晚餐 购物清单'),
+		'Shopping-list center did not filter by source meal plan'
+	);
 	const checkedItemId = regeneratedList.items[0].id;
 	const checkedList = (await member.request(
 		`/api/shopping-lists/${regeneratedList.id}/items/${checkedItemId}`,

@@ -17,7 +17,7 @@ The selected Product Design direction is `Shared Meal Room`:
 - Primary: service-product green for stable actions and navigation.
 - Attention: restrained red for pending confirmation and share actions.
 - Surfaces: rounded mobile panels with light borders and soft shadows.
-- Navigation: app routes use a fixed three-item mobile bottom nav: `首页`, `饭单`, `我的`.
+- Navigation: app routes use a fixed mobile bottom nav: `首页`, `饭单`, `清单`, `我的`.
 - Typography: compact but readable mobile product scale, with 14-16px body text.
 
 ## 2026-06-25 Flow Realignment
@@ -39,6 +39,7 @@ The product should feel like a household meal flow before it feels like a data m
 - Meal-plan list now uses mobile task-list rows with status emphasis.
 - Meal-plan detail now separates menu, confirmation, shopping list and editing into focused mobile sections instead of showing every form at once.
 - Shopping-list page now behaves like a mobile shopping checklist first, with editing collapsed behind details.
+- Shopping-list center now gives `清单` a real route for current pending lists and history.
 - Public share page now stands alone without the logged-in app header and focuses on guest feedback and confirmation.
 
 ## LES-125 Density Rules
@@ -58,4 +59,4 @@ The product should feel like a household meal flow before it feels like a data m
 
 - Redesign the remaining form-heavy creator pages next: new/edit meal plan, target forms and dish forms.
 - Replace placeholder participant assumptions with real share/feedback participant state if the data model adds it.
-- Consider a real shopping-list index route before making the bottom nav label `清单`.
+- Keep the `清单` route focused on current shopping and history; do not let dish library or object management drift back into fixed navigation.

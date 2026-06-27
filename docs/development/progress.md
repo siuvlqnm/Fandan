@@ -2,6 +2,36 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## LES-112 - Shopping List Center And History
+
+Status: implemented locally on 2026-06-27. No database migration required; the center is derived from existing workspace-scoped meal plans, shopping lists and shopping-list items.
+
+What changed:
+
+- Added `/app/shopping-lists` as the current workspace shopping-list center.
+- Defaulted the center to unfinished lists, with separate `待买`, `历史` and `全部` status filters.
+- Added date filters for all dates, today and this week, plus source meal-plan and text search filters.
+- Displayed each list's source meal plan, date range, pending count, completion progress and latest family actor.
+- Added an empty state that sends users back to meal plans to generate a shopping list or arrange a new meal.
+- Added `清单` to the mobile bottom navigation and a `当前采购` dashboard entry.
+- Extended the family workspace smoke to verify the center page, dashboard entry, completed-list history separation and source meal-plan filtering.
+- Updated `docs/development/shopping-lists-pages.md` with the index route behavior and workspace-isolation note.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- `npm run verify:family-workspace`
+- `npm run db:migrate:local` confirmed no pending local migrations.
+- `npm run db:migrate:remote` confirmed no pending remote migrations.
+- Local Worker preview at `http://localhost:4173`.
+- Mobile browser smoke at `390 x 844`: opened `/app/shopping-lists`, confirmed the center renders, bottom nav shows `首页|饭单|清单|我的`, and `scrollWidth` equals `clientWidth` with no horizontal overflow.
+
+Notes for next threads:
+
+- LES-111 account verification/password recovery remains deliberately deferred by user request.
+- Continue Phase 11 with LES-114 or LES-113 after LES-112 is verified, committed and pushed.
+
 ## 2026-06-26 - Docs And Linear Status Sync
 
 Status: synchronized on 2026-06-26. No code changes.
@@ -19,7 +49,7 @@ What changed:
 
 Notes for next threads:
 
-- Start from LES-111. Do not reopen LES-127 or redo family-collaboration planning before the account settings/password recovery slice.
+- Superseded by the 2026-06-27 LES-112 round. LES-111 is deferred; do not reopen LES-127 or redo family-collaboration planning.
 
 ## LES-110 - Share Link Permissions And Expiry
 
