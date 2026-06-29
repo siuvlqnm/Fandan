@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>妈妈请你确认菜单 / 饭单</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="分享确认">
+				<div class="screen">
+					<header class="topbar">
+						<div class="brand">
+							<div class="logo"><img src="./assets/reference/logo.png" alt="" /></div>
+							<div>
+								<h1>看一眼菜单</h1>
+								<p>妈妈 邀请你确认今晚吃什么</p>
+							</div>
+						</div>
+						<div class="actions">
+							<div class="avatar"><img src="./assets/reference/breakfast.jpg" alt="妈妈" /></div>
+						</div>
+					</header>
+
+					<!-- 这顿饭概览 -->
+					<section class="detail-card" style="margin-top:16px;">
+						<div class="detail-head">
+							<img src="./assets/reference/lunch.jpg" alt="" />
+							<div>
+								<h2>午餐 · 今天</h2>
+								<p>4 人 · 11:00-13:30</p>
+								<div class="tags">
+									<span class="pill"><i class="ri-restaurant-line"></i> 3 道菜</span>
+									<span class="state-pill attention">等你确认</span>
+								</div>
+							</div>
+						</div>
+						<p style="margin:12px 0 0;color:#595550;font-size:14px;line-height:1.45;">妈妈安排好了今天的午餐，你看看行不行，有想换的告诉我。</p>
+					</section>
+
+					<!-- 菜单 + 每道菜能反应 -->
+					<section class="section-head">
+						<div>
+							<h3>今天吃什么</h3>
+							<p>点 👍 喜欢 / 换 / 留言</p>
+						</div>
+					</section>
+					<section class="card-list">
+						<article class="plan-item" style="grid-template-columns:56px minmax(0,1fr);">
+							<img src="./assets/reference/lunch.jpg" alt="" />
+							<div class="pi-copy">
+								<strong>番茄牛腩</strong>
+								<span>主菜 · 45 分钟</span>
+								<div style="display:flex;gap:6px;margin-top:8px;">
+									<button class="react-btn like" type="button" style="padding:5px 9px;font-size:11px;"><i class="ri-thumb-up-line"></i> 喜欢</button>
+									<button class="react-btn replace" type="button" style="padding:5px 9px;font-size:11px;"><i class="ri-refresh-line"></i> 想换</button>
+									<button class="react-btn note" type="button" style="padding:5px 9px;font-size:11px;"><i class="ri-chat-3-line"></i> 留言</button>
+								</div>
+							</div>
+						</article>
+						<article class="plan-item" style="grid-template-columns:56px minmax(0,1fr);">
+							<img src="./assets/reference/dinner.jpg" alt="" />
+							<div class="pi-copy">
+								<strong>清炒西兰花</strong>
+								<span>配菜 · 10 分钟</span>
+								<div style="display:flex;gap:6px;margin-top:8px;">
+									<button class="react-btn like" type="button" style="padding:5px 9px;font-size:11px;background:var(--coral-soft);border-color:var(--coral);color:var(--coral);"><i class="ri-thumb-up-fill"></i> 已喜欢</button>
+									<button class="react-btn replace" type="button" style="padding:5px 9px;font-size:11px;"><i class="ri-refresh-line"></i> 想换</button>
+									<button class="react-btn note" type="button" style="padding:5px 9px;font-size:11px;"><i class="ri-chat-3-line"></i> 留言</button>
+								</div>
+							</div>
+						</article>
+						<article class="plan-item" style="grid-template-columns:56px minmax(0,1fr);">
+							<img src="./assets/reference/breakfast.jpg" alt="" />
+							<div class="pi-copy">
+								<strong>米饭</strong>
+								<span>主食</span>
+								<div style="display:flex;gap:6px;margin-top:8px;">
+									<button class="react-btn like" type="button" style="padding:5px 9px;font-size:11px;"><i class="ri-thumb-up-line"></i> 喜欢</button>
+									<button class="react-btn replace" type="button" style="padding:5px 9px;font-size:11px;"><i class="ri-refresh-line"></i> 想换</button>
+									<button class="react-btn note" type="button" style="padding:5px 9px;font-size:11px;"><i class="ri-chat-3-line"></i> 留言</button>
+								</div>
+							</div>
+						</article>
+					</section>
+
+					<!-- 留言 -->
+					<section class="section-head">
+						<div>
+							<h3>说两句</h3>
+							<p>忌口、想加汤都行</p>
+						</div>
+					</section>
+					<section class="soft-card" style="display:grid;gap:10px;">
+						<textarea class="textarea" placeholder="比如：牛腩少放辣，再加个紫菜蛋花汤"></textarea>
+						<div class="chip-row">
+							<span class="chip">忌辣</span>
+							<span class="chip active">想加汤</span>
+							<span class="chip">少油</span>
+							<span class="chip">多吃菜</span>
+						</div>
+					</section>
+
+					<!-- 其他家人的反馈 -->
+					<section class="section-head">
+						<div>
+							<h3>弟弟说</h3>
+							<p>1 条反馈</p>
+						</div>
+					</section>
+					<section class="card-list">
+						<article class="feedback-row">
+							<span class="who">弟</span>
+							<span class="fb-copy"><strong>弟弟</strong><span>都行，加个汤更好</span></span>
+							<span class="fb-emoji" style="color:var(--green);"><i class="ri-thumb-up-line"></i></span>
+						</article>
+					</section>
+
+					<p style="margin:18px 0 0;text-align:center;color:var(--muted);font-size:12px;">链接 7 天内有效 · 饭单</p>
+				</div>
+
+				<!-- 底部：确认 → 妈妈就能去买菜 -->
+				<div class="sticky-action two">
+					<button class="ghost-btn" type="button">回头再说</button>
+					<button class="primary-btn" type="button">确认菜单 <i class="ri-check-line"></i></button>
+				</div>
+			</section>
+		</main>
+		<script>
+			document.querySelectorAll(".chip").forEach((c) =>
+				c.addEventListener("click", () => c.classList.toggle("active"))
+			);
+		</script>
+	</body>
+</html>

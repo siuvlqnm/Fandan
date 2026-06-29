@@ -104,6 +104,41 @@ Second implementation pass on 2026-06-29 removed the remaining admin-style page 
 
 The shared app shell now uses softer glass panels, image-led scene heroes and rounded mobile controls so remaining pages do not fall back to the previous admin/dashboard look.
 
+## 2026-06-29 .fd-* Design Vocabulary Pass
+
+A third same-day pass replaced the remaining `.app-*` styling vocabulary on every `/app/*` page with a single `.fd-*` design language ported from the static HTML prototypes in `app-redesign/`. No page server, action, form field, route or data binding changed; this is a full CSS-vocabulary and markup replacement plus a shared flow-stepper component.
+
+### Static prototypes
+
+- `app-redesign/app.css` is the source-of-truth design system; it was ported into `src/routes/layout.css` as a parallel `.fd-*` component layer.
+- `app-redesign/*.html` are the per-page prototypes (`today`, `meal-plans`, `meal-plan-detail`, `meal-plan-new`, `dishes`, `dish-detail`, `dish-new`, `shopping`, `shopping-detail`, `home`, `targets`). They are kept in the repository as design reference and are not part of the runtime bundle.
+
+### Design vocabulary
+
+- Warm cream page surface (`--fd-bg: #fbf7ef`) instead of the previous cool grey-green.
+- Service green `--fd-green`, warm orange `--fd-orange` for confirm emphasis, coral `--fd-coral` for destructive and attention states, with soft variants for callout backgrounds.
+- Component classes live in `src/routes/layout.css` under a `.fd-*` namespace: `fd-screen`, `fd-topbar`, `fd-brand`, `fd-back-btn`, `fd-hero-card`, `fd-detail-card`, `fd-soft-card`, `fd-form-card`, `fd-pill`, `fd-state-pill`, `fd-primary-btn`, `fd-ghost-btn`, `fd-danger-btn`, `fd-fab`, `fd-sticky-action`, `fd-segmented`, `fd-search-row`, `fd-section-head`, `fd-card-list`, `fd-list-card`, `fd-check-card`, `fd-profile-card`, `fd-tool-grid`, `fd-member-row`, `fd-setting-row`, `fd-field`, `fd-text-input`, `fd-textarea`, `fd-select`, `fd-chip`, `fd-ingredient-row`, `fd-slot-grid`, `fd-plan-item`, `fd-empty` and modifiers.
+
+### Four-step flow stepper
+
+- New shared component `src/lib/components/flow-steps.svelte` renders `安排 → 确认 → 买菜 → 完成` with the current step highlighted and completed steps checked.
+- It reads `flow.step` from `src/lib/domain/meal-flow.ts` (`getMealFlowState`), so the stepper stays in sync with the existing flow state machine and does not add new data.
+- Used on `/app` (today hero), `/app/meal-plans` (per-card), `/app/meal-plans/[id]` (detail hero) and target detail.
+
+### Shared form engines
+
+- `DishForm` (`src/lib/components/dish-form.svelte`) and `TargetForm` (`src/lib/components/target-form.svelte`) are shared form engines that keep their internal `.app-input` controls. They are wrapped in `.fd-form-card` chrome on the new/edit pages so the surrounding page matches the `.fd-*` system while the form internals stay unchanged and keep their server-side validation contract.
+
+### Page coverage
+
+- Rewrote `/app`, `/app/meal-plans`, `/app/meal-plans/new`, `/app/meal-plans/[id]`, `/app/dishes`, `/app/dishes/new`, `/app/dishes/[id]`, `/app/shopping-lists`, `/app/shopping-lists/[id]`, `/app/targets`, `/app/targets/new`, `/app/targets/[id]`, `/app/settings` and `/app/invitations` to the `.fd-*` vocabulary.
+- `mobile-bottom-nav.svelte` was restyled to the new bottom bar (border-top, white/translucent, four equal tabs); href and active-match logic are unchanged.
+- Non-`/app` surfaces (`/`, `/login`, `/register`, `/share/[token]`, `/invite/[token]`) were intentionally left on their current styles this pass.
+
+### Flow boundary preserved
+
+This pass did not touch any `+page.server.ts` or `+layout.server.ts` load or action, any `?/action` name, any form `name=` field, `enhanceWithFeedback` usage, `data-confirm` / `data-pending-label`, `src/lib/server/**`, routes, or the meal-flow state machine. Only `.svelte` markup/classes, `layout.css`, `mobile-bottom-nav.svelte` and the new `flow-steps.svelte` changed.
+
 ## QA Checklist
 
 - First viewport clearly answers `下一顿吃什么？`
@@ -118,6 +153,7 @@ The shared app shell now uses softer glass panels, image-led scene heroes and ro
 - `npm run check` passed on 2026-06-29.
 - `npm run build` passed on 2026-06-29.
 - `npm run check` and `npm run build` passed again after the full app pass on 2026-06-29.
+- `npm run check` passed again after the `.fd-*` pass on 2026-06-29 (0 errors, 0 warnings).
 - Mobile browser smoke at 390 x 844:
   - `/` rendered without horizontal overflow.
   - `/login` rendered without horizontal overflow.
@@ -128,3 +164,18 @@ The shared app shell now uses softer glass panels, image-led scene heroes and ro
   - No horizontal overflow, broken images or removed backend terms were found in the checked pages.
 - User-facing Svelte text scan found no remaining `工作台`, `系统状态`, `菜品库`, `家庭空间` or `工作区` strings.
 - Build note: local Node is `22.9.0`; Vite recommends `20.19+` or `22.12+`. The build completed successfully despite that environment warning.
+
+## 2026-06-29 .fd-* Pass End-to-End Verification
+
+The `.fd-*` pass was verified end-to-end through the local dev server with real form submissions (not mocked APIs):
+
+- Registered a fresh account through the real `/register?/signUpEmail` action and confirmed a `better-auth.session_token` cookie was set.
+- All ten `/app/*` routes returned `200` and rendered the `.fd-*` shell (`fd-screen`, `fd-topbar`, per-page `data-testid`) with correct Chinese titles.
+- Created a target through `POST /app/targets/new` (default action) and landed on the `.fd-*` detail page with the four-step flow stepper.
+- Created a dish with two ingredients through `POST /app/dishes/new?/create` and confirmed the detail page rendered ingredients, instructions and servings.
+- Created a meal plan through `POST /app/meal-plans/new?/create` and confirmed it auto-generated a shopping list and redirected to `?first=1` — verifying the `安排 → 看吃什么 → 知道买什么` line.
+- Shopping-list detail showed correct serving-scaled quantities (e.g. `饭单 3 份 ÷ 基准 2 人份` → `鸡蛋 4.5 个`).
+- Toggled a shopping item through `?/toggleItem` (`name=itemId`, `name=checked`); progress moved from `0/2` to `1/2` and the row gained the `is-done` class.
+- Created an invitation through `POST /app/invitations?/create`; the invitations page then showed the pending record, 7-day expiry, copy button and the success pill.
+- `git status` confirmed only the planned `.svelte` files, `layout.css`, `mobile-bottom-nav.svelte`, the new `flow-steps.svelte` and the `app-redesign/` prototype directory changed; no `+page.server.ts`, `+layout.server.ts` or `src/lib/server/**` file was touched.
+- Limitation: pixel-level visual QA at 390 x 844 was not performed (no browser in this environment); functional and data-flow correctness was confirmed end-to-end.

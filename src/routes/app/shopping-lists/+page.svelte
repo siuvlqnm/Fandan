@@ -1,10 +1,9 @@
 <script lang="ts">
 	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
 	import basketImage from '$lib/assets/meal-ui/basket.jpg';
+	import avatarImage from '$lib/assets/meal-ui/avatar.jpg';
 	import logoImage from '$lib/assets/meal-ui/logo.png';
-	import { ArrowRight, CheckCircle2, ClipboardList, Plus, Search, ShoppingBasket } from 'lucide-svelte';
+	import { ArrowRight, CheckCircle2, Plus, Search, ShoppingBasket } from 'lucide-svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -38,148 +37,143 @@
 	const dateRangeLabel = (list: ShoppingListRow) => {
 		const start = list.mealPlan.startDate ?? list.dateStart;
 		const end = list.mealPlan.endDate ?? list.dateEnd;
-
 		if (!start && !end) return '未设置日期';
 		if (!end || start === end) return start ?? end ?? '未设置日期';
 		return `${start} - ${end}`;
 	};
-	const listStateLabel = (list: ShoppingListRow) => (list.completed ? '已买完' : list.totalCount === 0 ? '待补充' : `待买 ${list.pendingCount}`);
+	const listStateLabel = (list: ShoppingListRow) =>
+		list.completed ? '已买完' : list.totalCount === 0 ? '待补充' : `${list.pendingCount} 待买`;
+	const listStateClass = (list: ShoppingListRow) =>
+		list.completed ? 'fd-state-pill green' : list.totalCount === 0 ? 'fd-state-pill muted' : 'fd-state-pill attention';
 </script>
 
 <svelte:head>
 	<title>买菜 / 饭单</title>
 </svelte:head>
 
-<main class="app-client-page app-bottom-safe">
-	<header class="app-topbar">
-		<a href="/app" class="app-brand">
-			<span class="app-logo"><img src={logoImage} alt="" /></span>
+<main class="fd-screen" data-testid="shopping-lists-list">
+	<header class="fd-topbar">
+		<a href="/app" class="fd-brand">
+			<span class="fd-logo"><img src={logoImage} alt="" /></span>
 			<span class="min-w-0 leading-tight">
-				<span class="block text-2xl font-bold">买菜</span>
-				<span class="block truncate text-sm text-muted-foreground">少跑一趟，少漏一样</span>
+				<h1>买菜</h1>
+				<p>少跑一趟，少漏一样</p>
 			</span>
 		</a>
-		<Button href="/app/meal-plans" class="app-icon-action" aria-label="从饭单生成购物清单">
-			<ClipboardList class="size-5" />
-		</Button>
+		<div class="fd-actions">
+			<a href="/app/meal-plans" class="fd-icon-button" aria-label="从饭单生成购物清单"><Plus class="size-5" /></a>
+			<a href="/app/settings" class="fd-avatar"><img src={avatarImage} alt="" /></a>
+		</div>
 	</header>
 
-	<section class="space-y-3">
-		<p class="app-chip bg-white/80 text-muted-foreground">
-			<ShoppingBasket class="size-3.5 text-primary" />
-			{firstCurrentList ? `还缺 ${currentPendingCount} 件` : '当前没有待买'}
-		</p>
-		<div class="space-y-2">
-			<h1 class="text-4xl font-black leading-[1.06] tracking-normal">今天要买什么？</h1>
-			<p class="text-base leading-6 text-muted-foreground">从已安排的饭自动生成。买完进入详情勾掉，历史清单会自动收好。</p>
-		</div>
+	<section class="fd-page-title">
+		<span class="fd-eyebrow"><ShoppingBasket class="size-3.5" /> {firstCurrentList ? `还缺 ${currentPendingCount} 件` : '当前没有待买'}</span>
+		<h2>今天要买什么？</h2>
+		<p>从已安排的饭自动生成，买完就勾掉。临时想起的也能随手加。</p>
 	</section>
 
-	<section class="app-hero">
-		<div class="grid grid-cols-[minmax(0,1fr)_8rem]">
-			<div class="min-w-0 space-y-3 p-4">
-				<p class="app-chip bg-accent text-accent-foreground">{firstCurrentList ? '当前清单' : '买菜建议'}</p>
-				<div>
-					<h2 class="truncate text-2xl font-bold">{firstCurrentList?.title ?? '先安排一顿饭'}</h2>
-					<p class="mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
-						{#if firstCurrentList}
-							来自 {firstCurrentList.mealPlan.title} · 待买 {firstCurrentList.pendingCount} 项 · 已买 {firstCurrentList.checkedCount} 项
-						{:else}
-							安排饭后可以一键生成购物清单。
-						{/if}
-					</p>
+	{#if firstCurrentList}
+		<section class="fd-hero-card" aria-label="当前购物清单">
+			<div class="fd-hero-copy min-w-0">
+				<h3>{firstCurrentList.title}</h3>
+				<p>来自 {firstCurrentList.mealPlan.title} · 待买 {firstCurrentList.pendingCount} 项 · 已买 {firstCurrentList.checkedCount} 项</p>
+				<div class="mini">
+					<span class="fd-pill orange">待买 {firstCurrentList.pendingCount}</span>
+					<span class="fd-pill green">已买 {firstCurrentList.checkedCount}</span>
+					<span class="fd-pill">{dateRangeLabel(firstCurrentList)}</span>
 				</div>
-				<Button href={firstCurrentList ? `/app/shopping-lists/${firstCurrentList.id}` : '/app/meal-plans/new'} class="h-11 rounded-full px-4">
-					{firstCurrentList ? '去勾选' : '安排一顿饭'} <ArrowRight class="size-4" />
-				</Button>
 			</div>
-			<img src={basketImage} alt="" class="h-full min-h-40 w-full object-cover [mask-image:linear-gradient(90deg,transparent,black_25%)]" />
-		</div>
-	</section>
+			<div class="fd-hero-media"><img src={basketImage} alt="购物篮" /></div>
+		</section>
+	{:else}
+		<section class="fd-hero-card" aria-label="买菜建议">
+			<div class="fd-hero-copy min-w-0">
+				<h3>先安排一顿饭</h3>
+				<p>安排饭后可以一键生成购物清单，买完进详情勾掉。</p>
+				<div class="mini">
+					<a href="/app/meal-plans/new" class="fd-primary-btn" style="height:36px;font-size:13px;padding:0 14px;">安排一顿饭 <ArrowRight class="size-4" /></a>
+				</div>
+			</div>
+			<div class="fd-hero-media"><img src={basketImage} alt="购物篮" /></div>
+		</section>
+	{/if}
 
-	<nav class="app-segmented grid-cols-3" aria-label="购物清单状态">
+	<div class="fd-segmented cols-3" style="margin-top:14px;" aria-label="购物清单状态">
 		{#each statusOptions as option}
-			<a href={withFilters({ status: option.id })} class="app-segment {data.filters.status === option.id ? 'app-segment-active' : ''}" aria-current={data.filters.status === option.id ? 'page' : undefined}>
-				<span>{option.label}</span>
-				<span class="ml-1 text-xs opacity-75">{option.count}</span>
+			<a href={withFilters({ status: option.id })} class="fd-segment {data.filters.status === option.id ? 'active' : ''}" aria-current={data.filters.status === option.id ? 'page' : undefined}>
+				{option.label} <span style="font-size:11px;opacity:.7;">{option.count}</span>
 			</a>
 		{/each}
-	</nav>
+	</div>
 
-	<details class="app-panel overflow-hidden">
-		<summary class="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
-			<Search class="size-4 text-primary" />
-			找一份清单
-			<span class="ml-auto text-xs text-muted-foreground">日期 / 来源饭单</span>
+	<details class="fd-soft-card" style="margin-top:12px;padding:0;">
+		<summary style="display:flex;min-height:48px;cursor:pointer;list-style:none;align-items:center;gap:8px;padding:12px 16px;font-size:14px;font-weight:700;color:#4f4943;">
+			<Search class="size-4" style="color:var(--fd-green);" /> 找一份清单
+			<span style="margin-left:auto;font-size:12px;color:var(--fd-muted);">日期 / 来源饭单</span>
 		</summary>
-		<form method="get" class="space-y-3 border-t border-border/70 p-4">
+		<form method="get" style="border-top:1px solid var(--fd-line-soft);padding:16px;display:grid;gap:12px;">
 			<input type="hidden" name="status" value={data.filters.status} />
-			<div class="grid grid-cols-3 gap-2">
+			<div class="fd-segmented cols-3">
 				{#each dateOptions as option}
-					<a href={withFilters({ date: option.id })} class="app-segment {data.filters.date === option.id ? 'app-segment-active' : 'bg-muted/45'}">
-						{option.label}
-					</a>
+					<a href={withFilters({ date: option.id })} class="fd-segment {data.filters.date === option.id ? 'active' : ''}">{option.label}</a>
 				{/each}
 			</div>
-			<label class="flex h-11 min-w-0 items-center gap-2 rounded-full border border-border/80 bg-white px-3">
-				<Search class="size-4 shrink-0 text-muted-foreground" />
-				<Input name="q" value={data.filters.q} placeholder="清单或来源饭单" class="h-auto border-0 bg-transparent p-0 text-sm shadow-none focus:ring-0" />
+			<label class="fd-search">
+				<Search class="size-4" />
+				<input type="search" name="q" value={data.filters.q} placeholder="清单或来源饭单" />
 			</label>
-			<select name="mealPlanId" class="app-input h-11 text-sm">
+			<select name="mealPlanId" class="fd-select">
 				<option value="" selected={!data.filters.mealPlanId}>全部饭单</option>
 				{#each data.mealPlanOptions as option}
 					<option value={option.id} selected={data.filters.mealPlanId === option.id}>{option.title}</option>
 				{/each}
 			</select>
 			<input type="hidden" name="date" value={data.filters.date} />
-			<Button type="submit" variant="outline" class="h-11 w-full rounded-full bg-white">
-				<Search class="size-4" />
-				筛一下
-			</Button>
+			<button type="submit" class="fd-ghost-btn block"><Search class="size-4" /> 筛一下</button>
 		</form>
 	</details>
 
-	<section class="app-section-title">
+	<section class="fd-section-head">
 		<div>
-			<h2>{data.filters.status === 'history' ? '买过的清单' : '待买清单'}</h2>
-			<p>{data.lists.length} 份清单</p>
+			<h3>{data.filters.status === 'history' ? '最近买过' : '今天的清单'}</h3>
+			<p>{data.lists.length} 份清单 · {data.filters.status === 'history' ? '上周完成的' : '按饭分组，照着买'}</p>
 		</div>
 	</section>
 
-	<section class="grid gap-2" data-testid="shopping-list-center">
-		{#if data.lists.length === 0}
-			<div class="app-hero space-y-4 p-5 text-center">
-				<ShoppingBasket class="mx-auto size-9 text-primary" />
-				<div class="space-y-1">
-					<h2 class="text-xl font-semibold">{data.stats.total === 0 ? '还没有购物清单' : '没有匹配的清单'}</h2>
-					<p class="text-sm leading-6 text-muted-foreground">从这顿饭生成买菜清单后，会自动出现在这里。</p>
-				</div>
-				<Button href="/app/meal-plans/new" class="h-12 rounded-full px-5">
-					<Plus class="size-4" />
-					安排一顿饭
-				</Button>
-			</div>
-		{:else}
-			{#each data.lists as list}
-				<a href={`/app/shopping-lists/${list.id}`} class="app-list-row" data-testid={`shopping-list-row-${list.id}`}>
-					<span class="flex size-12 shrink-0 items-center justify-center rounded-2xl {list.completed ? 'bg-muted text-muted-foreground' : 'bg-secondary text-primary'}">
-						{#if list.completed}<CheckCircle2 class="size-6" />{:else}<ShoppingBasket class="size-6" />{/if}
-					</span>
-					<span class="min-w-0 flex-1">
-						<span class="flex min-w-0 items-center gap-2">
-							<span class="truncate text-lg font-semibold">{list.title}</span>
-							<span class="app-chip shrink-0 {list.completed ? 'bg-muted text-muted-foreground' : 'bg-secondary text-primary'}">{listStateLabel(list)}</span>
-						</span>
-						<span class="mt-1 block truncate text-sm text-muted-foreground">来自 {list.mealPlan.title} · {dateRangeLabel(list)}</span>
-						<span class="mt-2 block h-2 overflow-hidden rounded-full bg-muted">
-							<span class="block h-full rounded-full bg-primary" style={`width: ${list.progressPercent}%`}></span>
-						</span>
-					</span>
-					<ArrowRight class="size-5 shrink-0 text-muted-foreground" />
+	{#if data.lists.length === 0}
+		<div class="fd-empty" style="margin-top:14px;">
+			<span class="emoji"><ShoppingBasket class="size-8" /></span>
+			<h3>{data.stats.total === 0 ? '还没有购物清单' : '没有匹配的清单'}</h3>
+			<p>从这顿饭生成买菜清单后，会自动出现在这里。</p>
+			<a href="/app/meal-plans/new" class="fd-primary-btn lg block" style="margin-top:6px;">
+				<Plus class="size-4" /> 安排一顿饭
+			</a>
+		</div>
+	{:else}
+		<section class="fd-card-list" data-testid="shopping-list-center">
+			{#each data.lists as list (list.id)}
+				<a href={`/app/shopping-lists/${list.id}`} class="fd-soft-card" style="display:grid;gap:9px;text-decoration:none;{list.completed ? 'opacity:.78;' : ''}" data-testid={`shopping-list-row-${list.id}`}>
+					<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+						<div class="min-w-0">
+							<strong style="font-size:17px;font-weight:850;display:block;truncate">{list.title}</strong>
+							<span style="display:block;margin-top:2px;color:var(--fd-muted);font-size:12px;">{dateRangeLabel(list)} · 来自 {list.mealPlan.title}</span>
+						</div>
+						<span class={listStateClass(list)}>{listStateLabel(list)}</span>
+					</div>
+					<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+						<span class="fd-pill">{list.totalCount} 项</span>
+						<span class="fd-pill green">已买 {list.checkedCount}</span>
+						{#if list.completed}<span class="fd-pill"><CheckCircle2 class="size-3.5" /> 完成</span>{/if}
+					</div>
+					<div style="height:8px;border-radius:999px;background:var(--fd-line);overflow:hidden;">
+						<div style="width:{list.progressPercent}%;height:100%;background:var(--fd-green);"></div>
+					</div>
 				</a>
 			{/each}
-		{/if}
-	</section>
+		</section>
+	{/if}
 </main>
+
+<a href="/app/meal-plans" class="fd-fab" aria-label="生成购物清单"><Plus class="size-6" /></a>
 
 <MobileBottomNav />

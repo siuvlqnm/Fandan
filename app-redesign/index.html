@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>饭单 新设计预览</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="预览">
+				<div class="screen">
+					<header class="topbar">
+						<div class="brand">
+							<div class="logo"><img src="./assets/reference/logo.png" alt="" /></div>
+							<div><h1>预览</h1><p>挑一页看效果</p></div>
+						</div>
+					</header>
+
+					<section class="page-title">
+						<span class="eyebrow green"><i class="ri-eye-line"></i> 新设计 · HTML 草稿</span>
+						<h2>饭单新页面</h2>
+						<p>主线：安排一顿饭 → 看吃什么 → 知道买什么。每页都能点开看。</p>
+					</section>
+
+					<section class="section-head"><div><h3>主线四页</h3><p>底部导航这四个</p></div></section>
+					<section class="card-list">
+						<a class="list-card" href="./today.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--green-soft);"><i class="ri-bowl-line" style="font-size:26px;color:var(--green);"></i></span>
+							<span class="list-copy"><strong>今天</strong><span class="sub">下一顿吃什么 · 安排饭点</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a class="list-card" href="./dishes.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--green-soft);"><i class="ri-cooking-pot-line" style="font-size:26px;color:var(--green);"></i></span>
+							<span class="list-copy"><strong>常做菜</strong><span class="sub">看吃什么 · 食材带出买菜</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a class="list-card" href="./shopping.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--green-soft);"><i class="ri-shopping-basket-2-line" style="font-size:26px;color:var(--green);"></i></span>
+							<span class="list-copy"><strong>买菜</strong><span class="sub">知道买什么 · 按动线分组</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a class="list-card" href="./home.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--green-soft);"><i class="ri-home-5-line" style="font-size:26px;color:var(--green);"></i></span>
+							<span class="list-copy"><strong>家</strong><span class="sub">成员 · 目标 · 账号</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+					</section>
+
+					<section class="section-head"><div><h3>饭单流程</h3><p>安排→确认→买菜→完成</p></div></section>
+					<section class="card-list">
+						<a class="list-card" href="./meal-plans.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:#fff0d1;"><i class="ri-list-check-2" style="font-size:26px;color:var(--orange);"></i></span>
+							<span class="list-copy"><strong>饭单列表</strong><span class="sub">按流程步骤分组</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a class="list-card" href="./meal-plan-new.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:#fff0d1;"><i class="ri-add-circle-line" style="font-size:26px;color:var(--orange);"></i></span>
+							<span class="list-copy"><strong>安排饭</strong><span class="sub">定饭点 + 加菜</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a class="list-card" href="./meal-plan-detail.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:#fff0d1;"><i class="ri-restaurant-2-line" style="font-size:26px;color:var(--orange);"></i></span>
+							<span class="list-copy"><strong>饭单详情</strong><span class="sub">菜单 · 反馈 · 生成清单</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a class="list-card" href="./shopping-detail.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--green-soft);"><i class="ri-shopping-cart-line" style="font-size:26px;color:var(--green);"></i></span>
+							<span class="list-copy"><strong>买菜详情</strong><span class="sub">勾选 · 按动线分组</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+					</section>
+
+					<section class="section-head"><div><h3>常做菜</h3><p>看吃什么 + 食材</p></div></section>
+					<section class="card-list">
+						<a class="list-card" href="./dish-new.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--green-soft);"><i class="ri-add-circle-line" style="font-size:26px;color:var(--green);"></i></span>
+							<span class="list-copy"><strong>加常做菜</strong><span class="sub">菜名 + 食材 + 做法</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a class="list-card" href="./dish-detail.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--green-soft);"><i class="ri-restaurant-2-line" style="font-size:26px;color:var(--green);"></i></span>
+							<span class="list-copy"><strong>番茄牛腩</strong><span class="sub">食材 + 做法 + 用这菜安排饭</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+					</section>
+
+					<section class="section-head"><div><h3>家与目标</h3><p></p></div></section>
+					<section class="card-list">
+						<a class="list-card" href="./targets.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--green-soft);"><i class="ri-group-line" style="font-size:26px;color:var(--green);"></i></span>
+							<span class="list-copy"><strong>给谁做饭</strong><span class="sub">目标 · 家里/聚餐/客户</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+					</section>
+
+					<section class="section-head"><div><h3>入口与分享</h3><p></p></div></section>
+					<section class="card-list">
+						<a class="list-card" href="./login.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--coral-soft);"><i class="ri-login-circle-line" style="font-size:26px;color:var(--coral);"></i></span>
+							<span class="list-copy"><strong>登录</strong><span class="sub"></span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a class="list-card" href="./register.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--coral-soft);"><i class="ri-user-add-line" style="font-size:26px;color:var(--coral);"></i></span>
+							<span class="list-copy"><strong>注册</strong><span class="sub"></span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a class="list-card" href="./share.html" style="grid-template-columns:54px minmax(0,1fr) 34px;text-decoration:none;">
+							<span class="thumb" style="display:grid;place-items:center;background:var(--coral-soft);"><i class="ri-share-forward-line" style="font-size:26px;color:var(--coral);"></i></span>
+							<span class="list-copy"><strong>家人分享确认</strong><span class="sub">看菜单 · 反馈 · 确认</span></span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+					</section>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab active" href="./today.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+	</body>
+</html>

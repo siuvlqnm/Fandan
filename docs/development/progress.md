@@ -2,6 +2,37 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## 2026-06-29 - .fd-* Design Vocabulary Pass
+
+Status: implemented locally on 2026-06-29. No database migration and no server/action/route change; this is a full CSS-vocabulary and markup replacement across all `/app/*` pages plus a shared flow-stepper component, ported from the static HTML prototypes in `app-redesign/`.
+
+What changed:
+
+- Added the `app-redesign/` static prototype directory (per-page HTML plus `app.css`) and committed it as design reference; it is not part of the runtime bundle.
+- Ported the prototype design system into `src/routes/layout.css` as a parallel `.fd-*` component layer: warm cream surface (`--fd-bg`), service green, warm orange confirm emphasis, coral destructive/attention, and component classes such as `fd-screen`, `fd-topbar`, `fd-hero-card`, `fd-detail-card`, `fd-soft-card`, `fd-form-card`, `fd-pill`, `fd-state-pill`, `fd-primary-btn`, `fd-ghost-btn`, `fd-danger-btn`, `fd-fab`, `fd-sticky-action`, `fd-segmented`, `fd-search-row`, `fd-section-head`, `fd-card-list`, `fd-check-card`, `fd-profile-card`, `fd-tool-grid`, `fd-member-row`, `fd-setting-row`, `fd-field`, `fd-text-input`, `fd-slot-grid`, `fd-plan-item`, `fd-empty` and modifiers.
+- Added shared `src/lib/components/flow-steps.svelte` rendering `安排 → 确认 → 买菜 → 完成`, driven by the existing `flow.step` from `src/lib/domain/meal-flow.ts` so the household meal line is visible without new data.
+- Rewrote every `/app/*` page to the `.fd-*` vocabulary: `/app`, `/app/meal-plans`, `/app/meal-plans/new`, `/app/meal-plans/[id]`, `/app/dishes`, `/app/dishes/new`, `/app/dishes/[id]`, `/app/shopping-lists`, `/app/shopping-lists/[id]`, `/app/targets`, `/app/targets/new`, `/app/targets/[id]`, `/app/settings`, `/app/invitations`.
+- Restyled `mobile-bottom-nav.svelte` to the new bottom bar (border-top, white/translucent, four equal tabs) without changing hrefs or active-match logic.
+- Wrapped shared `DishForm` and `TargetForm` in `.fd-form-card` chrome; their internal controls and server-side validation contract are unchanged.
+
+Flow boundary preserved:
+
+- No `+page.server.ts` or `+layout.server.ts` load or action changed.
+- No `?/action` name, form `name=` field, `enhanceWithFeedback` usage, `data-confirm` / `data-pending-label`, route, or `src/lib/server/**` file changed.
+- Only `.svelte` markup/classes, `layout.css`, `mobile-bottom-nav.svelte` and the new `flow-steps.svelte` changed.
+
+Verification completed:
+
+- `npm run check` (0 errors, 0 warnings).
+- End-to-end dev run through the local server with real form submissions: registered a fresh account, opened all ten `/app/*` routes, created a target, dish (with two ingredients) and meal plan, confirmed the meal auto-generated a shopping list (`安排 → 看吃什么 → 知道买什么`), verified serving-scaled quantities on the shopping list, toggled a shopping item, and created an invitation. See `next-meal-home-design.md` for the full evidence.
+- `git status` confirmed only the planned `.svelte` files, `layout.css`, `mobile-bottom-nav.svelte`, the new `flow-steps.svelte` and the `app-redesign/` directory changed.
+
+Notes for next threads:
+
+- Pixel-level visual QA at 390 x 844 was not performed this pass (no browser in the environment); functional and data-flow correctness was confirmed end-to-end. A signed-in visual sweep on a real mobile viewport is still worth doing.
+- Non-`/app` surfaces (`/`, `/login`, `/register`, `/share/[token]`, `/invite/[token]`) still use their current styles; migrate them only when explicitly requested.
+- The shared `DishForm` / `TargetForm` internals still use `.app-input`. They are acceptable as form engines wrapped in `.fd-form-card` chrome; revisit if a fully unified control vocabulary is wanted.
+
 ## 2026-06-29 - Client-Style Next Meal App Redesign
 
 Status: implemented locally on 2026-06-29. No database migration required; this is a Svelte UI, copy and asset update. A second same-day pass removed the remaining admin-style shadows from secondary pages.

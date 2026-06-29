@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>新建常做菜 / 饭单</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="新建常做菜">
+				<div class="screen">
+					<header class="topbar with-back">
+						<div class="brand with-back">
+							<a class="back-btn" href="./dishes.html" aria-label="返回"><i class="ri-arrow-left-s-line"></i></a>
+							<div>
+								<h1>加一道常做菜</h1>
+								<p>写一次，以后买菜自动带</p>
+							</div>
+						</div>
+						<button class="ghost-btn" type="button">AI 帮写</button>
+					</header>
+
+					<!-- 封面 -->
+					<section class="hero-card" style="grid-template-columns:minmax(0,1fr) 110px;min-height:120px;">
+						<div class="hero-copy">
+							<h3 style="font-size:18px;">菜的照片</h3>
+							<p>有图一眼认得出，买菜时也好对。</p>
+							<div class="mini">
+								<button class="ghost-btn" type="button" style="height:36px;font-size:12px;padding:0 12px;"><i class="ri-image-add-line"></i> 上传</button>
+							</div>
+						</div>
+						<div class="hero-media" style="display:grid;place-items:center;background:rgba(46,138,45,.06);">
+							<i class="ri-restaurant-2-line" style="font-size:40px;color:var(--green);opacity:.5;"></i>
+						</div>
+					</section>
+
+					<section class="form-card">
+						<div class="field">
+							<div class="field-label"><strong>菜名</strong></div>
+							<input class="text-input" type="text" placeholder="比如：番茄牛腩" />
+						</div>
+						<div class="field">
+							<div class="field-label"><strong>分类</strong></div>
+							<select class="select">
+								<option>主菜</option>
+								<option>配菜</option>
+								<option>主食</option>
+								<option>汤</option>
+								<option>早餐</option>
+								<option>宵夜</option>
+							</select>
+						</div>
+						<div class="field">
+							<div class="field-label"><strong>标签</strong><span class="hint">多选</span></div>
+							<div class="chip-row">
+								<span class="chip active">家常</span>
+								<span class="chip active">下饭</span>
+								<span class="chip">快手</span>
+								<span class="chip">清淡</span>
+								<span class="chip">孩子爱吃</span>
+								<span class="chip">宴客</span>
+							</div>
+						</div>
+						<div class="field">
+							<div class="field-label"><strong>基础份数</strong><span class="hint">买菜按这个算量</span></div>
+							<input class="text-input" type="number" value="4" />
+						</div>
+					</section>
+
+					<!-- 食材：买菜清单的来源 -->
+					<section class="section-head">
+						<div>
+							<h3>食材</h3>
+							<p>写好后，安排这菜时自动进买菜清单</p>
+						</div>
+					</section>
+					<section class="soft-card" style="padding:14px 16px;">
+						<div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,.7fr) 36px;gap:7px;font-size:11px;font-weight:780;color:var(--muted);">
+							<span>食材名</span><span>用量</span><span>单位</span><span></span>
+						</div>
+						<div class="ingredient-row">
+							<input class="text-input" type="text" value="牛腩" />
+							<input class="text-input" type="text" value="500" />
+							<input class="text-input" type="text" value="g" />
+							<button class="icon-del" type="button" aria-label="删除"><i class="ri-close-line"></i></button>
+						</div>
+						<div class="ingredient-row">
+							<input class="text-input" type="text" value="番茄" />
+							<input class="text-input" type="text" value="3" />
+							<input class="text-input" type="text" value="个" />
+							<button class="icon-del" type="button" aria-label="删除"><i class="ri-close-line"></i></button>
+						</div>
+						<div class="ingredient-row">
+							<input class="text-input" type="text" value="土豆" />
+							<input class="text-input" type="text" value="2" />
+							<input class="text-input" type="text" value="个" />
+							<button class="icon-del" type="button" aria-label="删除"><i class="ri-close-line"></i></button>
+						</div>
+						<div class="ingredient-row">
+							<input class="text-input" type="text" placeholder="加一项食材" />
+							<input class="text-input" type="text" placeholder="用量" />
+							<input class="text-input" type="text" placeholder="单位" />
+							<button class="icon-del" type="button" aria-label="删除"><i class="ri-close-line"></i></button>
+						</div>
+						<button class="add-row-btn" type="button"><i class="ri-add-line"></i> 再加一项</button>
+					</section>
+
+					<section class="form-card" style="margin-top:14px;">
+						<div class="field">
+							<div class="field-label"><strong>做法</strong><span class="hint">可选</span></div>
+							<textarea class="textarea" placeholder="简单写几句步骤，自己看得懂就行"></textarea>
+						</div>
+						<div class="setting-row">
+							<div class="meta"><strong>家人都能用</strong><span>关掉则只有自己可见</span></div>
+							<label class="switch on"><span class="track"></span></label>
+						</div>
+					</section>
+				</div>
+
+				<div class="sticky-action two">
+					<button class="ghost-btn" type="button">取消</button>
+					<button class="primary-btn" type="button" onclick="location.href='./dishes.html'">保存常做菜 <i class="ri-check-line"></i></button>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab" href="./today.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab active" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+		<script>
+			document.querySelectorAll(".chip").forEach((c) =>
+				c.addEventListener("click", () => c.classList.toggle("active"))
+			);
+			document.querySelectorAll(".switch").forEach((s) =>
+				s.addEventListener("click", () => s.classList.toggle("on"))
+			);
+		</script>
+	</body>
+</html>

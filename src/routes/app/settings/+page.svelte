@@ -1,6 +1,5 @@
 <script lang="ts">
 	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
-	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
@@ -8,24 +7,22 @@
 	import heroImage from '$lib/assets/meal-ui/hero.jpg';
 	import logoImage from '$lib/assets/meal-ui/logo.png';
 	import {
-		ArrowRightLeft,
-		Check,
+		ArrowRight,
 		ChefHat,
+		Check,
 		ChevronDown,
 		CircleCheck,
 		Copy,
 		Crown,
 		DoorOpen,
+		HousePlus,
 		Link2,
 		LogOut,
 		Pencil,
 		Plus,
-		HousePlus,
 		ShieldCheck,
-		Target,
 		UserMinus,
 		UserPlus,
-		UserRound,
 		UsersRound,
 		XCircle
 	} from 'lucide-svelte';
@@ -56,95 +53,83 @@
 
 <svelte:head><title>家 / 饭单</title></svelte:head>
 
-<main class="app-client-page app-bottom-safe" data-testid="home-settings">
-	<header class="app-topbar">
-		<a href="/app" class="app-brand">
-			<span class="app-logo"><img src={logoImage} alt="" /></span>
+<main class="fd-screen" data-testid="home-settings">
+	<header class="fd-topbar">
+		<a href="/app" class="fd-brand">
+			<span class="fd-logo"><img src={logoImage} alt="" /></span>
 			<span class="min-w-0 leading-tight">
-				<span class="block text-2xl font-bold">家</span>
-				<span class="block truncate text-sm text-muted-foreground">家庭、偏好和账号</span>
+				<h1>家</h1>
+				<p>家庭、偏好和账号</p>
 			</span>
 		</a>
-		<span class="app-icon-action overflow-hidden p-0"><img src={avatarImage} alt="" class="h-full w-full object-cover" /></span>
+		<div class="fd-actions">
+			<span class="fd-avatar"><img src={avatarImage} alt="" /></span>
+		</div>
 	</header>
 
-	{#if data.feedback.saved}
-		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">家庭名称已更新。</p>
+	<!-- 当前家庭 profile-card -->
+	<section class="fd-profile-card" aria-label="当前家庭">
+		<img src={heroImage} alt="家里的餐桌" />
+		<div class="min-w-0">
+			<h3>{data.space.name}</h3>
+			<p>{data.members.length} 位成员 · {roleLabels[data.space.role]}</p>
+		</div>
+		<span class="fd-state-pill green">当前</span>
+	</section>
+
+	{#if data.feedback.saved || data.feedback.workspaceCreated || data.feedback.workspaceSwitched || data.feedback.created || data.feedback.left}
+		<p class="fd-state-pill green" style="justify-content:flex-start;padding:8px 12px;margin-top:12px;">
+			{#if data.feedback.saved}家庭名称已更新。{:else if data.feedback.workspaceCreated}新家庭已创建并切换。{:else if data.feedback.workspaceSwitched}家庭已切换，页面已刷新。{:else if data.feedback.created}邀请链接已创建，可以复制给家人。{:else if data.feedback.left}已退出原家庭，现在显示你的个人家庭。{/if}
+		</p>
 	{/if}
-	{#if data.feedback.workspaceCreated}
-		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">新家庭已创建并切换，接下来新增的内容都会保存在这里。</p>
-	{/if}
-	{#if data.feedback.workspaceSwitched}
-		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">家庭已切换，页面数据已刷新。</p>
-	{/if}
-	{#if data.feedback.created}
-		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">邀请链接已创建，可以复制给家人。</p>
-	{/if}
-	{#if data.feedback.revoked}
-		<p class="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">邀请已撤销。</p>
-	{/if}
-	{#if data.feedback.removed}
-		<p class="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">成员已移除，无法再访问这个家庭。</p>
-	{/if}
-	{#if data.feedback.left}
-		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">已退出原家庭，现在显示你的个人家庭。</p>
+	{#if data.feedback.revoked || data.feedback.removed}
+		<p class="fd-state-pill muted" style="justify-content:flex-start;padding:8px 12px;margin-top:12px;">
+			{#if data.feedback.revoked}邀请已撤销。{:else if data.feedback.removed}成员已移除，无法再访问这个家庭。{/if}
+		</p>
 	{/if}
 	{#if form?.message}
-		<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
+		<p class="fd-state-pill coral" style="justify-content:flex-start;padding:8px 12px;margin-top:12px;">{form.message}</p>
 	{/if}
 
-	<section class="app-hero overflow-hidden">
-		<div class="relative min-h-36 p-5">
-			<img src={heroImage} alt="" class="absolute inset-y-0 right-0 h-full w-40 object-cover opacity-90 [mask-image:linear-gradient(90deg,transparent,black_35%)]" />
-			<div class="relative max-w-[14rem] space-y-3">
-				<p class="app-chip bg-white/85 text-primary">{roleLabels[data.space.role]}</p>
-				<h1 class="text-4xl font-black leading-[1.05] tracking-normal">把家里的吃饭习惯收好</h1>
-				<p class="text-sm leading-6 text-muted-foreground">成员、口味、邀请和账号都在这里。</p>
-			</div>
+	<!-- 家庭工具 -->
+	<section class="fd-section-head">
+		<div>
+			<h3>家庭工具</h3>
+			<p>常用但不抢首页</p>
 		</div>
-		<div class="flex items-center gap-4 border-t border-border/70 bg-white/80 p-5">
-			<span class="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white text-primary shadow-sm"><img src={avatarImage} alt="" class="h-full w-full object-cover" /></span>
-				<div class="min-w-0 flex-1">
-					<p class="truncate text-xl font-semibold">{data.user.name}</p>
-					<p class="truncate text-sm text-muted-foreground">{data.user.email}</p>
-				</div>
-			<span class="app-chip bg-secondary text-primary">{data.space.name}</span>
+	</section>
+	<section class="fd-tool-grid" aria-label="家庭工具">
+		<a class="fd-tool" href="/app/targets"><UsersRound class="size-6" /><span>给谁做饭</span></a>
+		<a class="fd-tool" href="/app/dishes"><ChefHat class="size-6" /><span>常做菜</span></a>
+		<a class="fd-tool" href={isOwner ? '/app/invitations' : '#family-members'}><UserPlus class="size-6" /><span>邀请家人</span></a>
+	</section>
+
+	<!-- 当前家庭：切换 / 新建 / 改名 -->
+	<section class="fd-section-head" id="current-family">
+		<div>
+			<h3>当前家庭</h3>
+			<p>家人共享的菜、安排和买菜清单都在这里</p>
 		</div>
 	</section>
 
-	<section class="space-y-3">
-		<h2 class="text-xl font-semibold">家庭工具</h2>
-		<div class="grid grid-cols-3 gap-2">
-			<a href="/app/dishes" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><ChefHat class="size-5 text-primary" />常做菜</a>
-			<a href="/app/targets" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><Target class="size-5 text-primary" />家人偏好</a>
-			<a href={isOwner ? '/app/invitations' : '#family-members'} class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><UsersRound class="size-5 text-primary" />邀请家人</a>
-		</div>
-	</section>
-
-	<div id="current-family" class="pt-2"><p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">当前家庭</p><h2 class="text-xl font-semibold">{data.space.name}</h2><p class="text-sm text-muted-foreground">家人共享的菜、安排和买菜清单都在这里。</p></div>
-
-	<section class="space-y-3" data-testid="workspace-switcher">
+	<section class="fd-soft-card" style="padding:0;" data-testid="workspace-switcher">
 		{#if data.workspaces.length > 1}
-			<div class="flex items-center justify-between">
-				<div><h2 class="text-xl font-semibold">切换家庭</h2><p class="text-sm text-muted-foreground">切换后，饭单和菜品会跟着更新</p></div>
-				<ArrowRightLeft class="size-6 text-primary" />
-			</div>
-			<div class="app-panel divide-y divide-border/70 overflow-hidden">
+			<div style="display:grid;gap:0;">
 				{#each data.workspaces as workspace}
-					<article class="flex items-center gap-3 p-4 {workspace.isCurrent ? 'bg-secondary/35' : ''}" data-testid={`workspace-${workspace.id}`}>
-						<span class="flex size-11 shrink-0 items-center justify-center rounded-2xl {workspace.isCurrent ? 'bg-white text-primary shadow-sm' : 'bg-muted text-muted-foreground'}">
+					<article class="fd-setting-row" style="border-bottom:1px solid var(--fd-line-soft);" data-testid={`workspace-${workspace.id}`}>
+						<span class="fd-avatar-text" style="width:42px;height:42px;" data-accent={workspace.isCurrent ? 'green' : ''}>
 							{#if workspace.isCurrent}<CircleCheck class="size-5" />{:else}<UsersRound class="size-5" />{/if}
 						</span>
-						<div class="min-w-0 flex-1">
-							<p class="truncate font-semibold">{workspace.name}</p>
-							<p class="text-xs text-muted-foreground">{roleLabels[workspace.role]}</p>
+						<div class="meta min-w-0">
+							<strong>{workspace.name}</strong>
+							<span>{roleLabels[workspace.role]}</span>
 						</div>
 						{#if workspace.isCurrent}
-							<span class="app-chip bg-white text-primary">当前</span>
+							<span class="fd-state-pill green">当前</span>
 						{:else}
 							<form method="post" action="?/switchWorkspace" use:enhanceWithFeedback={{ pendingLabel: '切换中...' }}>
 								<input type="hidden" name="spaceId" value={workspace.id} />
-								<Button type="submit" variant="outline" size="sm" class="h-11 rounded-xl bg-white" data-pending-label="切换中..." aria-label={`切换到 ${workspace.name}`}>切换</Button>
+								<button type="submit" class="fd-ghost-btn" style="height:38px;font-size:13px;" data-pending-label="切换中..." aria-label={`切换到 ${workspace.name}`}>切换</button>
 							</form>
 						{/if}
 					</article>
@@ -152,129 +137,170 @@
 			</div>
 		{/if}
 
-		<details class="app-panel group overflow-hidden">
-			<summary class="flex min-h-12 cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
-				<span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><HousePlus class="size-5" /></span>
-				<div class="min-w-0 flex-1">
-					<p class="font-semibold">{data.workspaces.length > 1 ? '创建另一个家庭' : '需要另一个家庭？'}</p>
-					<p class="text-sm text-muted-foreground">不同家庭或场景的数据彼此独立</p>
-				</div>
-				<ChevronDown class="size-5 text-muted-foreground transition-transform group-open:rotate-180" />
-			</summary>
-			<form method="post" action="?/createWorkspace" use:enhanceWithFeedback={{ pendingLabel: '创建中...' }} class="space-y-3 border-t border-border/70 p-4">
-				<div class="space-y-2">
-					<Label for="new-workspace-name">新家庭名称</Label>
-					<Input id="new-workspace-name" name="workspaceName" value={workspaceNameValue} maxlength={80} placeholder="例如：爸妈家" required class="app-input h-11" />
-				</div>
-				<p class="text-xs leading-5 text-muted-foreground">创建后会自动切换，原家庭内容不会受到影响。</p>
-				<Button type="submit" class="h-11 w-full rounded-2xl" data-pending-label="创建中..."><Plus class="size-4" />创建并切换</Button>
-			</form>
-		</details>
-	</section>
-
-	<section class="app-panel p-5">
-		<div class="mb-4 flex items-start gap-3">
-			<span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary"><Pencil class="size-5" /></span>
-			<div><h2 class="text-xl font-semibold">家庭名称</h2><p class="text-sm leading-6 text-muted-foreground">这个名称会显示给所有家庭成员。</p></div>
-		</div>
 		{#if isOwner}
-			<form method="post" action="?/rename" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-3">
+			<form method="post" action="?/rename" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} style={`padding:16px;display:grid;gap:10px;${data.workspaces.length > 1 ? 'border-top:1px solid var(--fd-line-soft);' : ''}`}>
 				<div class="space-y-2">
-					<Label for="workspace-name">家庭名称</Label>
-					<Input id="workspace-name" name="name" value={spaceNameValue} maxlength={80} required class="app-input h-11" />
+					<Label for="workspace-name" style="font-size:12px;font-weight:700;">家庭名称</Label>
+					<Input id="workspace-name" name="name" value={spaceNameValue} maxlength={80} required class="fd-text-input" />
 				</div>
-				<Button type="submit" class="h-11 w-full rounded-2xl" data-pending-label="保存中...">保存名称</Button>
+				<button type="submit" class="fd-primary-btn block" data-pending-label="保存中..."><Pencil class="size-4" /> 保存名称</button>
 			</form>
 		{:else}
-			<div class="rounded-2xl bg-muted p-4 text-sm leading-6"><p class="font-medium">{data.space.name}</p><p class="text-muted-foreground">只有家庭所有者可以修改名称。</p></div>
+			<div style="padding:16px;font-size:13px;color:var(--fd-muted);">
+				<strong style="display:block;font-weight:800;color:#38332e;">{data.space.name}</strong>
+				<span>只有家庭所有者可以修改名称。</span>
+			</div>
 		{/if}
 	</section>
 
-	<section id="family-members" class="space-y-3">
-		<div class="flex items-center justify-between">
-			<div><h2 class="text-xl font-semibold">家庭成员</h2><p class="text-sm text-muted-foreground">当前有 {data.members.length} 位成员</p></div>
-			<UsersRound class="size-6 text-primary" />
+	<details class="fd-soft-card" style="margin-top:12px;padding:0;">
+		<summary style="display:flex;min-height:48px;cursor:pointer;list-style:none;align-items:center;gap:11px;padding:12px 16px;font-size:14px;font-weight:700;color:#4f4943;">
+			<span class="fd-avatar-text" style="width:42px;height:42px;"><HousePlus class="size-5" /></span>
+			<span class="min-w-0 flex-1">
+				<strong style="display:block;font-size:15px;font-weight:850;">{data.workspaces.length > 1 ? '创建另一个家庭' : '需要另一个家庭？'}</strong>
+				<span style="display:block;font-size:12px;color:var(--fd-muted);">不同家庭的数据彼此独立</span>
+			</span>
+			<ChevronDown class="size-5" style="color:var(--fd-muted);" />
+		</summary>
+		<form method="post" action="?/createWorkspace" use:enhanceWithFeedback={{ pendingLabel: '创建中...' }} style="border-top:1px solid var(--fd-line-soft);padding:16px;display:grid;gap:10px;">
+			<div class="space-y-2">
+				<Label for="new-workspace-name" style="font-size:12px;font-weight:700;">新家庭名称</Label>
+				<Input id="new-workspace-name" name="workspaceName" value={workspaceNameValue} maxlength={80} placeholder="例如：爸妈家" required class="fd-text-input" />
+			</div>
+			<button type="submit" class="fd-primary-btn block" data-pending-label="创建中..."><Plus class="size-4" /> 创建并切换</button>
+		</form>
+	</details>
+
+	<!-- 家庭成员 -->
+	<section class="fd-section-head" id="family-members">
+		<div>
+			<h3>家庭成员</h3>
+			<p>谁在一起维护饭单 · {data.members.length} 位</p>
 		</div>
-		<div class="app-panel divide-y divide-border/70 overflow-hidden">
-			{#each data.members as member}
-				<article class="flex items-center gap-3 p-4" data-testid={`member-${member.id}`}>
-					<span class="flex size-11 shrink-0 items-center justify-center rounded-2xl {member.role === 'owner' ? 'bg-secondary text-primary' : 'bg-muted text-muted-foreground'}">
-						{#if member.role === 'owner'}<Crown class="size-5" />{:else}<UserRound class="size-5" />{/if}
-					</span>
-					<div class="min-w-0 flex-1">
-						<div class="flex min-w-0 flex-wrap items-center gap-2">
-							<p class="truncate font-semibold">{member.name}</p>
-							{#if member.userId === data.user.id}<span class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">你</span>{/if}
-						</div>
-						<p class="truncate text-xs text-muted-foreground">{member.email}</p>
-						<p class="mt-1 text-xs text-muted-foreground">{roleLabels[member.role]} · {formatDate(member.joinedAt)} 加入</p>
-					</div>
-					{#if isOwner && member.role === 'member'}
+		{#if isOwner}<a href="/app/invitations" class="fd-ghost-btn"><UserPlus class="size-4" /> 邀请</a>{/if}
+	</section>
+	<section class="fd-card-list">
+		{#each data.members as member (member.id)}
+			<article class="fd-member-row" data-testid={`member-${member.id}`}>
+				<img src={avatarImage} alt={member.name} />
+				<span class="min-w-0">
+					<strong>{member.name}{#if member.userId === data.user.id}（你）{/if}</strong>
+					<span class="sub">{member.email} · {roleLabels[member.role]} · {formatDate(member.joinedAt)} 加入</span>
+				</span>
+				{#if member.role === 'owner'}
+					<span class="fd-state-pill green"><Crown class="size-3.5" /> 所有者</span>
+				{:else}
+					<span class="fd-state-pill">成员</span>
+					{#if isOwner}
 						<form method="post" action="?/removeMember" use:enhanceWithFeedback={{ confirmMessage: `确定移除 ${member.name} 吗？对方将立即失去这个家庭的访问权限。`, pendingLabel: '移除中...' }}>
 							<input type="hidden" name="membershipId" value={member.id} />
-							<Button type="submit" variant="ghost" size="sm" class="h-11 text-destructive" data-pending-label="移除中..." aria-label={`移除成员 ${member.name}`}>
-								<UserMinus class="size-4" />移除
-							</Button>
+							<button type="submit" class="fd-icon-del" style="width:34px;height:34px;font-size:16px;" aria-label={`移除成员 ${member.name}`} data-pending-label="移除中...">
+								<UserMinus class="size-4" />
+							</button>
 						</form>
 					{/if}
-				</article>
-			{/each}
-		</div>
+				{/if}
+			</article>
+		{/each}
 	</section>
 
+	<!-- 邀请家人 -->
 	{#if isOwner}
-		<section class="space-y-3">
-			<div class="flex items-center justify-between">
-				<div><h2 class="text-xl font-semibold">邀请家人</h2><p class="text-sm text-muted-foreground">链接默认 7 天有效</p></div>
-				<UserPlus class="size-6 text-primary" />
-			</div>
-			<div class="app-panel space-y-4 p-4">
-				<form method="post" action="?/createInvitation" use:enhanceWithFeedback={{ pendingLabel: '创建中...' }}>
-					<Button type="submit" class="h-12 w-full rounded-2xl text-base" data-pending-label="创建中..."><Plus class="size-4" />创建邀请链接</Button>
+		<section class="fd-hero-card" id="invite" aria-label="邀请家人" style="margin-top:16px;">
+			<div class="fd-hero-copy min-w-0">
+				<h3>邀请家人一起用</h3>
+				<p>发一个链接，对方加入后就能一起维护常做菜和买菜清单。</p>
+				<div class="mini">
+					<span class="fd-pill green">7 天有效</span>
+					<span class="fd-pill">可随时撤销</span>
+					{#if pendingInvitations.length > 0}<span class="fd-pill orange">{pendingInvitations.length} 待加入</span>{/if}
+				</div>
+				<form method="post" action="?/createInvitation" use:enhanceWithFeedback={{ pendingLabel: '创建中...' }} style="margin-top:10px;">
+					<button type="submit" class="fd-primary-btn" data-pending-label="创建中..."><Plus class="size-4" /> 创建邀请链接</button>
 				</form>
-				{#if pendingInvitations.length === 0}
-					<div class="rounded-2xl border border-dashed p-5 text-center text-sm leading-6 text-muted-foreground">没有待处理邀请。需要时创建一条发给家人。</div>
-				{:else}
-					<div class="space-y-3">
-						{#each pendingInvitations as invitation}
-							<article class="rounded-2xl bg-muted/70 p-3" data-testid={`invitation-${invitation.id}`}>
-								<div class="mb-3 flex items-center gap-3">
-									<span class="flex size-9 items-center justify-center rounded-xl bg-white text-primary"><Link2 class="size-4" /></span>
-									<div class="min-w-0 flex-1"><p class="font-medium">等待加入</p><p class="truncate text-xs text-muted-foreground">{formatDate(invitation.expiresAt)} 到期</p></div>
-								</div>
-								<div class="grid grid-cols-[1fr_auto] gap-2">
-									<Button type="button" onclick={() => copyInvitation(invitation.token, invitation.url)} class="h-11 rounded-xl">
-										{#if copiedToken === invitation.token}<Check class="size-4" />已复制{:else}<Copy class="size-4" />复制链接{/if}
-									</Button>
-									<form method="post" action="?/revokeInvitation" use:enhanceWithFeedback={{ confirmMessage: '撤销后，这个邀请链接将立即失效。确定撤销吗？', pendingLabel: '撤销中...' }}>
-										<input type="hidden" name="invitationId" value={invitation.id} />
-										<Button type="submit" variant="outline" class="h-11 rounded-xl bg-white" data-pending-label="撤销中..."><XCircle class="size-4" />撤销</Button>
-									</form>
-								</div>
-							</article>
-						{/each}
-					</div>
-				{/if}
-				<a href="/app/invitations" class="flex min-h-11 items-center justify-center text-center text-sm font-medium text-muted-foreground">查看全部邀请记录</a>
 			</div>
+			<div class="fd-hero-media"><img src={avatarImage} alt="家庭晚餐" /></div>
 		</section>
+
+		{#if pendingInvitations.length > 0}
+			<section class="fd-card-list" style="margin-top:12px;">
+				{#each pendingInvitations as invitation (invitation.id)}
+					<article class="fd-soft-card" data-testid={`invitation-${invitation.id}`}>
+						<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+							<span class="fd-avatar-text" style="width:36px;height:36px;" data-accent="green"><Link2 class="size-4" /></span>
+							<div class="min-w-0 flex-1">
+								<strong style="display:block;font-size:14px;font-weight:850;">等待加入</strong>
+								<span style="display:block;font-size:12px;color:var(--fd-muted);">{formatDate(invitation.expiresAt)} 到期</span>
+							</div>
+						</div>
+						<div style="display:grid;grid-template-columns:1fr auto;gap:8px;">
+							<button type="button" class="fd-primary-btn" onclick={() => copyInvitation(invitation.token, invitation.url)}>
+								{#if copiedToken === invitation.token}<Check class="size-4" /> 已复制{:else}<Copy class="size-4" /> 复制链接{/if}
+							</button>
+							<form method="post" action="?/revokeInvitation" use:enhanceWithFeedback={{ confirmMessage: '撤销后，这个邀请链接将立即失效。确定撤销吗？', pendingLabel: '撤销中...' }}>
+								<input type="hidden" name="invitationId" value={invitation.id} />
+								<button type="submit" class="fd-ghost-btn" style="color:var(--fd-coral);" data-pending-label="撤销中..."><XCircle class="size-4" /> 撤销</button>
+							</form>
+						</div>
+					</article>
+				{/each}
+			</section>
+		{/if}
+		<a href="/app/invitations" class="fd-ghost-btn block" style="margin-top:10px;">查看全部邀请记录 <ArrowRight class="size-4" /></a>
 	{/if}
 
-	<section class="app-panel space-y-4 p-5">
-		<div class="flex items-start gap-3">
-			<span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><ShieldCheck class="size-5" /></span>
-			<div><h2 class="text-lg font-semibold">家庭权限</h2><p class="text-sm leading-6 text-muted-foreground">{isOwner ? '所有者负责成员、邀请和危险操作。转让所有权功能上线前，所有者不能退出。' : '成员可以共同维护菜品、饭单和购物清单，也可以随时退出当前家庭。'}</p></div>
+	<!-- 账号 -->
+	<section class="fd-section-head">
+		<div>
+			<h3>账号</h3>
+			<p>登录、家庭权限和数据</p>
 		</div>
-		{#if !isOwner}
-			<form method="post" action="?/leave" use:enhanceWithFeedback={{ confirmMessage: `确定退出「${data.space.name}」吗？退出后需要新的邀请才能再次加入。`, pendingLabel: '退出中...' }}>
-				<Button type="submit" variant="outline" class="h-11 w-full rounded-2xl border-destructive/30 bg-white text-destructive" data-pending-label="退出中..."><DoorOpen class="size-4" />退出这个家庭</Button>
-			</form>
+	</section>
+	<section class="fd-soft-card" style="padding:4px 16px;">
+		<div class="fd-setting-row">
+			<div class="meta"><strong>我的账号</strong><span>{data.user.email}</span></div>
+			<span class="end" style="color:var(--fd-muted);font-size:13px;">{data.user.name}</span>
+		</div>
+		<div class="fd-setting-row">
+			<div class="meta"><strong>当前家庭</strong><span>{data.space.name}</span></div>
+			<span class="fd-state-pill green">{roleLabels[data.space.role]}</span>
+		</div>
+		{#if data.workspaces.length > 1}
+			<div class="fd-setting-row">
+				<div class="meta"><strong>切换家庭</strong><span>有 {data.workspaces.length} 个家庭</span></div>
+				<a href="#current-family" class="end" style="color:var(--fd-green-deep);font-size:13px;font-weight:700;">去切换</a>
+			</div>
 		{/if}
 	</section>
 
-	<form method="post" action="/logout">
-		<Button type="submit" variant="outline" class="h-11 w-full rounded-2xl bg-white text-muted-foreground"><LogOut class="size-4" />退出登录</Button>
-	</form>
+	<!-- 家庭权限 -->
+	<section class="fd-section-head">
+		<div>
+			<h3>家庭权限</h3>
+			<p>{isOwner ? '所有者负责成员、邀请和危险操作' : '成员可共同维护，也可随时退出'}</p>
+		</div>
+	</section>
+	<section class="fd-soft-card" style="display:flex;align-items:flex-start;gap:10px;">
+		<ShieldCheck class="size-5 shrink-0" style="color:var(--fd-green);margin-top:2px;" />
+		<p style="margin:0;font-size:13px;color:#595550;line-height:1.45;">
+			{isOwner ? '转让所有权功能上线前，所有者不能退出。需要时可以创建另一个家庭。' : '你可以共同维护菜品、饭单和购物清单，也可以随时退出当前家庭。'}
+		</p>
+	</section>
+	{#if !isOwner}
+		<form method="post" action="?/leave" use:enhanceWithFeedback={{ confirmMessage: `确定退出「${data.space.name}」吗？退出后需要新的邀请才能再次加入。`, pendingLabel: '退出中...' }} style="margin-top:10px;">
+			<button type="submit" class="fd-danger-btn block" data-pending-label="退出中..."><DoorOpen class="size-4" /> 退出这个家庭</button>
+		</form>
+	{/if}
+
+	<!-- 退出登录 -->
+	<section class="fd-soft-card" style="padding:4px 16px;margin-top:12px;">
+		<form method="post" action="/logout" style="display:contents;">
+			<button type="submit" class="fd-setting-row" style="width:100%;border:0;background:transparent;cursor:pointer;font:inherit;text-align:left;">
+				<div class="meta"><strong style="color:var(--fd-coral);">退出登录</strong><span>不影响其他成员</span></div>
+				<LogOut class="size-5" style="color:var(--fd-coral);" />
+			</button>
+		</form>
+	</section>
 </main>
 
 <MobileBottomNav />

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>午餐清单 / 饭单</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="购物清单详情">
+				<div class="screen">
+					<header class="topbar with-back">
+						<div class="brand with-back">
+							<a class="back-btn" href="./shopping.html" aria-label="返回"><i class="ri-arrow-left-s-line"></i></a>
+							<div>
+								<h1>午餐清单</h1>
+								<p>来自 6月29日 午餐 · 8 项</p>
+							</div>
+						</div>
+						<button class="icon-button" type="button" aria-label="更多"><i class="ri-more-2-fill"></i></button>
+					</header>
+
+					<!-- 进度条 -->
+					<section class="detail-card" style="margin-top:16px;">
+						<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+							<strong style="font-size:16px;font-weight:850;">买菜进度</strong>
+							<span style="color:var(--muted);font-size:13px;font-weight:700;">2 / 8</span>
+						</div>
+						<div style="height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:10px;"><div style="width:25%;height:100%;background:var(--green);"></div></div>
+						<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;">
+							<span class="pill orange">待买 6</span>
+							<span class="pill green">已买 2</span>
+							<span class="pill"><i class="ri-bowl-line"></i> 来自午餐</span>
+						</div>
+					</section>
+
+					<!-- 按动线分组 -->
+					<section class="section-head">
+						<div>
+							<h3>肉类 · 蔬菜摊</h3>
+							<p>先买生鲜</p>
+						</div>
+					</section>
+					<section class="card-list">
+						<article class="check-card">
+							<button class="check" type="button" aria-label="勾选牛腩"><i class="ri-check-line"></i></button>
+							<span class="check-copy"><strong>牛腩</strong><span>番茄牛腩 · 主料</span></span>
+							<span class="quantity">500g</span>
+						</article>
+						<article class="check-card">
+							<button class="check" type="button" aria-label="勾选番茄"><i class="ri-check-line"></i></button>
+							<span class="check-copy"><strong>番茄</strong><span>番茄牛腩 · 主料</span></span>
+							<span class="quantity">3 个</span>
+						</article>
+						<article class="check-card">
+							<button class="check" type="button" aria-label="勾选西兰花"><i class="ri-check-line"></i></button>
+							<span class="check-copy"><strong>西兰花</strong><span>清炒西兰花 · 配菜</span></span>
+							<span class="quantity">1 颗</span>
+						</article>
+						<article class="check-card">
+							<button class="check" type="button" aria-label="勾选土豆"><i class="ri-check-line"></i></button>
+							<span class="check-copy"><strong>土豆</strong><span>番茄牛腩 · 配菜</span></span>
+							<span class="quantity">2 个</span>
+						</article>
+					</section>
+
+					<section class="section-head">
+						<div>
+							<h3>主食 · 米面</h3>
+							<p>家里有的跳过</p>
+						</div>
+					</section>
+					<section class="card-list">
+						<article class="check-card done">
+							<button class="check" type="button" aria-label="取消勾选大米"><i class="ri-check-line"></i></button>
+							<span class="check-copy"><strong>大米</strong><span>家里已有</span></span>
+							<span class="quantity">1 杯</span>
+						</article>
+					</section>
+
+					<section class="section-head">
+						<div>
+							<h3>调味 · 干货</h3>
+							<p>最后拿</p>
+						</div>
+					</section>
+					<section class="card-list">
+						<article class="check-card">
+							<button class="check" type="button" aria-label="勾选姜葱"><i class="ri-check-line"></i></button>
+							<span class="check-copy"><strong>姜葱</strong><span>家常必备</span></span>
+							<span class="quantity">少许</span>
+						</article>
+						<article class="check-card">
+							<button class="check" type="button" aria-label="勾选生抽"><i class="ri-check-line"></i></button>
+							<span class="check-copy"><strong>生抽</strong><span>家里快没了</span></span>
+							<span class="quantity">1 瓶</span>
+						</article>
+						<article class="check-card done">
+							<button class="check" type="button" aria-label="取消勾选冰糖"><i class="ri-check-line"></i></button>
+							<span class="check-copy"><strong>冰糖</strong><span>已买</span></span>
+							<span class="quantity">1 包</span>
+						</article>
+					</section>
+
+					<!-- 手动加 -->
+					<button class="ghost-btn block" type="button" style="margin-top:14px;"><i class="ri-add-line"></i> 临时加一项</button>
+				</div>
+
+				<!-- 全买完 → 完成 -->
+				<div class="sticky-action">
+					<button class="primary-btn block lg" type="button"><i class="ri-check-double-line"></i> 全部买完了，标记完成</button>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab" href="./today.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab active" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+		<script>
+			document.querySelectorAll(".check").forEach((b) =>
+				b.addEventListener("click", () => b.closest(".check-card").classList.toggle("done"))
+			);
+		</script>
+	</body>
+</html>
