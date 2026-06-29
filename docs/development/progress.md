@@ -32,6 +32,7 @@ Notes for next threads:
 - Pixel-level visual QA at 390 x 844 was not performed this pass (no browser in the environment); functional and data-flow correctness was confirmed end-to-end. A signed-in visual sweep on a real mobile viewport is still worth doing.
 - Non-`/app` surfaces (`/`, `/login`, `/register`, `/share/[token]`, `/invite/[token]`) still use their current styles; migrate them only when explicitly requested.
 - The shared `DishForm` / `TargetForm` internals still use `.app-input`. They are acceptable as form engines wrapped in `.fd-form-card` chrome; revisit if a fully unified control vocabulary is wanted.
+- TODO (2026-06-29, deferred): `app-redesign/assets/reference` is a symlink to a path outside the repository (`../../prototypes/fandan-app-design/assets/reference`), so prototype images are broken in a fresh clone. Fix the path so the reference directory is self-contained. Design-reference only; does not affect the runtime app. See `next-meal-home-design.md` "Static prototypes" for options.
 
 ## 2026-06-29 - Client-Style Next Meal App Redesign
 
