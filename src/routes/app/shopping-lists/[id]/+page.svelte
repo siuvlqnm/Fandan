@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import basketImage from '$lib/assets/meal-ui/basket.jpg';
 	import { INGREDIENT_CATEGORY_OPTIONS, INGREDIENT_UNIT_OPTIONS } from '$lib/domain/food-options';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, CheckCircle2, Circle, ClipboardList, Plus, RefreshCw, Save, ShoppingBag, Trash2 } from 'lucide-svelte';
@@ -60,31 +61,36 @@
 </svelte:head>
 
 <main class="app-page app-bottom-safe">
-	<section class="space-y-4">
-		<Button href={`/app/meal-plans/${data.mealPlan.id}`} variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
-			<ArrowLeft class="size-4" />
-			返回饭单
-		</Button>
-		<div class="flex items-start justify-between gap-4">
-			<div class="min-w-0 space-y-2">
-				<p class="app-chip bg-secondary text-primary">购物清单</p>
-				<h1 class="break-words text-3xl font-semibold leading-tight">{data.shoppingList.title}</h1>
-				<p class="text-sm leading-6 text-muted-foreground">来自 {data.mealPlan.title} · 待买 {data.summary.pending} 项</p>
+	<section class="app-scene-hero">
+		<div class="app-scene-hero-media">
+			<img src={basketImage} alt="" />
+		</div>
+		<div class="app-scene-body -mt-14">
+			<Button href={`/app/meal-plans/${data.mealPlan.id}`} variant="ghost" size="sm" class="mb-1 h-11 justify-start rounded-2xl bg-white/85 px-3 text-muted-foreground">
+				<ArrowLeft class="size-4" />
+				返回这顿饭
+			</Button>
+			<div class="flex items-start justify-between gap-4">
+				<div class="min-w-0 space-y-2">
+					<p class="app-chip bg-white text-primary shadow-sm">买菜清单</p>
+					<h1 class="break-words text-3xl font-semibold leading-tight">{data.shoppingList.title}</h1>
+					<p class="text-sm leading-6 text-muted-foreground">来自 {data.mealPlan.title} · 待买 {data.summary.pending} 项</p>
+				</div>
+				<form method="post" action="?/regenerate" use:enhanceWithFeedback>
+					<input type="hidden" name="expectedMealPlanUpdatedAt" value={data.mealPlan.updatedAt} />
+					<input type="hidden" name="expectedShoppingListUpdatedAt" value={data.shoppingList.updatedAt} />
+					<Button
+						type="submit"
+						variant="outline"
+						class="size-12 shrink-0 rounded-2xl bg-white"
+						aria-label="重新整理"
+						data-confirm="重新整理会替换当前购物项，确认继续？"
+						data-pending-label="整理中..."
+					>
+						<RefreshCw class="size-5" />
+					</Button>
+				</form>
 			</div>
-			<form method="post" action="?/regenerate" use:enhanceWithFeedback>
-				<input type="hidden" name="expectedMealPlanUpdatedAt" value={data.mealPlan.updatedAt} />
-				<input type="hidden" name="expectedShoppingListUpdatedAt" value={data.shoppingList.updatedAt} />
-				<Button
-					type="submit"
-					variant="outline"
-					class="size-12 shrink-0 rounded-2xl bg-white"
-					aria-label="重新生成"
-					data-confirm="重新生成会替换当前购物项，确认继续？"
-					data-pending-label="重新生成中..."
-				>
-					<RefreshCw class="size-5" />
-				</Button>
-			</form>
 		</div>
 	</section>
 
@@ -128,7 +134,7 @@
 
 	<section class="space-y-4" data-testid="shopping-list-items">
 		<p class="rounded-2xl border border-border/80 bg-secondary/40 p-4 text-sm leading-6 text-muted-foreground">
-			数量按每道菜的“饭单份数 ÷ 食材基准份数”计算；文本数量、缺失数量和单位冲突不会猜测。每项下方会显示计算依据，可展开编辑确认。
+			数量按每道菜的人数自动换算；不确定的数量会保留原样，可以在每一项里展开调整。
 		</p>
 		<div class="grid grid-cols-3 gap-2 rounded-2xl bg-white p-1 shadow-sm" aria-label="购物项筛选">
 			{#each filterOptions as option}
@@ -276,7 +282,7 @@
 	<section class="app-panel p-5">
 		<div class="mb-4 flex items-center gap-2">
 			<Plus class="size-5 text-primary" />
-			<h2 class="text-xl font-semibold">添加购物项</h2>
+			<h2 class="text-xl font-semibold">临时加一项</h2>
 		</div>
 		<form method="post" action="?/addItem" use:enhanceWithFeedback={{ pendingLabel: '添加中...', resetOnSuccess: true }} class="space-y-4">
 			<div class="space-y-2">

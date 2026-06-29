@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import dinnerImage from '$lib/assets/meal-ui/dinner.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import {
 		Archive,
@@ -111,16 +112,18 @@
 
 <main class="app-page app-bottom-safe">
 	<section class="space-y-4">
-		<Button href="/app/meal-plans" variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
-			<ArrowLeft class="size-4" />
-			返回饭单列表
-		</Button>
-
-		<section class="app-panel overflow-hidden">
-			<div class="space-y-4 bg-[linear-gradient(135deg,oklch(1_0_0),oklch(0.975_0.025_151))] p-5">
+		<section class="app-scene-hero">
+			<div class="app-scene-hero-media min-h-40">
+				<img src={dinnerImage} alt="" />
+			</div>
+			<div class="app-scene-body -mt-16">
+				<Button href="/app/meal-plans" variant="ghost" size="sm" class="mb-1 h-11 justify-start rounded-2xl bg-white/85 px-3 text-muted-foreground">
+					<ArrowLeft class="size-4" />
+					返回安排
+				</Button>
 				<div class="flex items-start justify-between gap-3">
 					<div class="min-w-0 space-y-2">
-						<p class="app-chip {flowChipClass(data.mealPlan.flow.tone)}">
+						<p class="app-chip shadow-sm {flowChipClass(data.mealPlan.flow.tone)}">
 							{data.mealPlan.flow.label}
 						</p>
 						<h1 class="break-words text-3xl font-semibold leading-tight">{data.mealPlan.title}</h1>
@@ -190,7 +193,7 @@
 
 	{#if isArchived}
 		<p class="rounded-2xl border bg-muted/40 p-3 text-sm text-muted-foreground">
-			这份饭单已归档，当前详情页保持只读。
+			这顿饭已经收起，当前页面保持只读。
 		</p>
 	{/if}
 
@@ -215,7 +218,7 @@
 			<div class="flex items-center justify-between">
 				<div>
 					<h2 class="text-xl font-semibold">菜单安排</h2>
-					<p class="text-sm text-muted-foreground">先看这顿饭吃什么，排序和删除也在这里。</p>
+					<p class="text-sm text-muted-foreground">先看这顿吃什么，需要时再调整顺序或换菜。</p>
 				</div>
 				<Button onclick={() => (activePanel = 'edit')} variant="outline" size="sm" class="h-11 rounded-xl bg-white">
 					<Plus class="size-4" />
@@ -426,14 +429,14 @@
 
 			<details class="app-panel overflow-hidden">
 				<summary class="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
-					<span>高级状态</span>
+						<span>收尾动作</span>
 					<span>{data.mealPlan.statusLabel}</span>
 				</summary>
 				<div class="border-t border-border/70 p-4">
 					<div class="mb-4 flex items-center justify-between gap-3">
 						<div>
 							<h2 class="text-xl font-semibold">这顿进展</h2>
-							<p class="text-sm text-muted-foreground">通常不用手动改；需要结束反馈或归档时再处理。</p>
+							<p class="text-sm text-muted-foreground">通常不用手动改；需要结束反馈或收起记录时再处理。</p>
 						</div>
 						{#if data.feedbackSummary.latestConfirmation}
 							<span class="app-chip bg-secondary text-primary">
@@ -453,7 +456,7 @@
 									size="sm"
 									class="rounded-xl bg-white"
 									disabled={isArchived || data.mealPlan.status === option.value}
-									data-confirm={option.value === 'archived' ? '归档后详情页会保持只读，确认归档这份饭单？' : undefined}
+									data-confirm={option.value === 'archived' ? '收起后页面会保持只读，确认收起这顿饭？' : undefined}
 									data-pending-label="更新中..."
 								>
 									{#if option.value === 'archived'}
@@ -480,7 +483,7 @@
 
 			{#if data.feedbackSummary.total === 0}
 				<div class="app-panel p-5 text-sm leading-6 text-muted-foreground">
-					暂无访客反馈。创建分享链接并发给家人或客户后，这里会聚合确认状态、忌口和每道菜的意见。
+					暂无反馈。创建分享链接并发给家人后，这里会聚合确认、忌口和每道菜的意见。
 				</div>
 			{:else}
 				{#if data.feedbackSummary.dietaryNotes.length > 0 || data.feedbackSummary.globalNotes.length > 0}
@@ -573,16 +576,16 @@
 			<div class="app-soft-panel space-y-3 p-5 text-sm">
 				<div class="flex items-center gap-2">
 					<UsersRound class="size-5 text-primary" />
-					<h2 class="text-xl font-semibold">用餐偏好</h2>
+					<h2 class="text-xl font-semibold">这顿偏好</h2>
 				</div>
 					{#if data.target}
 						<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">人数</span>{data.target.peopleCount} 人</p>
 						<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">口味</span>{data.target.tasteNotes || '未记录'}</p>
 						<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">忌口</span>{data.target.dietaryRestrictions || '未记录'}</p>
 						<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">预算备注</span>{data.target.budgetNotes || '未记录'}</p>
-					<Button href={`/app/targets/${data.target.id}`} variant="outline" class="h-11 rounded-2xl bg-white">打开用餐档案</Button>
+					<Button href={`/app/targets/${data.target.id}`} variant="outline" class="h-11 rounded-2xl bg-white">打开偏好</Button>
 				{:else}
-					<p class="rounded-2xl bg-white p-3 text-muted-foreground">默认使用当前家庭。需要客户、聚餐或特殊偏好时，再补充用餐档案。</p>
+					<p class="rounded-2xl bg-white p-3 text-muted-foreground">默认使用当前家庭。需要聚餐或特殊口味时，再补充偏好。</p>
 				{/if}
 			</div>
 		</section>
@@ -590,12 +593,12 @@
 		<section class="space-y-4">
 			<details class="app-panel overflow-hidden" open>
 				<summary class="cursor-pointer border-b border-border/70 bg-secondary/40 px-5 py-4 text-lg font-semibold">
-					基础信息
+					这顿信息
 				</summary>
 				<form method="post" action="?/updateMeta" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-4 p-5">
 					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 					<div class="space-y-2">
-						<Label for="meal-plan-title">饭单标题</Label>
+						<Label for="meal-plan-title">名称</Label>
 						<Input id="meal-plan-title" name="title" value={data.mealPlan.title} placeholder="例如：周三晚餐" required disabled={isArchived} class="app-input" />
 						{#if form?.action === 'updateMeta' && errors.title?.[0]}
 							<p class="text-sm text-destructive">{errors.title[0]}</p>
@@ -604,7 +607,7 @@
 
 					<div class="grid gap-3">
 						<div class="space-y-2">
-							<Label for="meal-plan-type">饭单类型</Label>
+							<Label for="meal-plan-type">类型</Label>
 							<select id="meal-plan-type" name="type" class={selectClass} disabled={isArchived}>
 								{#each data.typeOptions as option}
 									<option value={option.value} selected={data.mealPlan.type === option.value}>{option.label}</option>
@@ -644,7 +647,7 @@
 
 					<Button type="submit" class="h-12 w-full rounded-2xl" disabled={isArchived} data-pending-label="保存中...">
 						<CheckCircle2 class="size-4" />
-						保存基础信息
+						保存这顿饭
 					</Button>
 				</form>
 			</details>

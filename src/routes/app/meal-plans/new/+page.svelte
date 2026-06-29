@@ -2,6 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import dinnerImage from '$lib/assets/meal-ui/dinner.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, CalendarDays, Check, ChevronDown, Sparkles, Utensils } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
@@ -28,16 +29,21 @@
 <svelte:head><title>安排一顿饭 / 饭单</title></svelte:head>
 
 <main class="app-page app-bottom-safe max-w-3xl">
-	<section class="space-y-4">
-		<Button href="/app" variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground"><ArrowLeft class="size-4" />返回</Button>
-		<div class="space-y-2">
-			<p class="app-chip bg-secondary text-primary"><Utensils class="size-3.5" />今晚吃什么</p>
-			<h1 class="text-3xl font-semibold leading-tight">安排一顿饭</h1>
-			<p class="text-sm leading-6 text-muted-foreground">继续补菜、人数和细节。日期和餐别快捷入口在首页。</p>
+	<section class="app-scene-hero">
+		<div class="app-scene-hero-media">
+			<img src={dinnerImage} alt="" />
+		</div>
+		<div class="app-scene-body -mt-14">
+			<Button href="/app" variant="ghost" size="sm" class="mb-2 h-11 justify-start rounded-2xl bg-white/85 px-3 text-muted-foreground"><ArrowLeft class="size-4" />返回今天</Button>
+			<div class="space-y-2">
+				<p class="app-chip bg-white text-primary shadow-sm"><Utensils class="size-3.5" />今晚吃什么</p>
+				<h1 class="text-3xl font-semibold leading-tight">安排一顿饭</h1>
+				<p class="text-sm leading-6 text-muted-foreground">先把想吃的菜和人数定下来，细节可以之后慢慢补。</p>
+			</div>
 		</div>
 	</section>
 
-	<section class="app-panel space-y-4 border-primary/15 bg-secondary/35 p-5">
+	<section class="app-soft-panel space-y-4 p-5">
 		<div class="flex items-start gap-3">
 			<span class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white text-primary shadow-sm"><Sparkles class="size-5" /></span>
 			<div class="space-y-1">
@@ -146,7 +152,7 @@
 		</section>
 
 		<details class="app-panel overflow-hidden" open={Boolean(errors.dishNamesText?.[0])}>
-			<summary class="flex min-h-12 cursor-pointer items-center justify-between px-5 py-3 font-medium">更多设置 <ChevronDown class="size-4" /></summary>
+			<summary class="flex min-h-12 cursor-pointer items-center justify-between px-5 py-3 font-medium">补充细节 <ChevronDown class="size-4" /></summary>
 			<div class="space-y-4 border-t border-border/70 p-5">
 				<div class="space-y-2">
 					<Label for="dish-names">这顿想吃什么？</Label>
@@ -158,7 +164,7 @@
 				<div class="space-y-2"><Label for="meal-slot">时间</Label><Input id="meal-slot" name="mealSlot" value={values.mealSlot ?? '晚餐'} class={controlClass} /></div>
 				<div class="space-y-2"><Label for="title">名称（可选）</Label><Input id="title" name="title" value={values.title ?? ''} placeholder="例如：周末家庭晚餐" class={controlClass} /></div>
 				{#if targets.length > 0}
-					<div class="space-y-2"><Label for="target">为谁安排（可选）</Label><select id="target" name="targetId" class={controlClass}><option value="">当前家庭</option>{#each targets as target}<option value={target.id} selected={values.targetId === target.id}>{target.name}</option>{/each}</select></div>
+				<div class="space-y-2"><Label for="target">套用哪份偏好（可选）</Label><select id="target" name="targetId" class={controlClass}><option value="">当前家庭</option>{#each targets as target}<option value={target.id} selected={values.targetId === target.id}>{target.name}</option>{/each}</select></div>
 				{/if}
 				<div class="space-y-2"><Label for="notes">备注（可选）</Label><textarea id="notes" name="notes" class="app-input min-h-24 py-3" placeholder="例如：少油、不吃辣">{values.notes ?? ''}</textarea></div>
 			</div>

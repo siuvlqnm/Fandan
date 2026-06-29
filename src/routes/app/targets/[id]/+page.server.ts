@@ -20,7 +20,7 @@ const readTargetForm = async (request: Request) => {
 
 const getTargetId = (id: string | undefined) => {
 	if (!id) {
-		throw kitError(400, '缺少对象 ID');
+		throw kitError(400, '缺少偏好 ID');
 	}
 
 	return id;
@@ -74,7 +74,7 @@ export const actions: Actions = {
 
 			return {
 				values: target,
-				message: '已保存对象资料'
+				message: '已保存偏好'
 			};
 		} catch (cause) {
 			toPageError(cause);

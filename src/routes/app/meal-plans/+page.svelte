@@ -2,6 +2,7 @@
 	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
+	import heroImage from '$lib/assets/meal-ui/hero.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowRight, CalendarDays, ChevronDown, ClipboardCopy, ClipboardList, Plus, Search, Trash2 } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
@@ -31,30 +32,37 @@
 </svelte:head>
 
 <main class="app-page app-bottom-safe">
-	<section class="flex items-start justify-between gap-4">
-		<div class="space-y-2">
-			<p class="app-chip bg-secondary text-primary">吃饭安排</p>
-			<h1 class="text-3xl font-semibold leading-tight">每一顿，都在这里</h1>
-			<p class="text-sm leading-6 text-muted-foreground">先处理最近的安排，需要时再展开筛选和管理操作。</p>
+	<section class="app-scene-hero">
+		<div class="app-scene-hero-media min-h-40">
+			<img src={heroImage} alt="" />
 		</div>
-		{#if data.total > 0}
-			<Button href="/app/meal-plans/new" class="size-12 shrink-0 rounded-2xl" aria-label="安排一顿饭">
-				<Plus class="size-5" />
-			</Button>
-		{/if}
+		<div class="app-scene-body -mt-16">
+			<div class="flex items-start justify-between gap-4">
+				<div class="min-w-0 space-y-2">
+					<p class="app-chip bg-white text-primary shadow-sm">吃饭安排</p>
+					<h1 class="break-words text-3xl font-semibold leading-tight">每一顿，都在这里</h1>
+					<p class="text-sm leading-6 text-muted-foreground">先处理最近的一顿，需要时再看筛选、复制或收起记录。</p>
+				</div>
+				{#if data.total > 0}
+					<Button href="/app/meal-plans/new" class="size-12 shrink-0 rounded-2xl" aria-label="安排一顿饭">
+						<Plus class="size-5" />
+					</Button>
+				{/if}
+			</div>
+		</div>
 	</section>
 
 	{#if data.total > 5}
 	<details class="app-panel group overflow-hidden" open={data.filters.status !== 'all' || data.filters.type !== 'all' || Boolean(data.filters.targetId)}>
 		<summary class="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
 			<Search class="size-4 text-primary" />筛选饭单
-			<span class="ml-auto text-xs text-muted-foreground group-open:hidden">按状态、类型或用餐档案</span>
+			<span class="ml-auto text-xs text-muted-foreground group-open:hidden">按进展、类型或偏好</span>
 		</summary>
 	<form method="get" class="space-y-4 border-t border-border/70 p-4">
 		<div class="grid gap-3">
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-2">
-					<Label for="meal-plan-status">状态</Label>
+					<Label for="meal-plan-status">进展</Label>
 					<select id="meal-plan-status" name="status" class="app-input h-11 text-sm">
 						{#each data.statusOptions as option}
 							<option value={option.value} selected={data.filters.status === option.value}>{option.label}</option>
@@ -79,7 +87,7 @@
 					{/each}
 				</select>
 			</div>
-			<Button type="submit" variant="outline" class="h-11 rounded-2xl bg-white">应用筛选</Button>
+				<Button type="submit" variant="outline" class="h-11 rounded-2xl bg-white">看看这些</Button>
 		</div>
 	</form>
 	</details>
@@ -89,9 +97,9 @@
 		<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
 	{/if}
 
-	<section class="app-panel divide-y divide-border/70 overflow-hidden">
+	<section class="space-y-3">
 		{#if data.mealPlans.length === 0}
-			<div class="space-y-4 p-5">
+			<div class="app-panel space-y-4 p-5">
 				<div class="flex size-12 items-center justify-center rounded-2xl bg-secondary text-primary">
 					<ClipboardList class="size-6" />
 				</div>
@@ -106,7 +114,7 @@
 			</div>
 		{:else}
 			{#each data.mealPlans as mealPlan}
-				<article class="p-4" data-testid={`meal-plan-card-${mealPlan.id}`}>
+				<article class="app-panel p-4" data-testid={`meal-plan-card-${mealPlan.id}`}>
 					<a href={mealPlanHref(mealPlan)} class="flex items-start gap-3">
 						<span class="mt-1 h-16 w-1 shrink-0 rounded-full {mealPlan.flow.tone === 'attention' ? 'bg-destructive' : mealPlan.flow.tone === 'success' ? 'bg-primary' : mealPlan.flow.tone === 'muted' ? 'bg-muted-foreground/40' : 'bg-[oklch(0.76_0.16_72)]'}"></span>
 						<span class="min-w-0 flex-1 space-y-2">
@@ -129,7 +137,7 @@
 					</a>
 					<details class="group mt-3 rounded-2xl bg-muted/45">
 						<summary class="flex min-h-11 cursor-pointer list-none items-center justify-between px-3 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
-							<span>管理这份饭单</span>
+						<span>更多动作</span>
 							<ChevronDown class="size-4 transition-transform group-open:rotate-180" />
 						</summary>
 						<div class="grid grid-cols-3 gap-2 border-t border-border/70 p-2">
@@ -154,10 +162,10 @@
 										variant="ghost"
 										size="sm"
 										class="h-11 w-full"
-										data-confirm={`归档饭单「${mealPlan.title}」？归档后详情页会保持只读。`}
-										data-pending-label="归档中..."
+										data-confirm={`收起「${mealPlan.title}」？收起后会保留记录但不再作为当前安排。`}
+										data-pending-label="收起中..."
 									>
-										归档
+									收起
 									</Button>
 								</form>
 							{/if}
@@ -168,7 +176,7 @@
 									variant="destructive"
 									size="sm"
 									class="h-11 w-full"
-									data-confirm={`删除饭单「${mealPlan.title}」？关联的饭单条目、购物清单和反馈会一并移除。`}
+									data-confirm={`删除「${mealPlan.title}」？相关菜单、买菜清单和反馈会一并移除。`}
 									data-pending-label="删除中..."
 								>
 									<Trash2 class="size-4" />

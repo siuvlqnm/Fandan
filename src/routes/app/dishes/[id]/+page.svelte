@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DishForm from '$lib/components/dish-form.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import dinnerImage from '$lib/assets/meal-ui/dinner.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, ClipboardPlus, ListChecks } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
@@ -18,32 +19,37 @@
 </svelte:head>
 
 <main class="app-page app-bottom-safe">
-	<section class="space-y-4">
-		<Button href="/app/dishes" variant="ghost" size="sm" class="h-9 justify-start px-0 text-muted-foreground">
-			<ArrowLeft class="size-4" />
-			返回常做菜
-		</Button>
-		<div class="space-y-2">
-			<p class="app-chip bg-secondary text-primary">编辑菜品</p>
-			<h1 class="text-3xl font-semibold leading-tight">{dish.name}</h1>
-			<p class="text-sm leading-6 text-muted-foreground md:max-w-2xl">
-				维护食材、标签和简单做法。后续饭单和购物清单会从这里读取菜品信息。
-			</p>
-			<p class="text-xs text-muted-foreground">
-				{dish.updatedBy ? `最近由 ${dish.updatedBy.name} 更新` : '历史菜品，暂无操作归属'}
-			</p>
+	<section class="app-scene-hero">
+		<div class="app-scene-hero-media">
+			<img src={dinnerImage} alt="" />
 		</div>
-		<Button href={`/app/meal-plans/new?dishId=${dish.id}`} class="h-12 rounded-2xl">
-			<ClipboardPlus class="size-4" />
-			加入饭单
-		</Button>
+		<div class="app-scene-body -mt-14">
+			<Button href="/app/dishes" variant="ghost" size="sm" class="mb-1 h-11 justify-start rounded-2xl bg-white/85 px-3 text-muted-foreground">
+				<ArrowLeft class="size-4" />
+				返回常做菜
+			</Button>
+			<div class="space-y-2">
+				<p class="app-chip bg-white text-primary shadow-sm">这道菜</p>
+				<h1 class="text-3xl font-semibold leading-tight">{dish.name}</h1>
+				<p class="text-sm leading-6 text-muted-foreground md:max-w-2xl">
+					维护食材、标签和简单做法。以后安排饭和买菜会自动用到。
+				</p>
+				<p class="text-xs text-muted-foreground">
+					{dish.updatedBy ? `最近由 ${dish.updatedBy.name} 更新` : '历史菜品，暂无操作归属'}
+				</p>
+			</div>
+			<Button href={`/app/meal-plans/new?dishId=${dish.id}`} class="mt-2 h-12 rounded-2xl">
+				<ClipboardPlus class="size-4" />
+				加入下一顿
+			</Button>
+		</div>
 	</section>
 
 	<div class="grid gap-4 lg:grid-cols-[1fr_320px]">
 		<section class="app-panel space-y-5 p-5">
 			<div class="space-y-1">
-				<h2 class="text-xl font-semibold">菜品资料</h2>
-				<p class="text-sm text-muted-foreground">保存后会立即用于后续创建饭单和购物清单。</p>
+				<h2 class="text-xl font-semibold">怎么做这道菜</h2>
+				<p class="text-sm text-muted-foreground">保存后会立即用于后续安排饭和买菜。</p>
 			</div>
 			<DishForm {values} {errors} {message} action="?/update" submitLabel="保存修改" expectedUpdatedAt={dish.updatedAt} />
 		</section>
@@ -53,7 +59,7 @@
 				<div class="mb-4 space-y-1">
 					<h2 class="flex items-center gap-2 text-xl font-semibold">
 						<ListChecks class="size-5" />
-						食材摘要
+						需要准备
 					</h2>
 				<p class="text-sm text-muted-foreground">{dish.ingredients.length} 种食材 · 基准 {dish.baseServings} 人份</p>
 				{#if !dish.servingBasisConfirmed}
@@ -75,15 +81,15 @@
 					{/if}
 					<Button href={`/app/meal-plans/new?dishId=${dish.id}`} variant="outline" class="h-12 w-full rounded-2xl bg-white">
 						<ClipboardPlus class="size-4" />
-						用此菜新建饭单
+						加入下一顿
 					</Button>
 				</div>
 			</section>
 
 			<section class="app-panel space-y-4 border-destructive/20 p-5">
 				<div class="space-y-1">
-					<h2 class="text-xl font-semibold">删除菜品</h2>
-					<p class="text-sm text-muted-foreground">删除后会移除这道常做菜和它的食材。</p>
+					<h2 class="text-xl font-semibold">不再常做</h2>
+					<p class="text-sm text-muted-foreground">删除后会移除这道菜和它的食材。</p>
 				</div>
 				<form method="post" action="?/delete" use:enhanceWithFeedback>
 					<Button

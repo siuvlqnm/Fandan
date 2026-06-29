@@ -36,13 +36,13 @@ const statusLabels: Record<string, string> = {
 	pending_confirmation: '待确认',
 	confirmed: '已确认',
 	completed: '已完成',
-	archived: '已归档'
+	archived: '已收起'
 };
 
 const mealSlotOptions = ['早餐', '午餐', '晚餐', '加餐', '全天'];
 
 const metaFormSchema = z.object({
-	title: z.string().trim().min(1, '请输入饭单标题').max(120),
+	title: z.string().trim().min(1, '请输入名称').max(120),
 	targetId: formNullableIdSchema,
 	type: mealPlanTypeSchema,
 	startDate: formNullableTextSchema(20),
@@ -365,7 +365,7 @@ export const load: PageServerLoad = async (event) => {
 				...mealPlan,
 				typeLabel: typeLabels[mealPlan.type],
 				statusLabel: statusLabels[mealPlan.status],
-				targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知对象') : '当前家庭',
+				targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知偏好') : '当前家庭',
 				flow: getMealFlowState({
 					status: mealPlan.status,
 					itemCount: mealPlan.items.length,

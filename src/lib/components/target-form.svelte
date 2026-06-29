@@ -35,7 +35,7 @@
 
 	const typeOptions = [
 		{ value: 'home', label: '家庭' },
-		{ value: 'client', label: '客户' },
+		{ value: 'client', label: '特别照顾' },
 		{ value: 'gathering', label: '聚餐' },
 		{ value: 'other', label: '其他' }
 	];
@@ -48,8 +48,8 @@
 <form method="post" {action} use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-5">
 	<div class="grid gap-4 md:grid-cols-[1fr_180px_160px]">
 		<div class="space-y-2">
-			<Label for="target-name">偏好名称</Label>
-			<Input id="target-name" name="name" value={values.name ?? ''} placeholder="例如：张女士家" required class="app-input" />
+			<Label for="target-name">名称</Label>
+			<Input id="target-name" name="name" value={values.name ?? ''} placeholder="例如：爸妈来吃饭" required class="app-input" />
 			{#if errors.name?.[0]}
 				<p class="text-sm text-destructive">{errors.name[0]}</p>
 			{/if}
@@ -125,12 +125,12 @@
 		</div>
 
 		<div class="space-y-2">
-			<Label for="target-contact-notes">联系和安排备注</Label>
+			<Label for="target-contact-notes">安排备注</Label>
 			<textarea
 				id="target-contact-notes"
 				name="contactNotes"
 				class={cn(fieldClass)}
-				placeholder="例如：每周一、三、五上门做饭"
+				placeholder="例如：周末来吃，尽量提前一天买菜"
 			>{values.contactNotes ?? ''}</textarea>
 			{#if errors.contactNotes?.[0]}
 				<p class="text-sm text-destructive">{errors.contactNotes[0]}</p>

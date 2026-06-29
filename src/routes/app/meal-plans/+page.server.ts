@@ -18,7 +18,7 @@ const statusLabels: Record<string, string> = {
 	pending_confirmation: '待确认',
 	confirmed: '已确认',
 	completed: '已完成',
-	archived: '已归档'
+	archived: '已收起'
 };
 
 const requireContext = async (event: RequestEvent) => {
@@ -59,7 +59,7 @@ export const load: PageServerLoad = async (event) => {
 			...mealPlan,
 			typeLabel: typeLabels[mealPlan.type],
 			statusLabel: statusLabels[mealPlan.status],
-			targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知对象') : '当前家庭',
+			targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知偏好') : '当前家庭',
 			flow: getMealFlowState({ status: mealPlan.status, itemCount: mealPlan.items.length })
 		})),
 		targets,
@@ -68,7 +68,7 @@ export const load: PageServerLoad = async (event) => {
 			...Object.entries(typeLabels).map(([value, label]) => ({ value, label }))
 		],
 		statusOptions: [
-			{ value: 'all', label: '全部状态' },
+			{ value: 'all', label: '全部进展' },
 			...Object.entries(statusLabels).map(([value, label]) => ({ value, label }))
 		]
 	};

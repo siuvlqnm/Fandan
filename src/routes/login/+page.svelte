@@ -2,6 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import heroImage from '$lib/assets/meal-ui/hero.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowRight, ChefHat, LockKeyhole, Mail } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
@@ -16,9 +17,12 @@
 	<title>登录饭单 / Fandan</title>
 </svelte:head>
 
-<main class="mx-auto grid min-h-[calc(100svh-5rem)] max-w-md content-center gap-5 px-4 py-6 md:max-w-5xl md:grid-cols-[0.92fr_1fr] md:px-6 md:py-12">
-	<section class="app-soft-panel hidden flex-col justify-between gap-8 p-5 md:flex md:p-7">
-		<div class="space-y-5">
+<main class="app-page justify-center md:grid md:max-w-5xl md:grid-cols-[0.92fr_1fr] md:items-center">
+	<section class="app-scene-hero hidden md:block">
+		<div class="app-scene-hero-media min-h-72">
+			<img src={heroImage} alt="" />
+		</div>
+		<div class="app-scene-body -mt-20">
 			<span class="flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
 				<ChefHat class="size-7" />
 			</span>
@@ -29,11 +33,11 @@
 					登录后继续安排下一顿、确认菜单和整理买菜清单。
 				</p>
 			</div>
-		</div>
-		<div class="grid grid-cols-3 gap-2 text-center text-sm">
-			<p class="rounded-2xl bg-white p-3"><span class="block text-lg font-semibold text-primary">饭单</span>可复用</p>
-			<p class="rounded-2xl bg-white p-3"><span class="block text-lg font-semibold text-primary">忌口</span>可确认</p>
-			<p class="rounded-2xl bg-white p-3"><span class="block text-lg font-semibold text-primary">清单</span>可勾选</p>
+			<div class="grid grid-cols-3 gap-2 text-center text-sm">
+				<p class="rounded-2xl bg-white p-3"><span class="block text-lg font-semibold text-primary">菜单</span>可复用</p>
+				<p class="rounded-2xl bg-white p-3"><span class="block text-lg font-semibold text-primary">忌口</span>可确认</p>
+				<p class="rounded-2xl bg-white p-3"><span class="block text-lg font-semibold text-primary">清单</span>可勾选</p>
+			</div>
 		</div>
 	</section>
 

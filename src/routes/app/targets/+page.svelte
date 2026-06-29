@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import avatarImage from '$lib/assets/meal-ui/avatar.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, CalendarClock, Plus, Search, Utensils, UsersRound } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
@@ -11,26 +12,31 @@
 </script>
 
 <svelte:head>
-	<title>偏好档案 / 饭单</title>
+	<title>家人偏好 / 饭单</title>
 </svelte:head>
 
 <main class="app-page app-bottom-safe">
-	<section class="space-y-4">
-		<div class="space-y-2">
-			<Button href="/app" variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
-				<ArrowLeft class="size-4" />
-				返回家页
-			</Button>
-			<p class="app-chip bg-secondary text-primary">偏好档案</p>
-			<h1 class="text-3xl font-semibold leading-tight">记住家人的口味和忌口</h1>
-			<p class="text-sm leading-6 text-muted-foreground md:max-w-2xl">
-				记录人数、口味、忌口和预算备注。后续新建饭单时会直接复用这些信息。
-			</p>
+	<section class="app-scene-hero">
+		<div class="app-scene-hero-media">
+			<img src={avatarImage} alt="" />
 		</div>
-		{#if data.total > 0}<Button href="/app/targets/new" class="h-12 rounded-2xl">
-			<Plus class="size-4" />
-			新建偏好
-		</Button>{/if}
+		<div class="app-scene-body -mt-14">
+			<Button href="/app/settings" variant="ghost" size="sm" class="mb-1 h-11 justify-start rounded-2xl bg-white/85 px-3 text-muted-foreground">
+				<ArrowLeft class="size-4" />
+				返回家
+			</Button>
+			<div class="space-y-2">
+				<p class="app-chip bg-white text-primary shadow-sm">家人偏好</p>
+				<h1 class="text-3xl font-semibold leading-tight">记住家人的口味和忌口</h1>
+				<p class="text-sm leading-6 text-muted-foreground md:max-w-2xl">
+					记录人数、口味、忌口和预算备注。后续安排饭时会直接复用。
+				</p>
+			</div>
+			{#if data.total > 0}<Button href="/app/targets/new" class="mt-2 h-12 rounded-2xl">
+				<Plus class="size-4" />
+				新建偏好
+			</Button>{/if}
+		</div>
 	</section>
 
 	{#if data.total > 0}
@@ -46,7 +52,7 @@
 					class="app-input pl-9"
 				/>
 			</div>
-			<Button type="submit" variant="outline" class="size-12 shrink-0 rounded-xl bg-white" aria-label="搜索用餐档案"><Search class="size-4" /></Button>
+				<Button type="submit" variant="outline" class="size-12 shrink-0 rounded-xl bg-white" aria-label="搜索偏好"><Search class="size-4" /></Button>
 		</div>
 		{#if data.total > 5}<details class="group rounded-xl bg-muted/50" open={data.filters.type !== 'all'}>
 			<summary class="flex min-h-11 cursor-pointer list-none items-center px-3 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">更多筛选 <span class="ml-auto group-open:hidden">按类型</span></summary>
@@ -73,7 +79,7 @@
 		<div class="flex items-end justify-between gap-3">
 			<div>
 				<h2 class="text-xl font-semibold">偏好列表</h2>
-				<p class="text-sm text-muted-foreground">{data.targets.length} 份偏好档案</p>
+				<p class="text-sm text-muted-foreground">{data.targets.length} 份偏好</p>
 			</div>
 		</div>
 
@@ -81,12 +87,12 @@
 			<div class="app-panel space-y-4 p-5 text-center">
 				<UsersRound class="mx-auto size-8 text-primary" />
 				<div class="space-y-1">
-					<h3 class="text-xl font-semibold">{data.total === 0 ? '还没有用餐档案' : '没有匹配的档案'}</h3>
+					<h3 class="text-xl font-semibold">{data.total === 0 ? '还没有偏好' : '没有匹配的偏好'}</h3>
 					<p class="text-sm leading-6 text-muted-foreground">{data.total === 0 ? '需要记录特别的口味或忌口时，再创建一份档案。' : '换个关键词，或清除筛选后再看看。'}</p>
 				</div>
 				<Button href={data.total === 0 ? '/app/targets/new' : '/app/targets'} class="h-12 rounded-2xl">
 					<Plus class="size-4" />
-					{data.total === 0 ? '新建用餐档案' : '清除筛选'}
+					{data.total === 0 ? '新建偏好' : '清除筛选'}
 				</Button>
 			</div>
 		{:else}

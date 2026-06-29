@@ -90,6 +90,20 @@ The bottom navigation should feel like four native app areas, not four admin mod
 - `src/lib/assets/meal-ui/`: production UI image assets adapted from the prototype.
 - Secondary creator/share/invite pages had obvious backend wording removed so the flow does not snap back to admin language after the first screen.
 
+## Full App Pass
+
+Second implementation pass on 2026-06-29 removed the remaining admin-style page shells from secondary flows:
+
+- `/app/meal-plans`: became an image-led `吃饭安排` surface with current meal actions and softer copy for copy/archive/delete actions.
+- `/app/meal-plans/new`: became an `安排一顿饭` app task surface instead of a configuration form.
+- `/app/meal-plans/[id]`: became a `这顿饭` page with menu, family confirmation, shopping and edit tabs.
+- `/app/shopping-lists/[id]`: became a `买菜清单` checklist page with an image-led header and softer quantity-editing language.
+- `/app/dishes/new` and `/app/dishes/[id]`: became `这道菜` task pages, with form language changed from data fields to cooking language.
+- `/app/targets`, `/app/targets/new` and `/app/targets/[id]`: became `家人偏好` pages instead of object/profile management pages.
+- `/app/invitations`, `/invite/[token]`, `/login`, `/register` and `/share/[token]`: now use the same app card, imagery and household language.
+
+The shared app shell now uses softer glass panels, image-led scene heroes and rounded mobile controls so remaining pages do not fall back to the previous admin/dashboard look.
+
 ## QA Checklist
 
 - First viewport clearly answers `下一顿吃什么？`
@@ -103,9 +117,14 @@ The bottom navigation should feel like four native app areas, not four admin mod
 
 - `npm run check` passed on 2026-06-29.
 - `npm run build` passed on 2026-06-29.
+- `npm run check` and `npm run build` passed again after the full app pass on 2026-06-29.
 - Mobile browser smoke at 390 x 844:
   - `/` rendered without horizontal overflow.
   - `/login` rendered without horizontal overflow.
   - `/app` correctly redirected to `/login?next=%2Fapp` when unauthenticated.
+- Mobile authenticated smoke at 390 x 844:
+  - Registered a local test account and opened `/app`, `/app/meal-plans`, `/app/meal-plans/new`, `/app/dishes`, `/app/dishes/new`, `/app/shopping-lists`, `/app/settings`, `/app/targets`, `/app/targets/new` and `/app/invitations`.
+  - Created a local test meal, then checked the generated shopping-list detail page and meal-plan detail page.
+  - No horizontal overflow, broken images or removed backend terms were found in the checked pages.
 - User-facing Svelte text scan found no remaining `工作台`, `系统状态`, `菜品库`, `家庭空间` or `工作区` strings.
 - Build note: local Node is `22.9.0`; Vite recommends `20.19+` or `22.12+`. The build completed successfully despite that environment warning.

@@ -2,6 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import breakfastImage from '$lib/assets/meal-ui/breakfast.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, ChefHat, LockKeyhole, Mail, UserRound } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
@@ -15,17 +16,20 @@
 	<title>创建饭单账号 / Fandan</title>
 </svelte:head>
 
-<main class="mx-auto grid min-h-[calc(100svh-5rem)] max-w-md content-center gap-5 px-4 py-6 md:max-w-5xl md:grid-cols-[0.92fr_1fr] md:px-6 md:py-12">
-	<section class="app-soft-panel hidden flex-col justify-between gap-8 p-5 md:flex md:p-7">
-		<div class="space-y-5">
+<main class="app-page justify-center md:grid md:max-w-5xl md:grid-cols-[0.92fr_1fr] md:items-center">
+	<section class="app-scene-hero hidden md:block">
+		<div class="app-scene-hero-media min-h-72">
+			<img src={breakfastImage} alt="" />
+		</div>
+		<div class="app-scene-body -mt-20">
 			<span class="flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm"><ChefHat class="size-7" /></span>
 			<div class="space-y-3">
 				<p class="app-chip bg-white text-primary">第一次使用</p>
 				<h1 class="text-3xl font-semibold leading-tight md:text-4xl">先安排一顿饭，再慢慢认识其他功能。</h1>
 				<p class="text-base leading-7 text-muted-foreground">注册只需要三项信息，完成后直接开始决定吃什么。</p>
 			</div>
+			<div class="rounded-2xl bg-white p-4 text-sm leading-6 text-muted-foreground">不需要先理解复杂设置，先把下一顿安排好。</div>
 		</div>
-		<div class="rounded-2xl bg-white p-4 text-sm leading-6 text-muted-foreground">不需要先理解复杂设置，先把下一顿安排好。</div>
 	</section>
 
 	<section class="app-panel p-5 md:p-7">

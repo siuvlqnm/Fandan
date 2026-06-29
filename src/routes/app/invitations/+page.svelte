@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import avatarImage from '$lib/assets/meal-ui/avatar.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, Check, Copy, Link2, Plus, ShieldCheck, UserPlus, XCircle } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
@@ -30,13 +31,20 @@
 <svelte:head><title>邀请家人 / 饭单</title></svelte:head>
 
 <main class="app-page app-bottom-safe">
-	<section class="flex items-center gap-3">
-		<a href="/app/settings" class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-muted-foreground shadow-sm" aria-label="返回家页">
-			<ArrowLeft class="size-5" />
-		</a>
-		<div class="min-w-0">
-			<p class="text-xs text-muted-foreground">{data.space.name}</p>
-			<h1 class="text-2xl font-semibold">邀请家人</h1>
+	<section class="app-scene-hero">
+		<div class="app-scene-hero-media">
+			<img src={avatarImage} alt="" />
+		</div>
+		<div class="app-scene-body -mt-14">
+			<a href="/app/settings" class="mb-2 flex h-11 w-fit shrink-0 items-center gap-2 rounded-2xl bg-white/85 px-3 text-sm text-muted-foreground shadow-sm" aria-label="返回家">
+				<ArrowLeft class="size-4" />
+				返回家
+			</a>
+			<div class="min-w-0 space-y-2">
+				<p class="app-chip bg-white text-primary shadow-sm">{data.space.name}</p>
+				<h1 class="text-3xl font-semibold leading-tight">邀请家人</h1>
+				<p class="text-sm leading-6 text-muted-foreground">让家人一起看到菜单、确认口味和勾选买菜清单。</p>
+			</div>
 		</div>
 	</section>
 
@@ -106,7 +114,7 @@
 
 	<section class="app-panel flex gap-3 p-4 text-sm leading-6 text-muted-foreground">
 		<ShieldCheck class="mt-0.5 size-5 shrink-0 text-primary" />
-		<p>邀请页只显示家庭名称和邀请状态，不会泄露饭单、菜品或成员信息。</p>
+		<p>邀请页只显示家庭名称和加入状态，不会泄露菜单、菜品或成员信息。</p>
 	</section>
 </main>
 

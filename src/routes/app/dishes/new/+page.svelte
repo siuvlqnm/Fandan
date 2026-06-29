@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DishForm from '$lib/components/dish-form.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import lunchImage from '$lib/assets/meal-ui/lunch.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import { ArrowLeft, ChefHat, Sparkles } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
@@ -17,18 +18,23 @@
 </svelte:head>
 
 <main class="app-page app-bottom-safe">
-	<section class="space-y-4">
-		<Button href="/app/dishes" variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
-			<ArrowLeft class="size-4" />
-			返回常做菜
-		</Button>
-		<div class="space-y-2">
-			<p class="app-chip bg-secondary text-primary">
-				<ChefHat class="size-3.5" />
-				常做菜
-			</p>
-			<h1 class="text-3xl font-semibold leading-tight">新建菜品</h1>
-			<p class="text-sm leading-6 text-muted-foreground md:max-w-2xl">只填菜名即可保存，食材、标签和做法可以之后再补。</p>
+	<section class="app-scene-hero">
+		<div class="app-scene-hero-media">
+			<img src={lunchImage} alt="" />
+		</div>
+		<div class="app-scene-body -mt-14">
+			<Button href="/app/dishes" variant="ghost" size="sm" class="mb-1 h-11 justify-start rounded-2xl bg-white/85 px-3 text-muted-foreground">
+				<ArrowLeft class="size-4" />
+				返回常做菜
+			</Button>
+			<div class="space-y-2">
+				<p class="app-chip bg-white text-primary shadow-sm">
+					<ChefHat class="size-3.5" />
+					常做菜
+				</p>
+				<h1 class="text-3xl font-semibold leading-tight">新建菜品</h1>
+				<p class="text-sm leading-6 text-muted-foreground md:max-w-2xl">只填菜名即可保存，食材、标签和做法可以之后再补。</p>
+			</div>
 		</div>
 	</section>
 
@@ -76,8 +82,8 @@
 
 	<section class="app-panel space-y-5 p-5">
 		<div class="space-y-1">
-			<h2 class="text-xl font-semibold">菜品资料</h2>
-			<p class="text-sm text-muted-foreground">食材会用于后续生成购物清单。</p>
+			<h2 class="text-xl font-semibold">怎么做这道菜</h2>
+			<p class="text-sm text-muted-foreground">食材会用于后续生成买菜清单。</p>
 		</div>
 		<DishForm
 			{values}

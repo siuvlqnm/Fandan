@@ -120,7 +120,7 @@
 	{/if}
 	<div class="grid gap-4 md:grid-cols-[1fr_180px_160px]">
 		<div class="space-y-2">
-			<Label for="dish-name">菜品名称</Label>
+			<Label for="dish-name">菜名</Label>
 			<Input id="dish-name" name="name" value={values.name ?? ''} placeholder="例如：番茄炒蛋" required class="app-input" />
 			{#if errors.name?.[0]}
 				<p class="text-sm text-destructive">{errors.name[0]}</p>
@@ -142,7 +142,7 @@
 		</div>
 
 		<div class="space-y-2">
-			<Label for="dish-visibility">可见性</Label>
+			<Label for="dish-visibility">谁能看到</Label>
 			<select id="dish-visibility" name="visibility" class={selectClass}>
 				<option value="space" selected={(values.visibility ?? 'space') === 'space'}>当前家庭</option>
 				<option value="private" selected={values.visibility === 'private'}>私有</option>
@@ -154,7 +154,7 @@
 	</div>
 
 	<div class="space-y-2">
-		<Label for="dish-base-servings">食材基准份数</Label>
+		<Label for="dish-base-servings">这些食材够几个人吃</Label>
 		<Input
 			id="dish-base-servings"
 			name="baseServings"
@@ -165,7 +165,7 @@
 			required
 			class="app-input"
 		/>
-		<p class="text-sm text-muted-foreground">下方全部食材共同对应几人份。购物清单会按“饭单份数 ÷ 基准份数”缩放。</p>
+		<p class="text-sm text-muted-foreground">下面全部食材共同对应几人份。买菜清单会按这顿人数自动换算。</p>
 		{#if isAiUncertain('baseServings')}
 			<p class="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">原描述没有明确人数，当前显示 1 人份占位值。请修改为真实基准份数后再保存。</p>
 		{/if}
@@ -178,7 +178,7 @@
 	</div>
 
 	<div class="space-y-2">
-		<Label for="dish-tags">标签</Label>
+		<Label for="dish-tags">适合什么时候吃</Label>
 		<div id="dish-tags" class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 			{#each DISH_TAG_OPTIONS as tag}
 				<label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-2xl border border-border/80 bg-white px-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-secondary/60">
@@ -187,7 +187,7 @@
 				</label>
 			{/each}
 		</div>
-		<p class="text-sm text-muted-foreground">选择常用标签，列表页会展示并支持搜索。</p>
+		<p class="text-sm text-muted-foreground">这些标签会帮助之后更快找到它。</p>
 		{#if isAiUncertain('tags')}<p class="text-sm text-amber-800">AI 建议，保存前请核对。</p>{/if}
 		{#if errors.tagsText?.[0]}
 			<p class="text-sm text-destructive">{errors.tagsText[0]}</p>

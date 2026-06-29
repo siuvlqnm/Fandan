@@ -12,7 +12,7 @@ const emptyStringToUndefined = (value: unknown) => (value === '' ? undefined : v
 const formNotesSchema = z.preprocess(emptyStringToNull, notesSchema);
 
 const targetFieldsSchema = z.object({
-	name: z.string().trim().min(1, '请输入用餐对象名称').max(80),
+	name: z.string().trim().min(1, '请输入偏好名称').max(80),
 	type: targetTypeSchema.optional(),
 	peopleCount: z.number().int().min(1).max(999).optional(),
 	tasteNotes: notesSchema,
@@ -31,7 +31,7 @@ export const updateTargetSchema = targetFieldsSchema
 	.refine((value) => Object.keys(value).length > 0, { message: 'At least one field is required' });
 
 export const targetFormSchema = z.object({
-	name: z.string().trim().min(1, '请输入用餐对象名称').max(80),
+	name: z.string().trim().min(1, '请输入偏好名称').max(80),
 	type: targetTypeSchema.default('home'),
 	peopleCount: z.preprocess(emptyStringToUndefined, z.coerce.number().int().min(1).max(999).default(1)),
 	tasteNotes: formNotesSchema,

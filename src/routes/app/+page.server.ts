@@ -21,12 +21,12 @@ const statusLabels: Record<string, string> = {
 	pending_confirmation: '待确认',
 	confirmed: '已确认',
 	completed: '已完成',
-	archived: '已归档'
+	archived: '已收起'
 };
 
 const targetTypeLabels: Record<string, string> = {
 	home: '家庭',
-	client: '客户',
+	client: '特别照顾',
 	gathering: '聚餐',
 	other: '其他'
 };
@@ -94,7 +94,7 @@ export const load: PageServerLoad = async (event) => {
 			...mealPlan,
 			typeLabel: typeLabels[mealPlan.type],
 			statusLabel: statusLabels[mealPlan.status],
-			targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知对象') : '当前家庭',
+			targetName: mealPlan.targetId ? (targetById.get(mealPlan.targetId)?.name ?? '未知偏好') : '当前家庭',
 			dateRangeLabel: dateRangeLabel(mealPlan.startDate, mealPlan.endDate),
 			flow: getMealFlowState({ status: mealPlan.status, itemCount: mealPlan.items.length })
 		}))

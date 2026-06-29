@@ -43,7 +43,7 @@ const statusLabels: Record<string, string> = {
 	pending_confirmation: '待确认',
 	confirmed: '已确认',
 	completed: '已完成',
-	archived: '已归档'
+	archived: '已收起'
 };
 
 const fieldErrors = (error: { issues: { path: PropertyKey[]; message: string }[] }) =>
@@ -208,7 +208,7 @@ export const actions: Actions = {
 			return {
 				action: 'feedback',
 				success: true,
-				message: '反馈已提交，创建者会在饭单详情里看到这些备注。'
+				message: '反馈已提交，创建者会在这顿饭里看到这些备注。'
 			};
 		} catch (cause) {
 			return actionError('feedback', cause, values);

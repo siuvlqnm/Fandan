@@ -155,13 +155,17 @@
 @layer components {
 	.app-shell {
 		background:
-			linear-gradient(180deg, oklch(0.965 0.025 132) 0, transparent 17rem),
+			radial-gradient(circle at 85% -4rem, oklch(0.98 0.06 78 / 70%), transparent 18rem),
+			linear-gradient(180deg, oklch(0.965 0.028 118) 0, transparent 18rem),
 			var(--background);
 	}
 
 	.app-page {
 		@apply mx-auto flex min-h-svh w-full max-w-md flex-col gap-4 px-4 pb-24 pt-4 md:max-w-5xl md:gap-5 md:px-6 md:pb-10 md:pt-7;
 		padding-top: max(1rem, env(safe-area-inset-top));
+		background:
+			radial-gradient(circle at 82% 0, oklch(1 0 0 / 72%), transparent 14rem),
+			linear-gradient(180deg, oklch(0.955 0.024 80) 0, transparent 18rem);
 	}
 
 	.app-client-page {
@@ -173,12 +177,13 @@
 	}
 
 	.app-panel {
-		@apply rounded-lg border border-border/80 bg-card text-card-foreground shadow-[var(--app-shadow)];
-		box-shadow: var(--app-shadow), inset 0 1px 0 oklch(1 0 0 / 82%);
+		@apply overflow-hidden rounded-[1.35rem] border border-white/80 bg-white/88 text-card-foreground shadow-[var(--app-shadow)] backdrop-blur;
+		box-shadow: 0 18px 42px oklch(0.3 0.04 155 / 9%), inset 0 1px 0 oklch(1 0 0 / 88%);
 	}
 
 	.app-soft-panel {
-		@apply rounded-lg border border-primary/15 bg-secondary/65 text-card-foreground;
+		@apply rounded-[1.35rem] border border-primary/12 bg-secondary/55 text-card-foreground;
+		box-shadow: inset 0 1px 0 oklch(1 0 0 / 65%);
 	}
 
 	.app-chip {
@@ -186,7 +191,7 @@
 	}
 
 	.app-input {
-		@apply h-12 w-full rounded-lg border border-input bg-white px-3 text-base shadow-xs outline-none transition focus:border-primary focus:ring-3 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60;
+		@apply h-12 w-full rounded-[1rem] border border-input/90 bg-white/95 px-3 text-base shadow-xs outline-none transition focus:border-primary focus:ring-3 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60;
 	}
 
 	.app-bottom-safe {
@@ -216,6 +221,39 @@
 	.app-hero {
 		@apply overflow-hidden rounded-[1.4rem] border border-border/80 bg-white/90 shadow-[var(--app-shadow)];
 		box-shadow: var(--app-shadow), inset 0 1px 0 oklch(1 0 0 / 82%);
+	}
+
+	.app-scene-hero {
+		@apply overflow-hidden rounded-[1.6rem] border border-white/80 bg-white/90 shadow-[var(--app-shadow)];
+		box-shadow: 0 18px 44px oklch(0.3 0.04 155 / 10%), inset 0 1px 0 oklch(1 0 0 / 86%);
+	}
+
+	.app-scene-hero-media {
+		@apply relative min-h-32 overflow-hidden;
+	}
+
+	.app-scene-hero-media img {
+		@apply h-full w-full object-cover;
+	}
+
+	.app-scene-hero-media::after {
+		content: '';
+		@apply absolute inset-0;
+		background:
+			linear-gradient(180deg, transparent 20%, oklch(1 0 0 / 92%) 100%),
+			linear-gradient(90deg, oklch(0.21 0.04 155 / 18%), transparent 65%);
+	}
+
+	.app-scene-body {
+		@apply relative space-y-4 p-5;
+	}
+
+	.app-glass-row {
+		@apply rounded-[1.15rem] border border-white/80 bg-white/82 p-3 shadow-sm backdrop-blur;
+	}
+
+	.app-danger-zone {
+		@apply rounded-[1.25rem] border border-destructive/18 bg-white/80 p-4;
 	}
 
 	.app-hero-media {

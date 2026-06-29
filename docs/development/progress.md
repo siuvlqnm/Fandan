@@ -4,7 +4,7 @@ This file records completed implementation slices so other Codex threads can qui
 
 ## 2026-06-29 - Client-Style Next Meal App Redesign
 
-Status: implemented locally on 2026-06-29. No database migration required; this is a Svelte UI, copy and asset update.
+Status: implemented locally on 2026-06-29. No database migration required; this is a Svelte UI, copy and asset update. A second same-day pass removed the remaining admin-style shadows from secondary pages.
 
 What changed:
 
@@ -15,6 +15,8 @@ What changed:
 - Updated mobile bottom navigation to `今天`, `常做菜`, `买菜`, `家`.
 - Added production image assets under `src/lib/assets/meal-ui/`.
 - Cleaned obvious backend/admin language across secondary flow pages, including `工作台`, `系统状态`, `菜品库`, `家庭空间` and `工作区`.
+- Reworked secondary App surfaces so `/app/meal-plans`, `/app/meal-plans/new`, `/app/meal-plans/[id]`, shopping-list detail, dish detail/new, preference detail/new/list, invitations, login/register, invite and share pages use app scene headers, household language and softer mobile cards.
+- Changed user-facing language from `对象`, `归档`, `详情页`, `管理` style wording toward `偏好`, `收起`, `这顿饭`, `家人` and `买菜`.
 - Preserved existing quick-start, meal-plan, dish, shopping-list, invitation and family-setting behaviors.
 
 Verification completed:

@@ -2,6 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import dinnerImage from '$lib/assets/meal-ui/dinner.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import {
 		AlertCircle,
@@ -43,7 +44,7 @@
 	<title>{data.share ? `${data.share.mealPlan.title} / 分享确认` : '分享链接不可用 / 饭单'}</title>
 </svelte:head>
 
-<main class="mx-auto flex min-h-svh max-w-md flex-col gap-5 px-4 pb-8 pt-6 md:max-w-4xl md:px-6 md:py-10">
+<main class="app-page md:max-w-4xl">
 	{#if data.pageError}
 		<section class="app-panel space-y-5 p-5 md:p-8">
 			<span class="flex size-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
@@ -56,10 +57,13 @@
 			</div>
 		</section>
 	{:else if data.share}
-		<section class="app-panel overflow-hidden border-destructive/20">
-			<div class="space-y-5 bg-[linear-gradient(135deg,oklch(1_0_0),oklch(0.985_0.02_25))] p-5">
+		<section class="app-scene-hero border-destructive/20">
+			<div class="app-scene-hero-media min-h-40">
+				<img src={dinnerImage} alt="" />
+			</div>
+			<div class="app-scene-body -mt-16">
 				<div class="flex flex-wrap items-center gap-2">
-					<p class="app-chip bg-destructive/10 text-destructive">饭单确认</p>
+					<p class="app-chip bg-white text-primary shadow-sm">这顿饭确认</p>
 					<p class="app-chip bg-white text-muted-foreground">{data.share.mealPlan.typeLabel}</p>
 					<p class="app-chip bg-white text-primary">{data.share.mealPlan.statusLabel}</p>
 				</div>
@@ -98,7 +102,7 @@
 			</p>
 		{/if}
 		{#if data.confirmedNow}
-			<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">已确认这份饭单，创建者会收到确认结果。</p>
+			<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">已确认这顿饭，创建者会收到确认结果。</p>
 		{/if}
 		{#if errors.form?.[0]}
 			<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{errors.form[0]}</p>
@@ -128,7 +132,7 @@
 			</div>
 			{#if disabledByConfirmed}
 				<div class="rounded-2xl bg-secondary/60 p-4 text-sm leading-6 text-secondary-foreground">
-					这份饭单已经确认，反馈已停止收集。如需调整，请联系饭单创建者重新发起确认。
+					这顿饭已经确认，反馈已停止收集。如需调整，请联系创建者重新发起确认。
 				</div>
 			{:else if !canFeedback}
 				<div class="rounded-2xl bg-muted/60 p-4 text-sm leading-6 text-muted-foreground">
@@ -156,7 +160,7 @@
 
 				{#if data.groups.length === 0}
 					<div class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-						这份饭单暂时还没有菜品。
+						这顿饭暂时还没有菜品。
 					</div>
 				{:else}
 					{#each data.groups as group}

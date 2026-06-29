@@ -6,7 +6,7 @@ import type { Actions, PageServerLoad } from './$types';
 
 const typeLabels: Record<string, string> = {
 	home: '家庭',
-	client: '客户',
+	client: '特别照顾',
 	gathering: '聚餐',
 	other: '其他'
 };
@@ -68,7 +68,7 @@ export const actions: Actions = {
 		const id = formData.get('id');
 
 		if (typeof id !== 'string' || !id) {
-			return fail(400, { message: '缺少对象 ID' });
+			return fail(400, { message: '缺少偏好 ID' });
 		}
 
 		await deleteTarget(context, id);

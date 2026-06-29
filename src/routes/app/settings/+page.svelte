@@ -56,7 +56,7 @@
 
 <svelte:head><title>家 / 饭单</title></svelte:head>
 
-<main class="app-client-page app-bottom-safe" data-testid="workspace-settings">
+<main class="app-client-page app-bottom-safe" data-testid="home-settings">
 	<header class="app-topbar">
 		<a href="/app" class="app-brand">
 			<span class="app-logo"><img src={logoImage} alt="" /></span>
@@ -99,7 +99,7 @@
 			<div class="relative max-w-[14rem] space-y-3">
 				<p class="app-chip bg-white/85 text-primary">{roleLabels[data.space.role]}</p>
 				<h1 class="text-4xl font-black leading-[1.05] tracking-normal">把家里的吃饭习惯收好</h1>
-				<p class="text-sm leading-6 text-muted-foreground">成员、偏好、邀请和账号设置都在这里。</p>
+				<p class="text-sm leading-6 text-muted-foreground">成员、口味、邀请和账号都在这里。</p>
 			</div>
 		</div>
 		<div class="flex items-center gap-4 border-t border-border/70 bg-white/80 p-5">
@@ -116,12 +116,12 @@
 		<h2 class="text-xl font-semibold">家庭工具</h2>
 		<div class="grid grid-cols-3 gap-2">
 			<a href="/app/dishes" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><ChefHat class="size-5 text-primary" />常做菜</a>
-			<a href="/app/targets" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><Target class="size-5 text-primary" />偏好档案</a>
+			<a href="/app/targets" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><Target class="size-5 text-primary" />家人偏好</a>
 			<a href={isOwner ? '/app/invitations' : '#family-members'} class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><UsersRound class="size-5 text-primary" />邀请家人</a>
 		</div>
 	</section>
 
-	<div id="current-family" class="pt-2"><p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">家庭设置</p><h2 class="text-xl font-semibold">当前家庭</h2><p class="text-sm text-muted-foreground">{data.space.name}</p></div>
+	<div id="current-family" class="pt-2"><p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">当前家庭</p><h2 class="text-xl font-semibold">{data.space.name}</h2><p class="text-sm text-muted-foreground">家人共享的菜、安排和买菜清单都在这里。</p></div>
 
 	<section class="space-y-3" data-testid="workspace-switcher">
 		{#if data.workspaces.length > 1}

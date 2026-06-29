@@ -152,7 +152,7 @@
 				<ShoppingBasket class="mx-auto size-9 text-primary" />
 				<div class="space-y-1">
 					<h2 class="text-xl font-semibold">{data.stats.total === 0 ? '还没有购物清单' : '没有匹配的清单'}</h2>
-					<p class="text-sm leading-6 text-muted-foreground">从饭单详情生成购物清单后，会自动出现在这里。</p>
+					<p class="text-sm leading-6 text-muted-foreground">从这顿饭生成买菜清单后，会自动出现在这里。</p>
 				</div>
 				<Button href="/app/meal-plans/new" class="h-12 rounded-full px-5">
 					<Plus class="size-4" />

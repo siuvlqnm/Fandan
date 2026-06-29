@@ -36,7 +36,7 @@
 		<section class="app-panel space-y-5 p-5 md:p-8">
 			<span class="flex size-12 items-center justify-center rounded-2xl bg-secondary text-primary"><ShieldCheck class="size-6" /></span>
 			<div class="space-y-2"><h1 class="text-2xl font-semibold">这是你自己的家庭</h1><p class="text-sm leading-6 text-muted-foreground">家庭所有者不能接受自己创建的邀请。请把链接发给要加入的家人。</p></div>
-			<Button href="/app/invitations" class="h-12 w-full rounded-2xl">返回邀请管理</Button>
+			<Button href="/app/invitations" class="h-12 w-full rounded-2xl">返回邀请</Button>
 		</section>
 	{:else if data.invitation.state !== 'pending'}
 		<section class="app-panel space-y-5 p-5 md:p-8">
