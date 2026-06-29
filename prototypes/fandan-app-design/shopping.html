@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>买菜 / 饭单 App 原型</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./prototype-app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="饭单 App 买菜页原型">
+				<div class="screen">
+					<header class="topbar">
+						<div class="brand">
+							<div class="logo"><img src="./assets/reference/logo.png" alt="" /></div>
+							<div>
+								<h1>买菜</h1>
+								<p>少跑一趟，少漏一样</p>
+							</div>
+						</div>
+						<div class="actions">
+							<button class="icon-button" type="button" aria-label="添加购物项"><i class="ri-add-line"></i></button>
+							<div class="avatar"><img src="./assets/reference/avatar.jpg" alt="家里的餐桌" /></div>
+						</div>
+					</header>
+
+					<section class="page-title">
+						<span class="eyebrow"><i class="ri-shopping-basket-2-line"></i> 午餐还缺 6 件</span>
+						<h2>今天要买什么？</h2>
+						<p>从已安排的饭自动生成，买完就勾掉。临时想起的也能随手加。</p>
+					</section>
+
+					<section class="hero-card" aria-label="当前购物清单">
+						<div class="hero-copy">
+							<h3>午餐清单</h3>
+							<p>番茄牛腩 + 西兰花 + 米饭。还有 6 项待买，蔬菜和肉类已分好。</p>
+							<div class="mini">
+								<span class="pill orange">待买 6</span>
+								<span class="pill green">已买 2</span>
+								<span class="pill">来自午餐</span>
+							</div>
+						</div>
+						<div class="hero-media"><img src="./assets/reference/basket.jpg" alt="新鲜蔬菜篮" /></div>
+					</section>
+
+					<div class="segmented" aria-label="购物清单状态">
+						<button class="segment active" type="button">待买</button>
+						<button class="segment" type="button">今天</button>
+						<button class="segment" type="button">本周</button>
+						<button class="segment" type="button">历史</button>
+					</div>
+
+					<section class="section-head">
+						<div>
+							<h3>待买清单</h3>
+							<p>按买菜动线整理</p>
+						</div>
+						<button class="ghost-btn" type="button"><i class="ri-add-line"></i> 加一项</button>
+					</section>
+
+					<section class="card-list" aria-label="购物项">
+						<article class="check-card">
+							<button class="check" type="button" aria-label="勾选牛腩"><i class="ri-check-line"></i></button>
+							<span class="check-copy">
+								<strong>牛腩</strong>
+								<span>肉类 · 番茄牛腩</span>
+							</span>
+							<span class="quantity">500g</span>
+						</article>
+						<article class="check-card">
+							<button class="check" type="button" aria-label="勾选番茄"><i class="ri-check-line"></i></button>
+							<span class="check-copy">
+								<strong>番茄</strong>
+								<span>蔬菜 · 主菜</span>
+							</span>
+							<span class="quantity">3 个</span>
+						</article>
+						<article class="check-card done">
+							<button class="check" type="button" aria-label="取消勾选大米"><i class="ri-check-line"></i></button>
+							<span class="check-copy">
+								<strong>大米</strong>
+								<span>家里已有</span>
+							</span>
+							<span class="quantity">1 杯</span>
+						</article>
+						<article class="check-card">
+							<button class="check" type="button" aria-label="勾选西兰花"><i class="ri-check-line"></i></button>
+							<span class="check-copy">
+								<strong>西兰花</strong>
+								<span>蔬菜 · 配菜</span>
+							</span>
+							<span class="quantity">1 颗</span>
+						</article>
+						<article class="check-card">
+							<button class="check" type="button" aria-label="勾选姜葱"><i class="ri-check-line"></i></button>
+							<span class="check-copy">
+								<strong>姜葱</strong>
+								<span>调味 · 家常必备</span>
+							</span>
+							<span class="quantity">少许</span>
+						</article>
+					</section>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab" href="./next-meal-room.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab active" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+
+		<script>
+			document.querySelectorAll(".segment").forEach((segment) => {
+				segment.addEventListener("click", () => {
+					document.querySelectorAll(".segment").forEach((item) => item.classList.remove("active"));
+					segment.classList.add("active");
+				});
+			});
+			document.querySelectorAll(".check").forEach((button) => {
+				button.addEventListener("click", () => {
+					button.closest(".check-card").classList.toggle("done");
+				});
+			});
+		</script>
+	</body>
+</html>
+

@@ -144,7 +144,7 @@
 		<div class="space-y-2">
 			<Label for="dish-visibility">可见性</Label>
 			<select id="dish-visibility" name="visibility" class={selectClass}>
-				<option value="space" selected={(values.visibility ?? 'space') === 'space'}>工作空间</option>
+				<option value="space" selected={(values.visibility ?? 'space') === 'space'}>当前家庭</option>
 				<option value="private" selected={values.visibility === 'private'}>私有</option>
 			</select>
 			{#if errors.visibility?.[0]}

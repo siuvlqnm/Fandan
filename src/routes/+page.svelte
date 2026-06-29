@@ -30,14 +30,14 @@
 						先确认饭单，再生成购物清单。
 					</h1>
 					<p class="max-w-xl text-base leading-7 text-muted-foreground md:text-lg">
-						给家人、客户或聚餐对象安排菜单，把忌口偏好收齐，再按菜品食材生成采购待办。
+						给家人或聚餐安排菜单，把忌口偏好收齐，再按常做菜食材生成买菜清单。
 					</p>
 				</div>
 			</div>
 
 			<div class="grid gap-3 sm:grid-cols-2">
 				<Button href="/app" size="lg" class="h-12 rounded-2xl px-5 text-base shadow-[0_14px_28px_oklch(0.53_0.145_151_/_20%)]">
-					进入工作台
+					今天吃什么
 					<ArrowRight class="size-4" />
 				</Button>
 				<Button href="/login" variant="outline" size="lg" class="h-12 rounded-2xl bg-white px-5 text-base">
@@ -53,7 +53,7 @@
 						<p class="app-chip bg-white text-primary">饭单工作流</p>
 						<h2 class="text-2xl font-semibold leading-tight">从菜单确认到采购准备</h2>
 					</div>
-					<img src={participantGrid} alt="用餐对象参与菜单确认" class="size-16 rounded-2xl object-cover shadow-sm" />
+					<img src={participantGrid} alt="家人参与菜单确认" class="size-16 rounded-2xl object-cover shadow-sm" />
 				</div>
 				<p class="text-sm leading-6 text-muted-foreground">菜品、反馈和购物项始终围绕同一份饭单更新，方便下次继续复用。</p>
 			</div>

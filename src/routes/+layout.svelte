@@ -38,7 +38,7 @@
 					</span>
 				</a>
 				<nav class="flex items-center gap-1 text-sm text-muted-foreground">
-					<a class="hidden rounded-xl px-3 py-2 hover:bg-muted hover:text-foreground sm:inline-flex" href="/app">工作台</a>
+					<a class="hidden rounded-xl px-3 py-2 hover:bg-muted hover:text-foreground sm:inline-flex" href="/app">今天吃什么</a>
 					{#if data.user}
 						<form method="post" action="/logout">
 							<button class="rounded-xl px-3 py-2 hover:bg-muted hover:text-foreground" type="submit">退出</button>

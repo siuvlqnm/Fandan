@@ -14,14 +14,14 @@
 </script>
 
 <svelte:head>
-	<title>{dish.name} / 菜品库 / 饭单</title>
+	<title>{dish.name} / 常做菜 / 饭单</title>
 </svelte:head>
 
 <main class="app-page app-bottom-safe">
 	<section class="space-y-4">
 		<Button href="/app/dishes" variant="ghost" size="sm" class="h-9 justify-start px-0 text-muted-foreground">
 			<ArrowLeft class="size-4" />
-			返回菜品库
+			返回常做菜
 		</Button>
 		<div class="space-y-2">
 			<p class="app-chip bg-secondary text-primary">编辑菜品</p>
@@ -83,14 +83,14 @@
 			<section class="app-panel space-y-4 border-destructive/20 p-5">
 				<div class="space-y-1">
 					<h2 class="text-xl font-semibold">删除菜品</h2>
-					<p class="text-sm text-muted-foreground">删除后会移除菜品库记录和它的食材。</p>
+					<p class="text-sm text-muted-foreground">删除后会移除这道常做菜和它的食材。</p>
 				</div>
 				<form method="post" action="?/delete" use:enhanceWithFeedback>
 					<Button
 						type="submit"
 						variant="destructive"
 						class="h-12 w-full rounded-2xl"
-						data-confirm={`删除菜品「${dish.name}」？它会从菜品库移除。`}
+						data-confirm={`删除常做菜「${dish.name}」？`}
 						data-pending-label="删除中..."
 					>
 						删除菜品

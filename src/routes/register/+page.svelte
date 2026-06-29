@@ -25,7 +25,7 @@
 				<p class="text-base leading-7 text-muted-foreground">注册只需要三项信息，完成后直接开始决定吃什么。</p>
 			</div>
 		</div>
-		<div class="rounded-2xl bg-white p-4 text-sm leading-6 text-muted-foreground">不需要先理解工作区、对象或专业服务设置。</div>
+		<div class="rounded-2xl bg-white p-4 text-sm leading-6 text-muted-foreground">不需要先理解复杂设置，先把下一顿安排好。</div>
 	</section>
 
 	<section class="app-panel p-5 md:p-7">

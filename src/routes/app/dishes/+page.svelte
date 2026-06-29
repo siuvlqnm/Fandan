@@ -2,159 +2,157 @@
 	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
-	import { ArrowLeft, ChefHat, ClipboardPlus, ListChecks, Plus, Search, Tags } from 'lucide-svelte';
+	import breakfastImage from '$lib/assets/meal-ui/breakfast.jpg';
+	import dinnerImage from '$lib/assets/meal-ui/dinner.jpg';
+	import logoImage from '$lib/assets/meal-ui/logo.png';
+	import lunchImage from '$lib/assets/meal-ui/lunch.jpg';
+	import snackImage from '$lib/assets/meal-ui/snack.jpg';
+	import { ArrowRight, CookingPot, Plus, Search, SlidersHorizontal, Soup, Trash2 } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+
+	const dishImages = [lunchImage, dinnerImage, breakfastImage, snackImage];
+	const featuredDish = $derived(data.dishes[0] ?? null);
+	const dishImage = (index: number) => dishImages[index % dishImages.length];
 </script>
 
 <svelte:head>
-	<title>菜品库 / 饭单</title>
+	<title>常做菜 / 饭单</title>
 </svelte:head>
 
-<main class="app-page app-bottom-safe">
-	<section class="space-y-4">
+<main class="app-client-page app-bottom-safe">
+	<header class="app-topbar">
+		<a href="/app" class="app-brand">
+			<span class="app-logo"><img src={logoImage} alt="" /></span>
+			<span class="min-w-0 leading-tight">
+				<span class="block text-2xl font-bold">常做菜</span>
+				<span class="block truncate text-sm text-muted-foreground">家里顺手的好味道</span>
+			</span>
+		</a>
+		<Button href="/app/dishes/new" class="app-icon-action" aria-label="新增常做菜">
+			<Plus class="size-5" />
+		</Button>
+	</header>
+
+	<section class="space-y-3">
+		<p class="app-chip bg-white/80 text-muted-foreground">
+			<CookingPot class="size-3.5 text-primary" />
+			{data.total > 0 ? `${data.total} 道常做菜` : '先记下一道常做菜'}
+		</p>
 		<div class="space-y-2">
-			<Button href="/app" variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
-				<ArrowLeft class="size-4" />
-				返回工作台
-			</Button>
-			<p class="app-chip bg-secondary text-primary">菜品库</p>
-			<h1 class="text-3xl font-semibold leading-tight">维护可复用菜品</h1>
-			<p class="text-sm leading-6 text-muted-foreground md:max-w-2xl">
-				保存常做菜、食材和简单做法。之后创建饭单和购物清单时会直接复用这些菜品。
-			</p>
+			<h1 class="text-4xl font-black leading-[1.06] tracking-normal">从熟悉的菜里挑</h1>
+			<p class="text-base leading-6 text-muted-foreground">不用每次重新想。常吃、好买、适合今天的菜会先浮上来。</p>
 		</div>
-		{#if data.total > 0}<Button href="/app/dishes/new" class="h-12 rounded-2xl">
-			<Plus class="size-4" />
-			新建菜品
-		</Button>{/if}
 	</section>
 
-	{#if data.total > 0}
-	<form method="get" class="app-panel space-y-3 p-3">
-		<div class="flex gap-2">
-			<div class="relative min-w-0 flex-1">
-				<Search class="pointer-events-none absolute left-3 top-3.5 size-4 text-muted-foreground" />
-				<Input
-					id="dish-search"
-					name="q"
-					value={data.filters.q}
-					placeholder="菜名、食材或标签"
-					class="app-input pl-9"
-				/>
+	{#if featuredDish}
+		<section class="app-hero">
+			<div class="grid grid-cols-[minmax(0,1fr)_8rem]">
+				<div class="min-w-0 space-y-3 p-4">
+					<p class="app-chip bg-accent text-accent-foreground">今天可用</p>
+					<div>
+						<h2 class="truncate text-2xl font-bold">{featuredDish.name}</h2>
+						<p class="mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
+							{featuredDish.category || '家常菜'} · {featuredDish.ingredients.length} 种食材 · 可直接加入下一顿
+						</p>
+					</div>
+					<Button href={`/app/meal-plans/new?dishId=${featuredDish.id}`} class="h-11 rounded-full px-4">
+						安排这道 <ArrowRight class="size-4" />
+					</Button>
+				</div>
+				<img src={lunchImage} alt="" class="h-full min-h-40 w-full object-cover [mask-image:linear-gradient(90deg,transparent,black_25%)]" />
 			</div>
-			<Button type="submit" variant="outline" class="size-12 shrink-0 rounded-xl bg-white" aria-label="搜索菜品"><Search class="size-4" /></Button>
-		</div>
-		{#if data.total > 5}
-		<details class="group rounded-xl bg-muted/50" open={data.filters.category !== 'all'}>
-			<summary class="flex min-h-11 cursor-pointer list-none items-center px-3 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">更多筛选 <span class="ml-auto group-open:hidden">按分类</span></summary>
-		<div class="grid gap-3 border-t border-border/70 p-3 md:grid-cols-[1fr_auto] md:items-end">
-			<div class="space-y-2">
-				<Label for="dish-category">分类</Label>
-				<select id="dish-category" name="category" class="app-input h-11 text-sm">
-					{#each data.categoryOptions as option}
-						<option value={option.value} selected={data.filters.category === option.value}>{option.label}</option>
-					{/each}
-				</select>
-			</div>
-			<Button type="submit" variant="outline" class="h-11 rounded-xl bg-white">筛选</Button>
-		</div>
-		</details>
-		{/if}
+		</section>
+	{/if}
+
+	<form method="get" class="grid grid-cols-[minmax(0,1fr)_2.75rem] gap-2">
+		<label class="flex h-11 min-w-0 items-center gap-2 rounded-full border border-border/80 bg-white/85 px-3 shadow-sm">
+			<Search class="size-4 shrink-0 text-muted-foreground" />
+			<Input
+				id="dish-search"
+				name="q"
+				value={data.filters.q}
+				placeholder="搜菜名、食材、口味"
+				class="h-auto border-0 bg-transparent p-0 text-sm shadow-none focus:ring-0"
+			/>
+		</label>
+		<Button type="submit" variant="outline" class="size-11 rounded-full bg-white" aria-label="搜索常做菜">
+			<SlidersHorizontal class="size-4" />
+		</Button>
 	</form>
+
+	{#if data.total > 5}
+		<div class="app-segmented grid-cols-3">
+			{#each data.categoryOptions.slice(0, 3) as option}
+				<a href={option.value === 'all' ? '/app/dishes' : `/app/dishes?category=${encodeURIComponent(String(option.value))}`} class="app-segment {data.filters.category === option.value ? 'app-segment-active' : ''}">
+					{option.label}
+				</a>
+			{/each}
+		</div>
 	{/if}
 
 	{#if form?.message}
 		<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
 	{/if}
 
-	<section class="space-y-3">
-		<div class="flex items-end justify-between gap-3">
-			<div>
-				<h2 class="text-xl font-semibold">菜品列表</h2>
-				<p class="text-sm text-muted-foreground">{data.dishes.length} 道可复用菜品</p>
-			</div>
+	<section class="app-section-title">
+		<div>
+			<h2>今天可选</h2>
+			<p>{data.dishes.length} 道菜，按家里习惯继续用</p>
 		</div>
+		<Button href="/app/dishes/new" variant="outline" class="h-11 rounded-full bg-white px-4">
+			<Plus class="size-4" />
+			新增
+		</Button>
+	</section>
 
+	<section class="grid gap-2">
 		{#if data.dishes.length === 0}
-			<div class="app-panel space-y-4 p-5 text-center">
-				<ChefHat class="mx-auto size-8 text-primary" />
+			<div class="app-hero space-y-4 p-5 text-center">
+				<Soup class="mx-auto size-9 text-primary" />
 				<div class="space-y-1">
-					<h3 class="text-xl font-semibold">{data.total === 0 ? '还没有菜品' : '没有匹配的菜品'}</h3>
-					<p class="text-sm leading-6 text-muted-foreground">{data.total === 0 ? '先记下一道常做菜，食材和做法之后再慢慢补。' : '换个关键词，或清除筛选后再看看。'}</p>
+					<h2 class="text-xl font-semibold">{data.total === 0 ? '还没有常做菜' : '没有找到这道菜'}</h2>
+					<p class="text-sm leading-6 text-muted-foreground">{data.total === 0 ? '先记下一道家里常吃的菜，食材和做法以后可以慢慢补。' : '换个关键词，或者回到全部常做菜看看。'}</p>
 				</div>
-				<Button href={data.total === 0 ? '/app/dishes/new' : '/app/dishes'} class="h-12 rounded-2xl">
-					<Plus class="size-4" />
-					{data.total === 0 ? '新建菜品' : '清除筛选'}
+				<Button href={data.total === 0 ? '/app/dishes/new' : '/app/dishes'} class="h-12 rounded-full px-5">
+					{data.total === 0 ? '新增常做菜' : '查看全部'}
 				</Button>
 			</div>
 		{:else}
-			<div class="app-panel divide-y divide-border/70 overflow-hidden">
-				{#each data.dishes as dish}
-					<article class="space-y-4 p-4">
-						<a href={`/app/dishes/${dish.id}`} class="flex items-start gap-3">
-							<span class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary">
-								<ChefHat class="size-5" />
-							</span>
-							<span class="min-w-0 flex-1 space-y-1">
-								<span class="block truncate text-lg font-semibold">{dish.name}</span>
-								<span class="block text-sm text-muted-foreground">{dish.category || '未分类'} · {dish.ingredients.length} 种食材</span>
-								<span class="block text-xs text-muted-foreground">
-									{dish.updatedBy ? `由 ${dish.updatedBy.name} 更新` : '历史菜品，暂无操作归属'}
-								</span>
+			{#each data.dishes as dish, index}
+				<article class="app-meal-card grid-cols-[5.4rem_minmax(0,1fr)]" data-testid={`dish-${dish.id}`}>
+					<a href={`/app/dishes/${dish.id}`} class="app-meal-card-image min-h-28"><img src={dishImage(index)} alt="" /></a>
+					<div class="min-w-0 space-y-3 p-3">
+						<a href={`/app/dishes/${dish.id}`} class="block min-w-0">
+							<span class="block truncate text-lg font-bold">{dish.name}</span>
+							<span class="mt-1 block truncate text-sm text-muted-foreground">{dish.category || '未分类'} · {dish.ingredients.length} 种食材</span>
+							<span class="mt-1 block truncate text-xs text-muted-foreground">
+								{dish.ingredients.length > 0 ? dish.ingredients.map((ingredient) => ingredient.name).join('、') : '还没有食材，之后补也可以'}
 							</span>
 						</a>
-
-						<div class="grid gap-2 text-sm md:grid-cols-2">
-							<p class="rounded-2xl border border-border/80 bg-white p-3">
-								<span class="mb-1 flex items-center gap-1.5 text-muted-foreground">
-									<ListChecks class="size-4" />
-									食材
-								</span>
-								<span class="line-clamp-2">
-									{dish.ingredients.length > 0 ? dish.ingredients.map((ingredient) => ingredient.name).join('、') : '暂无食材'}
-								</span>
-							</p>
-							<p class="rounded-2xl border border-border/80 bg-white p-3">
-								<span class="mb-1 flex items-center gap-1.5 text-muted-foreground">
-									<Tags class="size-4" />
-									标签
-								</span>
-								<span class="line-clamp-2">{dish.tags.length > 0 ? dish.tags.join('、') : '暂无标签'}</span>
-							</p>
-						</div>
-
-						<p class="line-clamp-2 text-sm leading-6 text-muted-foreground">
-							做法：{dish.instructions || '暂无做法记录'}
-						</p>
-
-						<div class="grid grid-cols-[1fr_1fr_auto] gap-2">
-							<Button href={`/app/dishes/${dish.id}`} variant="outline" size="sm" class="h-11 rounded-xl bg-white">编辑</Button>
-							<Button href={`/app/meal-plans/new?dishId=${dish.id}`} variant="ghost" size="sm" class="h-11 rounded-xl">
-								<ClipboardPlus class="size-4" />
-								加入饭单
+						<div class="grid grid-cols-[1fr_auto] gap-2">
+							<Button href={`/app/meal-plans/new?dishId=${dish.id}`} variant="outline" class="h-10 rounded-full bg-white">
+								加入下一顿
 							</Button>
 							<form method="post" action="?/delete" use:enhanceWithFeedback>
 								<input type="hidden" name="id" value={dish.id} />
 								<Button
 									type="submit"
-									variant="destructive"
-									size="icon-sm"
-									class="size-11 rounded-xl"
-									aria-label={`删除菜品「${dish.name}」`}
-									data-confirm={`删除菜品「${dish.name}」？它会从菜品库移除。`}
+									variant="ghost"
+									class="size-10 rounded-full text-destructive"
+									aria-label={`删除常做菜「${dish.name}」`}
+									data-confirm={`删除常做菜「${dish.name}」？`}
 									data-pending-label="删除中..."
 								>
-									删除
+									<Trash2 class="size-4" />
 								</Button>
 							</form>
 						</div>
-					</article>
-				{/each}
-			</div>
+					</div>
+				</article>
+			{/each}
 		{/if}
 	</section>
 </main>

@@ -164,6 +164,14 @@
 		padding-top: max(1rem, env(safe-area-inset-top));
 	}
 
+	.app-client-page {
+		@apply mx-auto flex min-h-svh w-full max-w-md flex-col gap-4 px-4 pb-24 pt-4 md:max-w-5xl md:gap-5 md:px-6 md:pb-10 md:pt-7;
+		padding-top: max(1rem, env(safe-area-inset-top));
+		background:
+			radial-gradient(circle at 82% 0, oklch(1 0 0 / 88%), transparent 14rem),
+			linear-gradient(180deg, oklch(0.955 0.024 80) 0, transparent 18rem);
+	}
+
 	.app-panel {
 		@apply rounded-lg border border-border/80 bg-card text-card-foreground shadow-[var(--app-shadow)];
 		box-shadow: var(--app-shadow), inset 0 1px 0 oklch(1 0 0 / 82%);
@@ -183,6 +191,86 @@
 
 	.app-bottom-safe {
 		padding-bottom: max(6rem, env(safe-area-inset-bottom));
+	}
+
+	.app-topbar {
+		@apply flex items-center justify-between gap-3;
+	}
+
+	.app-brand {
+		@apply flex min-w-0 items-center gap-3;
+	}
+
+	.app-logo {
+		@apply flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[1.05rem] bg-primary text-primary-foreground shadow-sm;
+	}
+
+	.app-logo img {
+		@apply h-full w-full object-cover;
+	}
+
+	.app-icon-action {
+		@apply flex size-11 shrink-0 items-center justify-center rounded-full border border-border/80 bg-white/80 text-foreground shadow-sm backdrop-blur;
+	}
+
+	.app-hero {
+		@apply overflow-hidden rounded-[1.4rem] border border-border/80 bg-white/90 shadow-[var(--app-shadow)];
+		box-shadow: var(--app-shadow), inset 0 1px 0 oklch(1 0 0 / 82%);
+	}
+
+	.app-hero-media {
+		@apply relative min-h-36 overflow-hidden;
+	}
+
+	.app-hero-media img {
+		@apply h-full w-full object-cover;
+	}
+
+	.app-hero-media::after {
+		content: '';
+		@apply absolute inset-x-0 bottom-0 h-16;
+		background: linear-gradient(180deg, transparent, oklch(1 0 0 / 92%));
+	}
+
+	.app-section-title {
+		@apply flex items-end justify-between gap-3;
+	}
+
+	.app-section-title h2 {
+		@apply text-xl font-semibold leading-tight;
+	}
+
+	.app-section-title p {
+		@apply text-sm leading-5 text-muted-foreground;
+	}
+
+	.app-meal-card {
+		@apply grid min-h-24 grid-cols-[3rem_minmax(0,1fr)_6.5rem] items-center overflow-hidden rounded-[1.2rem] border border-border/80 bg-white/90 shadow-[var(--app-shadow)];
+	}
+
+	.app-meal-card-image {
+		@apply h-full min-h-24 overflow-hidden;
+		mask-image: linear-gradient(90deg, transparent 0%, black 22%, black 100%);
+	}
+
+	.app-meal-card-image img {
+		@apply h-full w-full object-cover;
+	}
+
+	.app-segmented {
+		@apply grid rounded-[1.15rem] border border-border/80 bg-white/60 p-1 shadow-sm;
+	}
+
+	.app-segment {
+		@apply flex min-h-10 min-w-0 items-center justify-center rounded-[0.9rem] px-2 text-sm font-medium text-muted-foreground transition;
+	}
+
+	.app-segment-active {
+		@apply bg-white text-primary shadow-sm;
+	}
+
+	.app-list-row {
+		@apply flex min-h-20 items-center gap-3 rounded-[1.2rem] border border-border/80 bg-white/90 p-3 shadow-sm;
 	}
 
 	.participant-avatar {

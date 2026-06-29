@@ -23,10 +23,10 @@
 				<ChefHat class="size-7" />
 			</span>
 			<div class="space-y-3">
-				<p class="app-chip bg-white text-primary">移动端工作台</p>
+				<p class="app-chip bg-white text-primary">饭单 App</p>
 				<h1 class="text-3xl font-semibold leading-tight md:text-4xl">把菜单确认和采购准备放在一个地方。</h1>
 				<p class="text-base leading-7 text-muted-foreground">
-					登录后继续管理用餐对象、饭单、分享确认和购物清单。
+					登录后继续安排下一顿、确认菜单和整理买菜清单。
 				</p>
 			</div>
 		</div>
@@ -44,7 +44,7 @@
 		</div>
 		<div class="mb-6 space-y-1">
 			<h2 class="text-2xl font-semibold">登录饭单</h2>
-			<p class="text-sm text-muted-foreground">回到你的菜单协作工作台。</p>
+			<p class="text-sm text-muted-foreground">回到你的家庭饭单。</p>
 		</div>
 		<form method="post" action="?/signInEmail" use:enhanceWithFeedback={{ pendingLabel: '登录中...' }} class="space-y-4">
 			<input type="hidden" name="next" value={data.next} />

@@ -173,7 +173,7 @@ const loadInvitationActivities = async (context: AuthenticatedContext): Promise<
 		return {
 			id: `invitation-${row.id}`,
 			type: 'invitation' as const,
-			title: accepted ? '家人加入工作区' : '创建邀请链接',
+			title: accepted ? '家人加入家庭' : '创建邀请链接',
 			detail: accepted ? '家庭成员已可以一起安排饭单' : '等待家人通过链接加入',
 			actorName: actorName(actor),
 			href: '/app/invitations',

@@ -4,8 +4,10 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
+	import avatarImage from '$lib/assets/meal-ui/avatar.jpg';
+	import heroImage from '$lib/assets/meal-ui/hero.jpg';
+	import logoImage from '$lib/assets/meal-ui/logo.png';
 	import {
-		ArrowLeft,
 		ArrowRightLeft,
 		Check,
 		ChefHat,
@@ -52,18 +54,19 @@
 	};
 </script>
 
-<svelte:head><title>我的 / 饭单</title></svelte:head>
+<svelte:head><title>家 / 饭单</title></svelte:head>
 
-<main class="app-page app-bottom-safe" data-testid="workspace-settings">
-	<section class="flex items-center gap-3">
-		<a href="/app" class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-muted-foreground shadow-sm" aria-label="返回工作台">
-			<ArrowLeft class="size-5" />
+<main class="app-client-page app-bottom-safe" data-testid="workspace-settings">
+	<header class="app-topbar">
+		<a href="/app" class="app-brand">
+			<span class="app-logo"><img src={logoImage} alt="" /></span>
+			<span class="min-w-0 leading-tight">
+				<span class="block text-2xl font-bold">家</span>
+				<span class="block truncate text-sm text-muted-foreground">家庭、偏好和账号</span>
+			</span>
 		</a>
-		<div class="min-w-0">
-			<p class="text-xs text-muted-foreground">家庭与账号</p>
-			<h1 class="text-2xl font-semibold">我的</h1>
-		</div>
-	</section>
+		<span class="app-icon-action overflow-hidden p-0"><img src={avatarImage} alt="" class="h-full w-full object-cover" /></span>
+	</header>
 
 	{#if data.feedback.saved}
 		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">家庭名称已更新。</p>
@@ -81,36 +84,38 @@
 		<p class="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">邀请已撤销。</p>
 	{/if}
 	{#if data.feedback.removed}
-		<p class="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">成员已移除，无法再访问这个家庭空间。</p>
+		<p class="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">成员已移除，无法再访问这个家庭。</p>
 	{/if}
 	{#if data.feedback.left}
-		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">已退出原家庭空间，现在显示你的个人空间。</p>
+		<p class="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">已退出原家庭，现在显示你的个人家庭。</p>
 	{/if}
 	{#if form?.message}
 		<p class="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{form.message}</p>
 	{/if}
 
-	<section class="space-y-3">
-		<div><p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">账号设置</p><h2 class="text-xl font-semibold">个人账号</h2></div>
-		<div class="app-soft-panel overflow-hidden">
-			<div class="flex items-center gap-4 p-5">
-				<span class="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white text-primary shadow-sm"><UserRound class="size-7" /></span>
+	<section class="app-hero overflow-hidden">
+		<div class="relative min-h-36 p-5">
+			<img src={heroImage} alt="" class="absolute inset-y-0 right-0 h-full w-40 object-cover opacity-90 [mask-image:linear-gradient(90deg,transparent,black_35%)]" />
+			<div class="relative max-w-[14rem] space-y-3">
+				<p class="app-chip bg-white/85 text-primary">{roleLabels[data.space.role]}</p>
+				<h1 class="text-4xl font-black leading-[1.05] tracking-normal">把家里的吃饭习惯收好</h1>
+				<p class="text-sm leading-6 text-muted-foreground">成员、偏好、邀请和账号设置都在这里。</p>
+			</div>
+		</div>
+		<div class="flex items-center gap-4 border-t border-border/70 bg-white/80 p-5">
+			<span class="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white text-primary shadow-sm"><img src={avatarImage} alt="" class="h-full w-full object-cover" /></span>
 				<div class="min-w-0 flex-1">
 					<p class="truncate text-xl font-semibold">{data.user.name}</p>
 					<p class="truncate text-sm text-muted-foreground">{data.user.email}</p>
 				</div>
-				<span class="app-chip bg-white text-primary">{roleLabels[data.space.role]}</span>
-			</div>
-			<div class="border-t border-border/70 bg-white px-5 py-3 text-sm text-muted-foreground">
-				当前家庭：<span class="font-medium text-foreground">{data.space.name}</span>
-			</div>
+			<span class="app-chip bg-secondary text-primary">{data.space.name}</span>
 		</div>
 	</section>
 
 	<section class="space-y-3">
 		<h2 class="text-xl font-semibold">家庭工具</h2>
 		<div class="grid grid-cols-3 gap-2">
-			<a href="/app/dishes" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><ChefHat class="size-5 text-primary" />菜品库</a>
+			<a href="/app/dishes" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><ChefHat class="size-5 text-primary" />常做菜</a>
 			<a href="/app/targets" class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><Target class="size-5 text-primary" />偏好档案</a>
 			<a href={isOwner ? '/app/invitations' : '#family-members'} class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white p-3 text-center text-sm font-medium"><UsersRound class="size-5 text-primary" />邀请家人</a>
 		</div>
@@ -181,7 +186,7 @@
 				<Button type="submit" class="h-11 w-full rounded-2xl" data-pending-label="保存中...">保存名称</Button>
 			</form>
 		{:else}
-			<div class="rounded-2xl bg-muted p-4 text-sm leading-6"><p class="font-medium">{data.space.name}</p><p class="text-muted-foreground">只有空间所有者可以修改名称。</p></div>
+			<div class="rounded-2xl bg-muted p-4 text-sm leading-6"><p class="font-medium">{data.space.name}</p><p class="text-muted-foreground">只有家庭所有者可以修改名称。</p></div>
 		{/if}
 	</section>
 
@@ -205,7 +210,7 @@
 						<p class="mt-1 text-xs text-muted-foreground">{roleLabels[member.role]} · {formatDate(member.joinedAt)} 加入</p>
 					</div>
 					{#if isOwner && member.role === 'member'}
-						<form method="post" action="?/removeMember" use:enhanceWithFeedback={{ confirmMessage: `确定移除 ${member.name} 吗？对方将立即失去这个家庭空间的访问权限。`, pendingLabel: '移除中...' }}>
+						<form method="post" action="?/removeMember" use:enhanceWithFeedback={{ confirmMessage: `确定移除 ${member.name} 吗？对方将立即失去这个家庭的访问权限。`, pendingLabel: '移除中...' }}>
 							<input type="hidden" name="membershipId" value={member.id} />
 							<Button type="submit" variant="ghost" size="sm" class="h-11 text-destructive" data-pending-label="移除中..." aria-label={`移除成员 ${member.name}`}>
 								<UserMinus class="size-4" />移除
@@ -262,7 +267,7 @@
 		</div>
 		{#if !isOwner}
 			<form method="post" action="?/leave" use:enhanceWithFeedback={{ confirmMessage: `确定退出「${data.space.name}」吗？退出后需要新的邀请才能再次加入。`, pendingLabel: '退出中...' }}>
-				<Button type="submit" variant="outline" class="h-11 w-full rounded-2xl border-destructive/30 bg-white text-destructive" data-pending-label="退出中..."><DoorOpen class="size-4" />退出家庭空间</Button>
+				<Button type="submit" variant="outline" class="h-11 w-full rounded-2xl border-destructive/30 bg-white text-destructive" data-pending-label="退出中..."><DoorOpen class="size-4" />退出这个家庭</Button>
 			</form>
 		{/if}
 	</section>

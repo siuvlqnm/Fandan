@@ -11,7 +11,7 @@ import {
 } from './context';
 
 export const updateWorkspaceSchema = z.object({
-	name: z.string().trim().min(1, '请输入家庭空间名称').max(80, '空间名称不能超过 80 个字')
+	name: z.string().trim().min(1, '请输入家庭名称').max(80, '家庭名称不能超过 80 个字')
 });
 
 export const createWorkspaceSchema = updateWorkspaceSchema;

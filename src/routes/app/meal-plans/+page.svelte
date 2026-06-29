@@ -27,13 +27,13 @@
 </script>
 
 <svelte:head>
-	<title>饭单 / 饭单</title>
+	<title>吃饭安排 / 饭单</title>
 </svelte:head>
 
 <main class="app-page app-bottom-safe">
 	<section class="flex items-start justify-between gap-4">
 		<div class="space-y-2">
-			<p class="app-chip bg-secondary text-primary">饭单</p>
+			<p class="app-chip bg-secondary text-primary">吃饭安排</p>
 			<h1 class="text-3xl font-semibold leading-tight">每一顿，都在这里</h1>
 			<p class="text-sm leading-6 text-muted-foreground">先处理最近的安排，需要时再展开筛选和管理操作。</p>
 		</div>
@@ -71,9 +71,9 @@
 				</div>
 			</div>
 			<div class="space-y-2">
-				<Label for="meal-plan-target">对象</Label>
-				<select id="meal-plan-target" name="targetId" class="app-input h-11 text-sm">
-					<option value="" selected={!data.filters.targetId}>全部对象</option>
+					<Label for="meal-plan-target">用餐偏好</Label>
+					<select id="meal-plan-target" name="targetId" class="app-input h-11 text-sm">
+						<option value="" selected={!data.filters.targetId}>全部偏好</option>
 					{#each data.targets as target}
 						<option value={target.id} selected={data.filters.targetId === target.id}>{target.name}</option>
 					{/each}

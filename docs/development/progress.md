@@ -2,6 +2,33 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## 2026-06-29 - Client-Style Next Meal App Redesign
+
+Status: implemented locally on 2026-06-29. No database migration required; this is a Svelte UI, copy and asset update.
+
+What changed:
+
+- Rebuilt `/app` as the `今天` surface led by `下一顿吃什么？` and the quick-start meal slots.
+- Reworked `/app/dishes` into `常做菜`, focused on familiar dishes that can be reused for the next meal.
+- Reworked `/app/shopping-lists` into `买菜`, focused on the current pending shopping list and progress.
+- Reworked `/app/settings` into `家`, focused on household, members, preferences, invitations and account.
+- Updated mobile bottom navigation to `今天`, `常做菜`, `买菜`, `家`.
+- Added production image assets under `src/lib/assets/meal-ui/`.
+- Cleaned obvious backend/admin language across secondary flow pages, including `工作台`, `系统状态`, `菜品库`, `家庭空间` and `工作区`.
+- Preserved existing quick-start, meal-plan, dish, shopping-list, invitation and family-setting behaviors.
+
+Verification completed:
+
+- `npm run check`
+- `npm run build`
+- Mobile browser smoke at `390 x 844` for `/`, `/login` and unauthenticated `/app` redirect.
+- User-facing Svelte text scan for removed backend terms.
+
+Notes for next threads:
+
+- Authenticated visual QA should be repeated with a signed-in local account before larger interaction changes.
+- Current Node is `22.9.0`; Vite recommends `20.19+` or `22.12+`. Build completed successfully, but upgrading local Node would remove the warning.
+
 ## LES-112 - Shopping List Center And History
 
 Status: implemented locally on 2026-06-27. No database migration required; the center is derived from existing workspace-scoped meal plans, shopping lists and shopping-list items.

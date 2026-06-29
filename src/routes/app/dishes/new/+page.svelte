@@ -20,12 +20,12 @@
 	<section class="space-y-4">
 		<Button href="/app/dishes" variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
 			<ArrowLeft class="size-4" />
-			返回菜品库
+			返回常做菜
 		</Button>
 		<div class="space-y-2">
 			<p class="app-chip bg-secondary text-primary">
 				<ChefHat class="size-3.5" />
-				菜品库
+				常做菜
 			</p>
 			<h1 class="text-3xl font-semibold leading-tight">新建菜品</h1>
 			<p class="text-sm leading-6 text-muted-foreground md:max-w-2xl">只填菜名即可保存，食材、标签和做法可以之后再补。</p>
@@ -64,7 +64,7 @@
 		{:else if ai?.status === 'draft'}
 			<div class="space-y-2 rounded-2xl bg-white p-4" aria-live="polite">
 				<p class="font-medium text-primary">草稿已填入，尚未保存</p>
-				<p class="text-sm leading-6 text-muted-foreground">请逐项编辑、删除或确认。点击最下方“确认并创建菜品”后才会写入菜品库。</p>
+				<p class="text-sm leading-6 text-muted-foreground">请逐项编辑、删除或确认。点击最下方“确认并创建菜品”后才会写入常做菜。</p>
 				{#if ai.notes.length > 0}
 					<ul class="list-disc space-y-1 pl-5 text-sm text-amber-900">
 						{#each ai.notes as note}<li>{note}</li>{/each}

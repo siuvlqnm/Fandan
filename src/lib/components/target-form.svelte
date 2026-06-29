@@ -48,7 +48,7 @@
 <form method="post" {action} use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} class="space-y-5">
 	<div class="grid gap-4 md:grid-cols-[1fr_180px_160px]">
 		<div class="space-y-2">
-			<Label for="target-name">对象名称</Label>
+			<Label for="target-name">偏好名称</Label>
 			<Input id="target-name" name="name" value={values.name ?? ''} placeholder="例如：张女士家" required class="app-input" />
 			{#if errors.name?.[0]}
 				<p class="text-sm text-destructive">{errors.name[0]}</p>

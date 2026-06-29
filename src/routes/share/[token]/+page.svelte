@@ -77,7 +77,7 @@
 					<p>
 						<UsersRound class="mx-auto mb-1 size-5 text-primary" />
 						<span class="block truncate text-muted-foreground">
-							{data.share.mealPlan.target?.name ?? '未设置对象'}
+							{data.share.mealPlan.target?.name ?? '当前家庭'}
 						</span>
 					</p>
 					<p>

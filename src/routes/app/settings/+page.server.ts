@@ -86,7 +86,7 @@ export const actions: Actions = {
 	switchWorkspace: async (event) => {
 		const formData = await event.request.formData();
 		const spaceId = String(formData.get('spaceId') ?? '');
-		if (!spaceId) return fail(400, { message: '缺少工作区编号' });
+		if (!spaceId) return fail(400, { message: '缺少家庭编号' });
 
 		try {
 			await switchWorkspaceForUser(await getContext(event), spaceId);

@@ -31,7 +31,7 @@
 
 <main class="app-page app-bottom-safe">
 	<section class="flex items-center gap-3">
-		<a href="/app" class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-muted-foreground shadow-sm" aria-label="返回工作台">
+		<a href="/app/settings" class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-muted-foreground shadow-sm" aria-label="返回家页">
 			<ArrowLeft class="size-5" />
 		</a>
 		<div class="min-w-0">
@@ -53,7 +53,7 @@
 	<section class="app-soft-panel space-y-4 p-5">
 		<span class="flex size-12 items-center justify-center rounded-2xl bg-white text-primary shadow-sm"><UserPlus class="size-6" /></span>
 		<div class="space-y-2">
-			<h2 class="text-xl font-semibold">把家人加入同一个饭单空间</h2>
+			<h2 class="text-xl font-semibold">把家人加入同一个家庭</h2>
 			<p class="text-sm leading-6 text-muted-foreground">链接默认 7 天有效。家人登录或注册后确认加入，就能立即看到这里的菜品、饭单和购物清单。</p>
 		</div>
 		<form method="post" action="?/create" use:enhanceWithFeedback={{ pendingLabel: '创建中...' }}>
@@ -106,7 +106,7 @@
 
 	<section class="app-panel flex gap-3 p-4 text-sm leading-6 text-muted-foreground">
 		<ShieldCheck class="mt-0.5 size-5 shrink-0 text-primary" />
-		<p>邀请页只显示空间名称和邀请状态，不会泄露饭单、菜品或成员信息。</p>
+		<p>邀请页只显示家庭名称和邀请状态，不会泄露饭单、菜品或成员信息。</p>
 	</section>
 </main>
 

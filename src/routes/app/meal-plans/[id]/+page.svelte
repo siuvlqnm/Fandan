@@ -432,7 +432,7 @@
 				<div class="border-t border-border/70 p-4">
 					<div class="mb-4 flex items-center justify-between gap-3">
 						<div>
-							<h2 class="text-xl font-semibold">系统状态</h2>
+							<h2 class="text-xl font-semibold">这顿进展</h2>
 							<p class="text-sm text-muted-foreground">通常不用手动改；需要结束反馈或归档时再处理。</p>
 						</div>
 						{#if data.feedbackSummary.latestConfirmation}
@@ -573,7 +573,7 @@
 			<div class="app-soft-panel space-y-3 p-5 text-sm">
 				<div class="flex items-center gap-2">
 					<UsersRound class="size-5 text-primary" />
-					<h2 class="text-xl font-semibold">对象偏好</h2>
+					<h2 class="text-xl font-semibold">用餐偏好</h2>
 				</div>
 					{#if data.target}
 						<p class="rounded-2xl bg-white p-3"><span class="block text-muted-foreground">人数</span>{data.target.peopleCount} 人</p>
@@ -613,9 +613,9 @@
 						</div>
 
 						<div class="space-y-2">
-							<Label for="meal-plan-target">用餐对象</Label>
+							<Label for="meal-plan-target">用餐偏好</Label>
 							<select id="meal-plan-target" name="targetId" class={selectClass} disabled={isArchived}>
-								<option value="" selected={!data.mealPlan.targetId}>未选择对象</option>
+								<option value="" selected={!data.mealPlan.targetId}>当前家庭</option>
 								{#each data.targets as target}
 									<option value={target.id} selected={data.mealPlan.targetId === target.id}>{target.name}</option>
 								{/each}

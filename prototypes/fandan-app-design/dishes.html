@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>常做菜 / 饭单 App 原型</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./prototype-app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="饭单 App 常做菜页原型">
+				<div class="screen">
+					<header class="topbar">
+						<div class="brand">
+							<div class="logo"><img src="./assets/reference/logo.png" alt="" /></div>
+							<div>
+								<h1>常做菜</h1>
+								<p>家里顺手的好味道</p>
+							</div>
+						</div>
+						<div class="actions">
+							<button class="icon-button" type="button" aria-label="新增常做菜"><i class="ri-add-line"></i></button>
+							<div class="avatar"><img src="./assets/reference/avatar.jpg" alt="家里的餐桌" /></div>
+						</div>
+					</header>
+
+					<section class="page-title">
+						<span class="eyebrow"><i class="ri-sparkling-2-line"></i> 午餐可直接用 3 道</span>
+						<h2>从熟悉的菜里挑</h2>
+						<p>不用每次重新想。常吃、好买、适合今天的菜会先浮上来。</p>
+					</section>
+
+					<section class="hero-card" aria-label="今天推荐常做菜">
+						<div class="hero-copy">
+							<h3>番茄牛腩</h3>
+							<p>适合今天午餐，已经能自动带出牛腩、番茄和配菜清单。</p>
+							<div class="mini">
+								<span class="pill orange">45 分钟</span>
+								<span class="pill green">家常</span>
+								<span class="pill">常被选择</span>
+							</div>
+						</div>
+						<div class="hero-media"><img src="./assets/reference/lunch.jpg" alt="番茄牛腩" /></div>
+					</section>
+
+					<div class="search-row">
+						<label class="search">
+							<i class="ri-search-line"></i>
+							<input type="search" placeholder="搜菜名、食材、口味" />
+						</label>
+						<button class="round-btn" type="button" aria-label="筛选常做菜"><i class="ri-equalizer-2-line"></i></button>
+					</div>
+
+					<div class="segmented" aria-label="常做菜分类">
+						<button class="segment active" type="button">推荐</button>
+						<button class="segment" type="button">快手</button>
+						<button class="segment" type="button">清淡</button>
+						<button class="segment" type="button">孩子爱吃</button>
+					</div>
+
+					<section class="section-head">
+						<div>
+							<h3>今天可用</h3>
+							<p>按当前饭点和家里习惯排序</p>
+						</div>
+						<a class="ghost-btn" href="./next-meal-room.html">安排饭</a>
+					</section>
+
+					<section class="card-list" aria-label="常做菜列表">
+						<a id="dish-tomato" class="list-card" href="#dish-tomato">
+							<span class="thumb"><img src="./assets/reference/lunch.jpg" alt="番茄牛腩" /></span>
+							<span class="list-copy">
+								<strong>番茄牛腩</strong>
+								<span>酸甜暖胃，适合午餐主菜</span>
+								<small>牛腩、番茄、土豆、米饭</small>
+							</span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a id="dish-fish" class="list-card" href="#dish-fish">
+							<span class="thumb"><img src="./assets/reference/dinner.jpg" alt="清蒸鱼" /></span>
+							<span class="list-copy">
+								<strong>清蒸鱼</strong>
+								<span>清淡一点，晚餐不负担</span>
+								<small>鲈鱼、姜葱、娃娃菜</small>
+							</span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+						<a id="dish-oat" class="list-card" href="#dish-oat">
+							<span class="thumb"><img src="./assets/reference/breakfast.jpg" alt="燕麦粥" /></span>
+							<span class="list-copy">
+								<strong>燕麦粥套餐</strong>
+								<span>明早可提前备好</span>
+								<small>燕麦、鸡蛋、时蔬</small>
+							</span>
+							<i class="ri-arrow-right-s-line"></i>
+						</a>
+					</section>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab" href="./next-meal-room.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab active" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+
+		<script>
+			const segments = document.querySelectorAll(".segment");
+			segments.forEach((segment) => {
+				segment.addEventListener("click", () => {
+					segments.forEach((item) => item.classList.remove("active"));
+					segment.classList.add("active");
+				});
+			});
+		</script>
+	</body>
+</html>

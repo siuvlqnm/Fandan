@@ -1,19 +1,23 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { ClipboardList, Home, ShoppingBag, UserRound } from 'lucide-svelte';
+	import { CookingPot, Home, ShoppingBag, Soup } from 'lucide-svelte';
 
 	const navItems = [
-		{ label: '首页', href: '/app', icon: Home, match: (path: string) => path === '/app' },
-		{ label: '饭单', href: '/app/meal-plans', icon: ClipboardList, match: (path: string) => path.startsWith('/app/meal-plans') },
-		{ label: '清单', href: '/app/shopping-lists', icon: ShoppingBag, match: (path: string) => path.startsWith('/app/shopping-lists') },
+		{ label: '今天', href: '/app', icon: Soup, match: (path: string) => path === '/app' || path.startsWith('/app/meal-plans') },
 		{
-			label: '我的',
+			label: '常做菜',
+			href: '/app/dishes',
+			icon: CookingPot,
+			match: (path: string) => path.startsWith('/app/dishes')
+		},
+		{ label: '买菜', href: '/app/shopping-lists', icon: ShoppingBag, match: (path: string) => path.startsWith('/app/shopping-lists') },
+		{
+			label: '家',
 			href: '/app/settings',
-			icon: UserRound,
+			icon: Home,
 			match: (path: string) =>
 				path.startsWith('/app/settings') ||
 				path.startsWith('/app/invitations') ||
-				path.startsWith('/app/dishes') ||
 				path.startsWith('/app/targets')
 		}
 	];
@@ -23,7 +27,7 @@
 	class="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-white/92 px-3 pb-[max(0.55rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_26px_oklch(0.28_0.035_150_/_10%)] backdrop-blur-xl md:hidden"
 	aria-label="移动端主导航"
 >
-	<div class="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-2xl border border-border/70 bg-muted/55 p-1">
+	<div class="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[1.4rem] border border-border/70 bg-muted/55 p-1">
 		{#each navItems as item}
 			{@const Icon = item.icon}
 			{@const active = item.match(page.url.pathname)}

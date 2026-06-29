@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>饭单 App 首页真实 DOM 原型</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<style>
+			:root {
+				--bg: #fbf7ef;
+				--card: rgba(255, 255, 255, 0.86);
+				--ink: #211812;
+				--text: #5d5b59;
+				--muted: #8b8780;
+				--green: #2e8a2d;
+				--green-soft: #eaf7df;
+				--line: #eadfcf;
+				--orange: #ee9309;
+				--shadow: 0 12px 30px rgba(85, 63, 34, 0.1);
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				min-height: 100svh;
+				overflow-x: hidden;
+				background:
+					radial-gradient(circle at 76% 12%, rgba(255, 255, 255, 0.95), transparent 24%),
+					linear-gradient(180deg, #f4ecdf 0%, #faf5ed 48%, #f9f5ef 100%);
+				color: var(--ink);
+				font-family:
+					ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC",
+					"Microsoft YaHei", sans-serif;
+				letter-spacing: 0;
+			}
+
+			button {
+				border: 0;
+				font: inherit;
+			}
+
+			.stage {
+				display: grid;
+				min-height: 100svh;
+				place-items: center;
+				padding: 24px;
+			}
+
+			.app {
+				position: relative;
+				width: min(390px, 100%);
+				height: min(844px, calc(100svh - 32px));
+				overflow: hidden;
+				border-radius: 30px;
+				background: var(--bg);
+				box-shadow: 0 30px 80px rgba(48, 38, 24, 0.18);
+			}
+
+			.screen {
+				position: relative;
+				z-index: 1;
+				height: 100%;
+				overflow-y: auto;
+				padding: 18px 17px 82px;
+				scrollbar-width: none;
+			}
+
+			.screen::-webkit-scrollbar {
+				display: none;
+			}
+
+			.hero-photo {
+				position: absolute;
+				top: 42px;
+				right: -36px;
+				width: 196px;
+				height: 166px;
+				overflow: hidden;
+				border-bottom-left-radius: 72px;
+				opacity: 0.9;
+				mask-image: linear-gradient(90deg, transparent 0%, black 30%, black 100%);
+			}
+
+			.hero-photo img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				object-position: 50% 45%;
+			}
+
+			.topbar {
+				position: relative;
+				z-index: 2;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+			}
+
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+
+			.logo {
+				display: grid;
+				width: 44px;
+				height: 44px;
+				place-items: center;
+				border-radius: 15px;
+				overflow: hidden;
+				background: #2e8a2d;
+				box-shadow: 0 10px 20px rgba(46, 138, 45, 0.18);
+			}
+
+			.logo img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+			}
+
+			.brand h1,
+			.brand p {
+				margin: 0;
+			}
+
+			.brand h1 {
+				font-size: 23px;
+				line-height: 1;
+				font-weight: 850;
+			}
+
+			.brand p {
+				margin-top: 4px;
+				color: #68635d;
+				font-size: 14px;
+			}
+
+			.actions {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+			}
+
+			.icon-button,
+			.avatar {
+				display: grid;
+				width: 45px;
+				height: 45px;
+				place-items: center;
+				border-radius: 50%;
+				border: 1px solid #eadfcf;
+				background: rgba(255, 255, 255, 0.72);
+				color: #4f4943;
+				font-size: 23px;
+				box-shadow: 0 7px 18px rgba(67, 52, 30, 0.08);
+			}
+
+			.avatar {
+				overflow: hidden;
+				padding: 0;
+			}
+
+			.avatar img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+			}
+
+			.meta {
+				position: relative;
+				z-index: 2;
+				display: flex;
+				align-items: center;
+				width: fit-content;
+				gap: 8px;
+				margin-top: 18px;
+				border: 1px solid rgba(234, 223, 207, 0.78);
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.68);
+				padding: 6px 10px;
+				color: #655f58;
+				font-size: 13px;
+				font-weight: 600;
+				box-shadow: 0 8px 18px rgba(74, 55, 30, 0.05);
+				backdrop-filter: blur(12px);
+			}
+
+			.meta .today {
+				color: #28231f;
+				font-weight: 760;
+			}
+
+			.meta .divider {
+				width: 1px;
+				height: 13px;
+				background: #e2d5c4;
+			}
+
+			.weather {
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+				border-radius: 999px;
+				background: rgba(255, 247, 226, 0.86);
+				padding: 3px 8px;
+				color: #615e5a;
+				font-size: 12px;
+				font-weight: 500;
+			}
+
+			.weather i {
+				color: #f2a10f;
+				font-size: 15px;
+			}
+
+			.headline {
+				position: relative;
+				z-index: 2;
+				margin-top: 14px;
+			}
+
+			.headline h2,
+			.headline p {
+				margin: 0;
+			}
+
+			.headline h2 {
+				position: relative;
+				width: fit-content;
+				font-size: 36px;
+				line-height: 1.06;
+				font-weight: 900;
+				letter-spacing: 0;
+			}
+
+			.headline h2::after {
+				position: absolute;
+				right: 4px;
+				bottom: 0;
+				left: 132px;
+				z-index: -1;
+				height: 9px;
+				border-radius: 999px;
+				background: rgba(86, 143, 67, 0.38);
+				content: "";
+			}
+
+			.headline p {
+				margin-top: 10px;
+				color: #686765;
+				font-size: 16px;
+			}
+
+			.date-grid {
+				position: relative;
+				z-index: 2;
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 9px;
+				margin-top: 20px;
+			}
+
+			.date-card {
+				position: relative;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				height: 64px;
+				border: 1px solid var(--line);
+				border-radius: 22px;
+				background: rgba(255, 255, 255, 0.82);
+				color: #28231f;
+				cursor: pointer;
+				text-align: center;
+				box-shadow: 0 8px 18px rgba(68, 50, 25, 0.06);
+				transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+			}
+
+			.date-card strong,
+			.date-card span {
+				display: block;
+			}
+
+			.date-card strong {
+				font-size: 18px;
+				font-weight: 780;
+			}
+
+			.date-card span {
+				margin-top: 4px;
+				color: #716d68;
+				font-size: 14px;
+			}
+
+			.date-card i {
+				margin-right: 7px;
+				color: #4c4843;
+			}
+
+			.date-card.pick-date strong {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 17px;
+			}
+
+			.date-card.active {
+				border-color: var(--green);
+				background: linear-gradient(135deg, #f4ffed, #effbe6);
+				color: var(--green);
+			}
+
+			.date-card.active::after {
+				position: absolute;
+				top: 5px;
+				right: 7px;
+				display: grid;
+				width: 20px;
+				height: 20px;
+				place-items: center;
+				border-radius: 50%;
+				background: var(--green);
+				color: #fff;
+				font-family: remixicon;
+				font-size: 15px;
+				content: "\eb7b";
+			}
+
+			.meals {
+				display: grid;
+				gap: 7px;
+				margin-top: 9px;
+			}
+
+			.meal-card {
+				position: relative;
+				display: grid;
+				height: 84px;
+				min-height: 0;
+				grid-template-columns: 48px 1fr 150px;
+				align-items: center;
+				gap: 0;
+				overflow: hidden;
+				border: 1px solid rgba(234, 223, 207, 0.92);
+				border-radius: 20px;
+				background: rgba(255, 255, 255, 0.84);
+				box-shadow: var(--shadow);
+			}
+
+			.meal-card.is-past {
+				opacity: 0.72;
+			}
+
+			.meal-card.is-focus {
+				border-color: rgba(238, 147, 9, 0.42);
+				box-shadow: 0 12px 28px rgba(238, 147, 9, 0.14);
+			}
+
+			.meal-card.warm {
+				background: linear-gradient(90deg, #fffdfa 0%, #fff6e5 100%);
+			}
+
+			.meal-card.green {
+				background: linear-gradient(90deg, #fffdfa 0%, #f4fbef 100%);
+			}
+
+			.meal-card.coral {
+				background: linear-gradient(90deg, #fffafa 0%, #fff1eb 100%);
+			}
+
+			.meal-icon {
+				display: grid;
+				place-items: center;
+				font-size: 30px;
+			}
+
+			.meal-card.breakfast .meal-icon,
+			.meal-card.lunch .meal-icon {
+				color: #f2a00b;
+			}
+
+			.meal-card.dinner .meal-icon {
+				color: var(--green);
+			}
+
+			.meal-card.snack .meal-icon {
+				color: #c86655;
+			}
+
+			.meal-copy {
+				min-width: 0;
+				padding: 7px 0;
+			}
+
+			.meal-title {
+				display: flex;
+				align-items: baseline;
+				gap: 7px;
+				white-space: nowrap;
+			}
+
+			.meal-title strong {
+				font-size: 20px;
+				line-height: 1;
+				font-weight: 870;
+			}
+
+			.meal-title span {
+				color: #e18400;
+				font-size: 12px;
+				font-weight: 650;
+			}
+
+			.meal-title .state {
+				margin-left: auto;
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.68);
+				padding: 2px 5px;
+				font-size: 10px;
+				font-weight: 780;
+			}
+
+			.is-past .meal-title .state {
+				color: #9a938b;
+			}
+
+			.is-focus .meal-title .state {
+				background: #fff0d1;
+				color: #d57900;
+			}
+
+			.dinner .meal-title span {
+				color: #2e8a2d;
+			}
+
+			.snack .meal-title span {
+				color: #d16a5c;
+			}
+
+			.meal-copy p {
+				margin: 6px 0 0;
+				color: #565350;
+				font-size: 11.8px;
+				line-height: 1.18;
+			}
+
+			.meal-copy small {
+				display: block;
+				margin-top: 6px;
+				color: #7c7772;
+				font-size: 10px;
+				white-space: nowrap;
+			}
+
+			.meal-image {
+				align-self: stretch;
+				overflow: hidden;
+				mask-image: linear-gradient(90deg, transparent 0%, black 18%, black 100%);
+			}
+
+			.meal-image img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				object-position: center;
+			}
+
+			.arrow {
+				display: none;
+				width: 32px;
+				height: 32px;
+				place-items: center;
+				border-radius: 50%;
+				background: #fff;
+				color: #332e29;
+				font-size: 24px;
+				box-shadow: 0 5px 14px rgba(60, 47, 28, 0.12);
+			}
+
+			.next-card {
+				position: relative;
+				display: grid;
+				height: 94px;
+				min-height: 0;
+				grid-template-columns: minmax(0, 1fr) 92px 94px;
+				align-items: center;
+				gap: 4px;
+				margin-top: 11px;
+				overflow: hidden;
+				border: 1px solid #f0d69c;
+				border-radius: 22px;
+				background:
+					radial-gradient(circle at 84% 10%, rgba(255, 255, 255, 0.86), transparent 34%),
+					linear-gradient(105deg, #fff8df 0%, #fff1c8 100%);
+				box-shadow: var(--shadow);
+			}
+
+			.next-copy {
+				min-width: 0;
+				padding: 12px 0 12px 17px;
+			}
+
+			.next-copy h3,
+			.next-copy p {
+				margin: 0;
+			}
+
+			.next-copy h3 {
+				display: inline-flex;
+				width: fit-content;
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.58);
+				color: #a76505;
+				padding: 4px 9px;
+				font-size: 12px;
+				line-height: 1;
+				font-weight: 780;
+			}
+
+			.next-info {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-top: 9px;
+				white-space: nowrap;
+			}
+
+			.next-info i {
+				color: #f0a10c;
+				font-size: 21px;
+			}
+
+			.next-info strong {
+				flex: 0 0 auto;
+				font-size: 18px;
+			}
+
+			.next-info span {
+				display: none;
+			}
+
+			.next-copy p {
+				margin-top: 6px;
+				color: #6f6457;
+				font-size: 11.5px;
+				line-height: 1.15;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			.next-card img {
+				display: block;
+				width: 92px;
+				height: 78px;
+				object-fit: cover;
+				object-position: center;
+				mix-blend-mode: multiply;
+			}
+
+			.continue-btn {
+				display: flex;
+				height: 46px;
+				align-items: center;
+				justify-content: center;
+				gap: 4px;
+				margin-right: 14px;
+				padding: 0 12px;
+				border-radius: 999px;
+				background: #f2a20c;
+				color: #fff;
+				cursor: pointer;
+				font-size: 13px;
+				font-weight: 780;
+				white-space: nowrap;
+				box-shadow: 0 10px 22px rgba(232, 139, 0, 0.24);
+			}
+
+			.tabbar {
+				position: absolute;
+				right: 0;
+				bottom: 0;
+				left: 0;
+				z-index: 3;
+				display: grid;
+				height: 72px;
+				grid-template-columns: repeat(4, 1fr);
+				align-items: center;
+				border-top: 1px solid #e7e2da;
+				border-radius: 24px 24px 0 0;
+				background: rgba(255, 255, 255, 0.92);
+				box-shadow: 0 -10px 28px rgba(65, 51, 31, 0.1);
+				backdrop-filter: blur(16px);
+			}
+
+			.tab {
+				display: flex;
+				height: 100%;
+				align-items: center;
+				justify-content: center;
+				gap: 4px;
+				color: #4f4b47;
+				font-size: 14px;
+				text-decoration: none;
+				flex-direction: column;
+			}
+
+			.tab i {
+				font-size: 25px;
+			}
+
+			.tab.active {
+				color: var(--green);
+			}
+
+			@media (max-width: 440px) {
+				.stage {
+					display: block;
+					padding: 0;
+				}
+
+				.app {
+					width: 100%;
+					height: 100svh;
+					border-radius: 0;
+					box-shadow: none;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="饭单 App 首页真实 DOM 原型">
+				<div class="hero-photo"><img src="./assets/reference/hero.jpg" alt="温暖的家中餐桌角落" /></div>
+				<div class="screen">
+					<header class="topbar">
+						<div class="brand">
+							<div class="logo"><img src="./assets/reference/logo.png" alt="" /></div>
+							<div>
+								<h1>饭单</h1>
+								<p>让每一顿都更简单温暖</p>
+							</div>
+						</div>
+						<div class="actions">
+							<button class="icon-button" type="button" aria-label="打开日历"><i class="ri-calendar-line"></i></button>
+							<div class="avatar"><img src="./assets/reference/avatar.jpg" alt="家里的餐桌" /></div>
+						</div>
+					</header>
+
+					<div class="meta">
+						<span class="today">今天 6月29日</span>
+						<span class="divider"></span>
+						<span>适合安排午餐</span>
+						<span class="weather"><i class="ri-sun-line"></i> 晴&nbsp; 28°C</span>
+					</div>
+
+					<section class="headline">
+						<h2>下一顿吃什么？</h2>
+						<p>定好饭点，我帮你把菜单理顺。3 道常做菜可选。</p>
+					</section>
+
+					<section class="date-grid" aria-label="选择日期">
+						<button class="date-card active" type="button">
+							<strong>今天</strong>
+							<span>06-29</span>
+						</button>
+						<button class="date-card" type="button">
+							<strong>明天</strong>
+							<span>06-30</span>
+						</button>
+						<button class="date-card pick-date" type="button">
+							<strong><i class="ri-calendar-check-line"></i>选日期</strong>
+						</button>
+					</section>
+
+					<section class="meals" aria-label="选择餐别">
+						<article class="meal-card breakfast warm is-past">
+							<div class="meal-icon"><i class="ri-sun-fill"></i></div>
+							<div class="meal-copy">
+								<div class="meal-title"><strong>早餐</strong><span>07:00-09:00</span><span class="state">过</span></div>
+								<p>今天已过，明天可以提前备好</p>
+								<small>推荐：燕麦粥 + 水煮蛋 + 时蔬</small>
+							</div>
+							<div class="meal-image"><img src="./assets/reference/breakfast.jpg" alt="燕麦粥早餐" /></div>
+							<button class="arrow" type="button" aria-label="安排早餐"><i class="ri-arrow-right-s-line"></i></button>
+						</article>
+
+						<article class="meal-card lunch warm is-focus">
+							<div class="meal-icon"><i class="ri-sun-fill"></i></div>
+							<div class="meal-copy">
+								<div class="meal-title"><strong>午餐</strong><span>11:00-13:30</span><span class="state">推荐</span></div>
+								<p>现在安排正合适，先定主菜</p>
+								<small>推荐：番茄牛腩 + 西兰花 + 米饭</small>
+							</div>
+							<div class="meal-image"><img src="./assets/reference/lunch.jpg" alt="番茄牛腩午餐" /></div>
+							<button class="arrow" type="button" aria-label="安排午餐"><i class="ri-arrow-right-s-line"></i></button>
+						</article>
+
+						<article class="meal-card dinner green">
+							<div class="meal-icon"><i class="ri-moon-fill"></i></div>
+							<div class="meal-copy">
+								<div class="meal-title"><strong>晚餐</strong><span>17:00-19:30</span><span class="state">备</span></div>
+								<p>适合提前想好，晚点不慌</p>
+								<small>推荐：清蒸鱼 + 上汤娃娃菜 + 小米粥</small>
+							</div>
+							<div class="meal-image"><img src="./assets/reference/dinner.jpg" alt="清蒸鱼晚餐" /></div>
+							<button class="arrow" type="button" aria-label="安排晚餐"><i class="ri-arrow-right-s-line"></i></button>
+						</article>
+
+						<article class="meal-card snack coral">
+							<div class="meal-icon"><i class="ri-moon-clear-fill"></i></div>
+							<div class="meal-copy">
+								<div class="meal-title"><strong>宵夜</strong><span>20:30以后</span><span class="state">轻</span></div>
+								<p>轻松一点，暖胃不负担</p>
+								<small>推荐：牛奶燕麦杯 + 坚果</small>
+							</div>
+							<div class="meal-image"><img src="./assets/reference/snack.jpg" alt="牛奶燕麦宵夜" /></div>
+							<button class="arrow" type="button" aria-label="安排宵夜"><i class="ri-arrow-right-s-line"></i></button>
+						</article>
+					</section>
+
+					<section class="next-card" aria-label="未完成的安排">
+						<div class="next-copy">
+							<h3>今天建议</h3>
+							<div class="next-info">
+								<i class="ri-sun-fill"></i>
+								<strong>先定午餐</strong>
+								<span>11:00-13:30</span>
+							</div>
+							<p>从 3 道常做菜里挑，最快 1 分钟完成。</p>
+						</div>
+						<img src="./assets/reference/basket.jpg" alt="新鲜蔬菜篮" />
+						<button class="continue-btn" type="button">开始安排 <i class="ri-arrow-right-s-line"></i></button>
+					</section>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab active" href="./next-meal-room.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+
+		<script>
+			const dateCards = document.querySelectorAll(".date-card");
+			dateCards.forEach((card) => {
+				card.addEventListener("click", () => {
+					dateCards.forEach((item) => item.classList.remove("active"));
+					card.classList.add("active");
+				});
+			});
+		</script>
+	</body>
+</html>

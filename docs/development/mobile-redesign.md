@@ -49,6 +49,19 @@ The product should feel like a household meal flow before it feels like a data m
 - Home, list empty states and meal detail avoid duplicate primary calls to action in the first screen.
 - Interactive controls on the covered mobile routes have at least a 44px touch height, a visible keyboard focus state and no horizontal overflow at the mobile product viewport.
 
+## 2026-06-29 Next Meal Home Direction
+
+The next homepage iteration moves away from the shared-confirmation room as the first impression and toward a daily life-assistant surface.
+
+- The first screen should be `安排饭`, led by `下一顿吃什么？`.
+- Date and meal selectors remain, but behave as app controls with contextual meal states.
+- The four meal choices are `早餐`, `午餐`, `晚餐`, `宵夜`; they should not be static shortcuts.
+- The product language should feel warm and domestic. Avoid backend terms such as `工作区`, `对象`, and raw system statuses on the first screen.
+- Bottom navigation language becomes `今天`, `常做菜`, `买菜`, `家`.
+- Execution reference: `next-meal-home-design.md`.
+- Local prototype: `/Users/meat/Dev/ts/Fandan/prototypes/fandan-app-design/next-meal-room.html`.
+- Implementation status: landed in Svelte on 2026-06-29 for `/app`, `/app/dishes`, `/app/shopping-lists`, `/app/settings` and the mobile bottom navigation.
+
 ## QA Evidence
 
 - Design QA report: `design-qa.md`

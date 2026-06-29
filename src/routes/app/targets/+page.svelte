@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-	<title>用餐对象 / 饭单</title>
+	<title>偏好档案 / 饭单</title>
 </svelte:head>
 
 <main class="app-page app-bottom-safe">
@@ -19,17 +19,17 @@
 		<div class="space-y-2">
 			<Button href="/app" variant="ghost" size="sm" class="h-11 justify-start px-0 text-muted-foreground">
 				<ArrowLeft class="size-4" />
-				返回工作台
+				返回家页
 			</Button>
-			<p class="app-chip bg-secondary text-primary">用餐对象</p>
-			<h1 class="text-3xl font-semibold leading-tight">管理家庭、客户和聚餐对象</h1>
+			<p class="app-chip bg-secondary text-primary">偏好档案</p>
+			<h1 class="text-3xl font-semibold leading-tight">记住家人的口味和忌口</h1>
 			<p class="text-sm leading-6 text-muted-foreground md:max-w-2xl">
 				记录人数、口味、忌口和预算备注。后续新建饭单时会直接复用这些信息。
 			</p>
 		</div>
 		{#if data.total > 0}<Button href="/app/targets/new" class="h-12 rounded-2xl">
 			<Plus class="size-4" />
-			新建对象
+			新建偏好
 		</Button>{/if}
 	</section>
 
@@ -72,8 +72,8 @@
 	<section class="space-y-3">
 		<div class="flex items-end justify-between gap-3">
 			<div>
-				<h2 class="text-xl font-semibold">对象列表</h2>
-				<p class="text-sm text-muted-foreground">{data.targets.length} 个用餐对象</p>
+				<h2 class="text-xl font-semibold">偏好列表</h2>
+				<p class="text-sm text-muted-foreground">{data.targets.length} 份偏好档案</p>
 			</div>
 		</div>
 
@@ -130,8 +130,8 @@
 									variant="destructive"
 									size="sm"
 									class="h-11 rounded-xl"
-									aria-label={`删除对象「${target.name}」`}
-									data-confirm={`删除对象「${target.name}」？已存在饭单不会删除，但会失去对象关联。`}
+									aria-label={`删除偏好「${target.name}」`}
+									data-confirm={`删除偏好「${target.name}」？已存在饭单不会删除。`}
 									data-pending-label="删除中..."
 								>
 									删除
