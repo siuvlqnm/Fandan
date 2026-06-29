@@ -112,6 +112,7 @@ A third same-day pass replaced the remaining `.app-*` styling vocabulary on ever
 
 - `app-redesign/app.css` is the source-of-truth design system; it was ported into `src/routes/layout.css` as a parallel `.fd-*` component layer.
 - `app-redesign/*.html` are the per-page prototypes (`today`, `meal-plans`, `meal-plan-detail`, `meal-plan-new`, `dishes`, `dish-detail`, `dish-new`, `shopping`, `shopping-detail`, `home`, `targets`). They are kept in the repository as design reference and are not part of the runtime bundle.
+- `app-redesign/assets/reference` is a symlink to `../../prototypes/fandan-app-design/assets/reference`, which lives outside the repository. The prototype HTML references images as `assets/reference/*`, so images resolve on machines that also have the external `prototypes/` checkout but will be broken links in a fresh clone. **TODO (2026-06-29): fix the prototype asset path so the reference directory is self-contained.** Options: copy the meal-ui images into `app-redesign/assets/reference/` (duplicates ~164K), or rewrite the HTML image paths to point at `../../src/lib/assets/meal-ui/`. This only affects the design-reference directory, not the runtime app.
 
 ### Design vocabulary
 
