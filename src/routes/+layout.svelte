@@ -1,19 +1,30 @@
 <script lang="ts">
 	import './layout.css';
+	import { browser } from '$app/environment';
 	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/state';
 	import { ChefHat, HeartHandshake } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
 	let { children, data }: { children: Snippet; data: LayoutData } = $props();
 	const isAppRoute = $derived(page.url.pathname.startsWith('/app'));
 	const isShareRoute = $derived(page.url.pathname.startsWith('/share/'));
+
+	onMount(() => {
+		if (browser && 'serviceWorker' in navigator) {
+			navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+		}
+	});
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:head>
+	<link rel="icon" href={favicon} />
+	<meta name="theme-color" content={isAppRoute ? '#f7faf4' : '#ffffff'} />
+</svelte:head>
 
-<div class="min-h-svh bg-background text-foreground">
+<div class="min-h-svh bg-background text-foreground {isAppRoute ? 'app-shell' : ''}">
 	{#if !isAppRoute && !isShareRoute}
 		<header class="sticky top-0 z-30 border-b border-border/70 bg-white/90 backdrop-blur">
 			<div class="mx-auto flex h-16 max-w-md items-center justify-between px-4 md:max-w-6xl">
