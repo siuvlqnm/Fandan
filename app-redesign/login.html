@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>饭单 · 登录</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="登录">
+				<div class="screen" style="display:grid;grid-template-rows:auto 1fr;">
+					<header class="topbar">
+						<div class="brand">
+							<div class="logo"><img src="./assets/reference/logo.png" alt="" /></div>
+							<div><h1>饭单</h1><p>让每一顿都更简单温暖</p></div>
+						</div>
+					</header>
+
+					<div class="center-stage">
+						<div class="stack">
+							<div class="big-logo"><img src="./assets/reference/hero.jpg" alt="" /></div>
+							<h1>欢迎回家</h1>
+							<p class="tag">安排一顿饭，看吃什么，知道买什么。家里吃饭的事，一条线搞定。</p>
+
+							<div class="login-card">
+								<div class="field" style="border:0;padding:0;">
+									<div class="field-label"><strong>邮箱</strong></div>
+									<input class="text-input" type="email" placeholder="me@home.com" />
+								</div>
+								<div class="field" style="border:0;padding:0;">
+									<div class="field-label"><strong>密码</strong><span class="hint">忘记密码？</span></div>
+									<input class="text-input" type="password" placeholder="••••••••" />
+								</div>
+								<button class="primary-btn block lg" type="button" onclick="location.href='./today.html'">登录 <i class="ri-arrow-right-s-line"></i></button>
+								<div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;">
+									<span style="flex:1;height:1px;background:var(--line);"></span>或<span style="flex:1;height:1px;background:var(--line);"></span>
+								</div>
+								<button class="ghost-btn block" type="button"><i class="ri-google-fill"></i> 用 Google 登录</button>
+							</div>
+
+							<p style="margin:0;color:var(--muted);font-size:13px;">还没账号？<a href="./register.html" style="color:var(--green);font-weight:800;">注册一个</a></p>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+	</body>
+</html>

@@ -62,6 +62,18 @@ The next homepage iteration moves away from the shared-confirmation room as the 
 - Local prototype: `/Users/meat/Dev/ts/Fandan/prototypes/fandan-app-design/next-meal-room.html`.
 - Implementation status: landed in Svelte on 2026-06-29 for `/app`, `/app/dishes`, `/app/shopping-lists`, `/app/settings` and the mobile bottom navigation.
 
+## 2026-06-29 .fd-* Visual System
+
+A same-day pass replaced the previous `.app-*` visual vocabulary across all `/app/*` pages with a single `.fd-*` design language ported from the static prototypes in `app-redesign/`. The product direction is unchanged; only the visual system was upgraded.
+
+- Base surface is warm cream (`--fd-bg: #fbf7ef`) rather than the previous cool grey-green page.
+- Primary stays service green (`--fd-green`); confirm emphasis uses warm orange (`--fd-orange`); destructive and attention states use coral (`--fd-coral`), with soft background variants for callouts.
+- All component classes live under a `.fd-*` namespace in `src/routes/layout.css`, ported from `app-redesign/app.css`.
+- A shared four-step flow stepper (`src/lib/components/flow-steps.svelte`) renders `安排 → 确认 → 买菜 → 完成` and reads the existing `flow.step` from `src/lib/domain/meal-flow.ts`, making the household meal line visible without new data.
+- `DishForm` and `TargetForm` keep their internal controls but are wrapped in `.fd-form-card` chrome so the new/edit pages match the `.fd-*` system.
+- The bottom navigation is restyled (border-top, white/translucent, four equal tabs) without changing hrefs or active-match logic.
+- No `+page.server.ts`, action, form field, route or `src/lib/server/**` file changed; only `.svelte` markup/classes, `layout.css`, `mobile-bottom-nav.svelte` and the new `flow-steps.svelte` were touched. See `next-meal-home-design.md` for the full page coverage and verification evidence.
+
 ## QA Evidence
 
 - Design QA report: `design-qa.md`

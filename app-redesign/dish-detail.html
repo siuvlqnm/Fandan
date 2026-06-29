@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>番茄牛腩 / 饭单</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="常做菜详情">
+				<div class="screen">
+					<header class="topbar with-back">
+						<div class="brand with-back">
+							<a class="back-btn" href="./dishes.html" aria-label="返回"><i class="ri-arrow-left-s-line"></i></a>
+							<div>
+								<h1>常做菜</h1>
+								<p>番茄牛腩</p>
+							</div>
+						</div>
+						<button class="icon-button" type="button" aria-label="更多"><i class="ri-more-2-fill"></i></button>
+					</header>
+
+					<!-- 大图 + 头 -->
+					<section style="position:relative;margin-top:16px;border-radius:26px;overflow:hidden;box-shadow:var(--shadow);">
+						<img src="./assets/reference/lunch.jpg" alt="番茄牛腩" style="display:block;width:100%;height:170px;object-fit:cover;" />
+						<div style="position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));">
+							<h2 style="margin:0;color:#fff;font-size:26px;font-weight:900;">番茄牛腩</h2>
+							<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+								<span class="pill" style="background:rgba(255,255,255,.86);"><i class="ri-time-line"></i> 45 分钟</span>
+								<span class="pill green" style="background:rgba(234,247,223,.95);">家常</span>
+								<span class="pill" style="background:rgba(255,255,255,.86);">下饭</span>
+							</div>
+						</div>
+					</section>
+
+					<!-- 食材：直接能转成买菜清单 -->
+					<section class="section-head">
+						<div>
+							<h3>食材</h3>
+							<p>基础 4 人份</p>
+						</div>
+						<button class="ghost-btn" type="button"><i class="ri-edit-line"></i> 改</button>
+					</section>
+					<section class="card-list">
+						<article class="check-card" style="grid-template-columns:34px minmax(0,1fr) auto;">
+							<span class="check" style="background:var(--green-soft);border-color:var(--green);color:var(--green);"><i class="ri-restaurant-line"></i></span>
+							<span class="check-copy"><strong>牛腩</strong><span>肉类 · 主料</span></span>
+							<span class="quantity">500g</span>
+						</article>
+						<article class="check-card" style="grid-template-columns:34px minmax(0,1fr) auto;">
+							<span class="check" style="background:var(--green-soft);border-color:var(--green);color:var(--green);"><i class="ri-plant-line"></i></span>
+							<span class="check-copy"><strong>番茄</strong><span>蔬菜 · 主料</span></span>
+							<span class="quantity">3 个</span>
+						</article>
+						<article class="check-card" style="grid-template-columns:34px minmax(0,1fr) auto;">
+							<span class="check" style="background:var(--green-soft);border-color:var(--green);color:var(--green);"><i class="ri-plant-line"></i></span>
+							<span class="check-copy"><strong>土豆</strong><span>蔬菜 · 配菜</span></span>
+							<span class="quantity">2 个</span>
+						</article>
+						<article class="check-card" style="grid-template-columns:34px minmax(0,1fr) auto;">
+							<span class="check" style="background:var(--green-soft);border-color:var(--green);color:var(--green);"><i class="ri-seedling-line"></i></span>
+							<span class="check-copy"><strong>姜葱</strong><span>调味 · 常备</span></span>
+							<span class="quantity">少许</span>
+						</article>
+					</section>
+
+					<!-- 做法 -->
+					<section class="section-head">
+						<div>
+							<h3>做法</h3>
+							<p>自己记的几步</p>
+						</div>
+					</section>
+					<section class="soft-card" style="display:grid;gap:10px;">
+						<div style="display:flex;gap:10px;"><span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:12px;font-weight:800;">1</span><span style="font-size:14px;line-height:1.5;color:#38332e;">牛腩切块冷水下锅焯出血沫，捞出洗净。</span></div>
+						<div style="display:flex;gap:10px;"><span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:12px;font-weight:800;">2</span><span style="font-size:14px;line-height:1.5;color:#38332e;">爆香姜葱，下牛腩和番茄炒出沙，加土豆和热水。</span></div>
+						<div style="display:flex;gap:10px;"><span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:12px;font-weight:800;">3</span><span style="font-size:14px;line-height:1.5;color:#38332e;">小火焖 40 分钟，收汁调味，配米饭。</span></div>
+					</section>
+
+					<!-- 用过几次 -->
+					<section class="soft-card" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+						<div>
+							<strong style="display:block;font-size:15px;font-weight:850;">这个月做了 3 次</strong>
+							<span style="display:block;margin-top:2px;color:var(--muted);font-size:12px;">上次：6月22日午餐</span>
+						</div>
+						<span class="pill green">常被选择</span>
+					</section>
+				</div>
+
+				<!-- 直线：从这道菜直接进安排饭 -->
+				<div class="sticky-action two">
+					<button class="ghost-btn" type="button"><i class="ri-edit-line"></i> 编辑</button>
+					<button class="primary-btn" type="button" onclick="location.href='./meal-plan-new.html'">用这道菜安排饭 <i class="ri-arrow-right-s-line"></i></button>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab" href="./today.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab active" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+	</body>
+</html>

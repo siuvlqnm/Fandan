@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>午餐 · 6月29日 / 饭单</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="饭单详情">
+				<div class="screen">
+					<header class="topbar with-back">
+						<div class="brand with-back">
+							<a class="back-btn" href="./meal-plans.html" aria-label="返回"><i class="ri-arrow-left-s-line"></i></a>
+							<div>
+								<h1>这顿饭</h1>
+								<p>安排 → 确认 → 买菜 → 完成</p>
+							</div>
+						</div>
+						<button class="icon-button" type="button" aria-label="更多"><i class="ri-more-2-fill"></i></button>
+					</header>
+
+					<!-- 详情头 -->
+					<section class="detail-card" style="margin-top:16px;">
+						<div class="detail-head">
+							<img src="./assets/reference/lunch.jpg" alt="" />
+							<div>
+								<h2>午餐 · 6月29日</h2>
+								<p>家里 4 人 · 11:00-13:30</p>
+								<div class="tags">
+									<span class="pill"><i class="ri-restaurant-line"></i> 3 道菜</span>
+									<span class="pill green"><i class="ri-user-line"></i> 4 人份</span>
+									<span class="state-pill attention">待确认</span>
+								</div>
+							</div>
+						</div>
+						<div class="flow-steps" style="margin-top:14px;">
+							<div class="flow-step done"><span class="n"><i class="ri-check-line"></i></span><span class="label">安排</span></div>
+							<div class="flow-step current"><span class="n">2</span><span class="label">确认</span></div>
+							<div class="flow-step"><span class="n">3</span><span class="label">买菜</span></div>
+							<div class="flow-step"><span class="n">4</span><span class="label">完成</span></div>
+						</div>
+					</section>
+
+					<!-- 看吃什么：菜单 -->
+					<section class="section-head">
+						<div>
+							<h3>吃什么</h3>
+							<p>点菜可改份量、看做法</p>
+						</div>
+						<button class="ghost-btn" type="button"><i class="ri-add-line"></i> 加菜</button>
+					</section>
+					<section class="card-list">
+						<a class="plan-item" href="./dish-detail.html" style="text-decoration:none;">
+							<img src="./assets/reference/lunch.jpg" alt="" />
+							<div class="pi-copy">
+								<strong>番茄牛腩</strong>
+								<span>主菜 · 45 分钟 · 家常</span>
+							</div>
+							<span class="pi-servings"><i class="ri-user-line"></i> 4 份</span>
+						</a>
+						<a class="plan-item" href="./dish-detail.html" style="text-decoration:none;">
+							<img src="./assets/reference/dinner.jpg" alt="" />
+							<div class="pi-copy">
+								<strong>清炒西兰花</strong>
+								<span>配菜 · 10 分钟 · 清淡</span>
+							</div>
+							<span class="pi-servings"><i class="ri-user-line"></i> 4 份</span>
+						</a>
+						<a class="plan-item" href="./dish-detail.html" style="text-decoration:none;">
+							<img src="./assets/reference/breakfast.jpg" alt="" />
+							<div class="pi-copy">
+								<strong>米饭</strong>
+								<span>主食 · 常备</span>
+							</div>
+							<span class="pi-servings"><i class="ri-user-line"></i> 4 份</span>
+						</a>
+					</section>
+
+					<!-- 家人反馈 -->
+					<section class="section-head">
+						<div>
+							<h3>家人反馈</h3>
+							<p>2 人已看</p>
+						</div>
+						<button class="ghost-btn" type="button"><i class="ri-share-forward-line"></i> 分享</button>
+					</section>
+					<section class="card-list">
+						<article class="feedback-row">
+							<span class="who">妈</span>
+							<span class="fb-copy"><strong>妈妈</strong><span>牛腩可以少放点辣</span></span>
+							<span class="fb-emoji" style="color:var(--orange);"><i class="ri-emotion-happy-line"></i></span>
+						</article>
+						<article class="feedback-row">
+							<span class="who">弟</span>
+							<span class="fb-copy"><strong>弟弟</strong><span>都行，加个汤更好</span></span>
+							<span class="fb-emoji" style="color:var(--green);"><i class="ri-thumb-up-line"></i></span>
+						</article>
+					</section>
+
+					<!-- 知道买什么：还没生成 -->
+					<section class="section-head">
+						<div>
+							<h3>买什么</h3>
+							<p>确认后自动生成清单</p>
+						</div>
+					</section>
+					<div class="soft-card" style="display:flex;align-items:center;gap:12px;">
+						<span class="empty" style="margin:0;padding:0;display:grid;place-items:center;">
+							<span class="emoji" style="width:48px;height:48px;font-size:24px;border-radius:16px;"><i class="ri-shopping-basket-line"></i></span>
+						</span>
+						<div style="min-width:0;">
+							<strong style="display:block;font-size:15px;font-weight:850;">还没生成买菜清单</strong>
+							<span style="display:block;margin-top:2px;color:var(--muted);font-size:12px;">家人确认后，一键从菜里带出食材。</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- 底部直线推进：当前是「确认」步 -->
+				<div class="sticky-action two">
+					<button class="ghost-btn" type="button"><i class="ri-share-forward-line"></i> 发给家人</button>
+					<button class="primary-btn" type="button" onclick="location.href='./shopping-detail.html'">确认并生成清单 <i class="ri-arrow-right-s-line"></i></button>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab active" href="./today.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+	</body>
+</html>

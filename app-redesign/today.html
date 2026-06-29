@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>今天 / 饭单</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="今天">
+				<div class="screen">
+					<header class="topbar">
+						<div class="brand">
+							<div class="logo"><img src="./assets/reference/logo.png" alt="" /></div>
+							<div>
+								<h1>饭单</h1>
+								<p>让每一顿都更简单温暖</p>
+							</div>
+						</div>
+						<div class="actions">
+							<button class="icon-button" type="button" aria-label="打开日历"><i class="ri-calendar-line"></i></button>
+							<div class="avatar"><img src="./assets/reference/avatar.jpg" alt="家里的餐桌" /></div>
+						</div>
+					</header>
+
+					<div class="meta pill" style="margin-top:18px;">
+						<span class="today" style="color:#28231f;font-weight:760;">今天 6月29日</span>
+						<span style="width:1px;height:13px;background:#e2d5c4;"></span>
+						<span>适合安排午餐</span>
+						<span class="weather" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,247,226,.86);border-radius:999px;padding:3px 8px;color:#615e5a;font-size:12px;"><i class="ri-sun-line" style="color:#f2a10f;"></i> 晴&nbsp; 28°C</span>
+					</div>
+
+					<section class="headline" style="margin-top:14px;">
+						<h2 style="margin:0;font-size:36px;line-height:1.06;font-weight:900;width:fit-content;">下一顿吃什么？</h2>
+						<p style="margin-top:10px;color:#686765;font-size:16px;">定好饭点，我帮你把菜单理顺。3 道常做菜可选。</p>
+					</section>
+
+					<!-- 日期切换 -->
+					<section class="date-grid" aria-label="选择日期" style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:20px;">
+						<button class="date-card active" type="button" style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:64px;border:1px solid var(--green);border-radius:22px;background:linear-gradient(135deg,#f4ffed,#effbe6);color:var(--green);text-align:center;box-shadow:0 8px 18px rgba(68,50,25,.06);">
+							<strong style="font-size:18px;font-weight:780;">今天</strong>
+							<span style="margin-top:4px;color:#716d68;font-size:14px;">06-29</span>
+						</button>
+						<button class="date-card" type="button" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:64px;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.82);color:#28231f;text-align:center;box-shadow:var(--shadow-soft);">
+							<strong style="font-size:18px;font-weight:780;">明天</strong>
+							<span style="margin-top:4px;color:#716d68;font-size:14px;">06-30</span>
+						</button>
+						<button class="date-card pick-date" type="button" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:64px;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.82);color:#28231f;text-align:center;box-shadow:var(--shadow-soft);">
+							<strong style="display:inline-flex;align-items:center;font-size:17px;font-weight:780;"><i class="ri-calendar-check-line" style="margin-right:6px;color:#4c4843;"></i>选日期</strong>
+						</button>
+					</section>
+
+					<!-- 餐别：直接选今天哪顿，点进去=安排 -->
+					<section class="section-head">
+						<div>
+							<h3>今天几顿</h3>
+							<p>点哪顿就开始安排哪顿</p>
+						</div>
+						<button class="ghost-btn" type="button"><i class="ri-add-line"></i> 新饭单</button>
+					</section>
+
+					<section class="meals" style="display:grid;gap:7px;margin-top:9px;">
+						<a class="meal-card breakfast warm is-past" href="./meal-plan-detail.html" style="display:grid;height:84px;grid-template-columns:48px 1fr 150px;align-items:center;overflow:hidden;border:1px solid rgba(234,223,207,.92);border-radius:20px;background:linear-gradient(90deg,#fffdfa 0%,#fff6e5 100%);box-shadow:var(--shadow);opacity:.72;text-decoration:none;">
+							<div style="display:grid;place-items:center;font-size:30px;color:#f2a00b;"><i class="ri-sun-fill"></i></div>
+							<div style="min-width:0;padding:7px 0;">
+								<div style="display:flex;align-items:baseline;gap:7px;white-space:nowrap;"><strong style="font-size:20px;font-weight:870;">早餐</strong><span style="color:#e18400;font-size:12px;font-weight:650;">07:00-09:00</span><span class="state" style="margin-left:auto;border-radius:999px;background:rgba(255,255,255,.68);padding:2px 5px;font-size:10px;font-weight:780;color:#9a938b;">过</span></div>
+								<p style="margin:6px 0 0;color:#565350;font-size:11.8px;line-height:1.18;">今天已过，明天可以提前备好</p>
+							</div>
+							<div style="align-self:stretch;overflow:hidden;mask-image:linear-gradient(90deg,transparent 0%,black 18%,black 100%);"><img src="./assets/reference/breakfast.jpg" alt="早餐" style="width:100%;height:100%;object-fit:cover;" /></div>
+						</a>
+
+						<a class="meal-card lunch warm is-focus" href="./meal-plan-detail.html" style="display:grid;height:84px;grid-template-columns:48px 1fr 150px;align-items:center;overflow:hidden;border:1px solid rgba(238,147,9,.42);border-radius:20px;background:linear-gradient(90deg,#fffdfa 0%,#fff6e5 100%);box-shadow:0 12px 28px rgba(238,147,9,.14);text-decoration:none;">
+							<div style="display:grid;place-items:center;font-size:30px;color:#f2a00b;"><i class="ri-sun-fill"></i></div>
+							<div style="min-width:0;padding:7px 0;">
+								<div style="display:flex;align-items:baseline;gap:7px;white-space:nowrap;"><strong style="font-size:20px;font-weight:870;">午餐</strong><span style="color:#e18400;font-size:12px;font-weight:650;">11:00-13:30</span><span class="state" style="margin-left:auto;border-radius:999px;background:#fff0d1;padding:2px 5px;font-size:10px;font-weight:780;color:#d57900;">推荐</span></div>
+								<p style="margin:6px 0 0;color:#565350;font-size:11.8px;line-height:1.18;">现在安排正合适，先定主菜</p>
+							</div>
+							<div style="align-self:stretch;overflow:hidden;mask-image:linear-gradient(90deg,transparent 0%,black 18%,black 100%);"><img src="./assets/reference/lunch.jpg" alt="午餐" style="width:100%;height:100%;object-fit:cover;" /></div>
+						</a>
+
+						<a class="meal-card dinner green" href="./meal-plan-new.html" style="display:grid;height:84px;grid-template-columns:48px 1fr 150px;align-items:center;overflow:hidden;border:1px solid rgba(234,223,207,.92);border-radius:20px;background:linear-gradient(90deg,#fffdfa 0%,#f4fbef 100%);box-shadow:var(--shadow);text-decoration:none;">
+							<div style="display:grid;place-items:center;font-size:30px;color:var(--green);"><i class="ri-moon-fill"></i></div>
+							<div style="min-width:0;padding:7px 0;">
+								<div style="display:flex;align-items:baseline;gap:7px;white-space:nowrap;"><strong style="font-size:20px;font-weight:870;">晚餐</strong><span style="color:#2e8a2d;font-size:12px;font-weight:650;">17:00-19:30</span><span class="state" style="margin-left:auto;border-radius:999px;background:rgba(255,255,255,.68);padding:2px 5px;font-size:10px;font-weight:780;color:#5b6f4e;">备</span></div>
+								<p style="margin:6px 0 0;color:#565350;font-size:11.8px;line-height:1.18;">适合提前想好，晚点不慌</p>
+							</div>
+							<div style="align-self:stretch;overflow:hidden;mask-image:linear-gradient(90deg,transparent 0%,black 18%,black 100%);"><img src="./assets/reference/dinner.jpg" alt="晚餐" style="width:100%;height:100%;object-fit:cover;" /></div>
+						</a>
+
+						<a class="meal-card snack coral" href="./meal-plan-new.html" style="display:grid;height:84px;grid-template-columns:48px 1fr 150px;align-items:center;overflow:hidden;border:1px solid rgba(234,223,207,.92);border-radius:20px;background:linear-gradient(90deg,#fffafa 0%,#fff1eb 100%);box-shadow:var(--shadow);text-decoration:none;">
+							<div style="display:grid;place-items:center;font-size:30px;color:#c86655;"><i class="ri-moon-clear-fill"></i></div>
+							<div style="min-width:0;padding:7px 0;">
+								<div style="display:flex;align-items:baseline;gap:7px;white-space:nowrap;"><strong style="font-size:20px;font-weight:870;">宵夜</strong><span style="color:#d16a5c;font-size:12px;font-weight:650;">20:30以后</span><span class="state" style="margin-left:auto;border-radius:999px;background:rgba(255,255,255,.68);padding:2px 5px;font-size:10px;font-weight:780;color:#b06a5e;">轻</span></div>
+								<p style="margin:6px 0 0;color:#565350;font-size:11.8px;line-height:1.18;">轻松一点，暖胃不负担</p>
+							</div>
+							<div style="align-self:stretch;overflow:hidden;mask-image:linear-gradient(90deg,transparent 0%,black 18%,black 100%);"><img src="./assets/reference/snack.jpg" alt="宵夜" style="width:100%;height:100%;object-fit:cover;" /></div>
+						</a>
+					</section>
+
+					<!-- 主线焦点卡：当前没安排完的饭，一条直线推进 -->
+					<section class="next-card" aria-label="今天建议" style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;margin-top:11px;border:1px solid #f0d69c;border-radius:22px;background:radial-gradient(circle at 88% 12%,rgba(255,255,255,.7),transparent 42%),linear-gradient(105deg,#fff8df 0%,#fff1c8 100%);box-shadow:var(--shadow);padding:14px 14px 14px 17px;">
+						<div style="min-width:0;">
+							<span style="display:inline-flex;align-items:center;gap:5px;border-radius:999px;background:rgba(255,255,255,.62);color:#a76505;padding:4px 9px;font-size:12px;font-weight:780;"><i class="ri-sun-fill" style="color:#f0a10c;"></i> 今天建议</span>
+							<div style="display:flex;align-items:baseline;gap:8px;margin-top:8px;flex-wrap:wrap;"><strong style="font-size:19px;font-weight:870;">先定午餐</strong><span style="color:#8a7a63;font-size:12px;font-weight:700;">11:00-13:30</span></div>
+							<p style="margin:5px 0 0;color:#6f6457;font-size:12px;line-height:1.35;">从 3 道常做菜里挑，最快 1 分钟完成。</p>
+						</div>
+						<a class="continue-btn" href="./meal-plan-detail.html" style="display:inline-flex;align-items:center;gap:4px;height:46px;padding:0 15px;border-radius:999px;background:#f2a20c;color:#fff;font-size:13px;font-weight:780;white-space:nowrap;box-shadow:0 10px 22px rgba(232,139,0,.24);">开始安排 <i class="ri-arrow-right-s-line"></i></a>
+					</section>
+
+					<!-- 进展：直线进度，不是并列面板 -->
+					<section class="section-head">
+						<div>
+							<h3>今天进展</h3>
+							<p>安排 → 确认 → 买菜 → 完成</p>
+						</div>
+					</section>
+					<div class="flow-steps" aria-label="今天饭单流程">
+						<div class="flow-step done"><span class="n"><i class="ri-check-line"></i></span><span class="label">安排</span></div>
+						<div class="flow-step current"><span class="n">2</span><span class="label">确认</span></div>
+						<div class="flow-step"><span class="n">3</span><span class="label">买菜</span></div>
+						<div class="flow-step"><span class="n">4</span><span class="label">完成</span></div>
+					</div>
+
+					<a class="soft-card" href="./meal-plans.html" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;text-decoration:none;">
+						<div>
+							<strong style="font-size:15px;font-weight:850;">看全部饭单</strong>
+							<p style="margin:3px 0 0;color:var(--muted);font-size:12px;">本周还有 2 顿没安排</p>
+						</div>
+						<i class="ri-arrow-right-s-line" style="color:#6a645d;font-size:22px;"></i>
+					</a>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab active" href="./today.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+	</body>
+</html>

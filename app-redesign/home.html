@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>家 / 饭单</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="家">
+				<div class="screen">
+					<header class="topbar">
+						<div class="brand">
+							<div class="logo"><img src="./assets/reference/logo.png" alt="" /></div>
+							<div>
+								<h1>家</h1>
+								<p>家庭、偏好和账号</p>
+							</div>
+						</div>
+						<div class="actions">
+							<button class="icon-button" type="button" aria-label="设置"><i class="ri-settings-3-line"></i></button>
+							<div class="avatar"><img src="./assets/reference/avatar.jpg" alt="" /></div>
+						</div>
+					</header>
+
+					<!-- 当前家庭 -->
+					<section class="profile-card" aria-label="当前家庭">
+						<img src="./assets/reference/hero.jpg" alt="家里的餐桌" />
+						<div>
+							<h3>我家饭桌</h3>
+							<p>3 位成员 · 12 道常做菜 · 今日午餐未完成</p>
+						</div>
+						<span class="state-pill green">当前</span>
+					</section>
+
+					<section class="page-title">
+						<span class="eyebrow"><i class="ri-home-heart-line"></i> 家庭生活助理</span>
+						<h2>把家里的吃饭习惯收好</h2>
+						<p>这里放成员、偏好、目标和账号。平时不用常来，需要时能马上找到。</p>
+					</section>
+
+					<!-- 工具：目标（给谁做饭）+ 偏好 + 邀请 -->
+					<section class="section-head">
+						<div>
+							<h3>家庭工具</h3>
+							<p>常用但不抢首页</p>
+						</div>
+					</section>
+					<section class="tool-grid" aria-label="家庭工具">
+						<a class="tool" href="./targets.html"><i class="ri-group-line"></i><span>给谁做饭</span></a>
+						<a class="tool" href="./home.html"><i class="ri-heart-pulse-line"></i><span>口味偏好</span></a>
+						<a class="tool" href="#invite"><i class="ri-user-add-line"></i><span>邀请家人</span></a>
+					</section>
+
+					<!-- 成员 -->
+					<section class="section-head">
+						<div>
+							<h3>家庭成员</h3>
+							<p>谁在一起维护饭单</p>
+						</div>
+						<button class="ghost-btn" type="button"><i class="ri-user-add-line"></i> 邀请</button>
+					</section>
+					<section class="card-list">
+						<article class="member-row">
+							<img src="./assets/reference/avatar.jpg" alt="MarXII" />
+							<span>
+								<strong>MarXII</strong>
+								<span>所有者 · 今天安排午餐</span>
+							</span>
+							<span class="state-pill green">你</span>
+						</article>
+						<article class="member-row">
+							<img src="./assets/reference/breakfast.jpg" alt="妈妈" />
+							<span>
+								<strong>妈妈</strong>
+								<span>成员 · 常看清淡菜</span>
+							</span>
+							<span class="state-pill">成员</span>
+						</article>
+						<article class="member-row">
+							<img src="./assets/reference/snack.jpg" alt="弟弟" />
+							<span>
+								<strong>弟弟</strong>
+								<span>成员 · 爱吃宵夜</span>
+							</span>
+							<span class="state-pill">成员</span>
+						</article>
+					</section>
+
+					<!-- 给谁做饭（targets 收拢在此） -->
+					<section class="section-head">
+						<div>
+							<h3>给谁做饭</h3>
+							<p>安排饭时选的目标</p>
+						</div>
+						<a class="ghost-btn" href="./targets.html">管理</a>
+					</section>
+					<section class="card-list">
+						<article class="member-row">
+							<span class="avatar-text"><i class="ri-home-line"></i></span>
+							<span><strong>家里</strong><span>4 人 · 家常为主</span></span>
+							<span class="state-pill green">常用</span>
+						</article>
+						<article class="member-row">
+							<span class="avatar-text"><i class="ri-cake-3-line"></i></span>
+							<span><strong>朋友聚餐</strong><span>6 人 · 偏丰盛</span></span>
+							<span class="state-pill">偶尔</span>
+						</article>
+						<article class="member-row">
+							<span class="avatar-text"><i class="ri-briefcase-line"></i></span>
+							<span><strong>客户</strong><span>2 人 · 清淡忌辣</span></span>
+							<span class="state-pill">偶尔</span>
+						</article>
+					</section>
+
+					<!-- 邀请 -->
+					<section id="invite" class="hero-card" aria-label="邀请家人" style="margin-top:18px;">
+						<div class="hero-copy">
+							<h3>邀请家人一起用</h3>
+							<p>发一个链接，对方加入后就能一起维护常做菜和买菜清单。</p>
+							<div class="mini">
+								<span class="pill green">7 天有效</span>
+								<span class="pill">可随时撤销</span>
+							</div>
+						</div>
+						<div class="hero-media"><img src="./assets/reference/dinner.jpg" alt="家庭晚餐" /></div>
+					</section>
+
+					<!-- 账号设置 -->
+					<section class="section-head">
+						<div>
+							<h3>账号</h3>
+							<p>登录、提醒和数据</p>
+						</div>
+					</section>
+					<section class="soft-card" style="padding:4px 16px;">
+						<div class="setting-row">
+							<div class="meta"><strong>我的账号</strong><span>me@home.com</span></div>
+							<i class="ri-arrow-right-s-line" style="color:var(--muted);"></i>
+						</div>
+						<div class="setting-row">
+							<div class="meta"><strong>买菜提醒</strong><span>饭前 2 小时</span></div>
+							<label class="switch on"><span class="track"></span></label>
+						</div>
+						<div class="setting-row">
+							<div class="meta"><strong>默认份数</strong><span>新菜按 4 人份算</span></div>
+							<span class="end">4 人</span>
+						</div>
+						<div class="setting-row">
+							<div class="meta"><strong>导出饭单</strong><span>存一份到本地</span></div>
+							<i class="ri-arrow-right-s-line" style="color:var(--muted);"></i>
+						</div>
+						<div class="setting-row">
+							<div class="meta"><strong style="color:var(--coral);">退出登录</strong><span>不影响其他成员</span></div>
+							<i class="ri-arrow-right-s-line" style="color:var(--coral);"></i>
+						</div>
+					</section>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab" href="./today.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab active" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+		<script>
+			document.querySelectorAll(".switch").forEach((s) =>
+				s.addEventListener("click", () => s.classList.toggle("on"))
+			);
+		</script>
+	</body>
+</html>

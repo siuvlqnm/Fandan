@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>饭单 / 饭单</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="饭单列表">
+				<div class="screen">
+					<header class="topbar">
+						<div class="brand">
+							<a class="back-btn" href="./today.html" aria-label="返回"><i class="ri-arrow-left-s-line"></i></a>
+							<div>
+								<h1>饭单</h1>
+								<p>每一顿，都在这里</p>
+							</div>
+						</div>
+						<div class="actions">
+							<button class="icon-button" type="button" aria-label="搜索"><i class="ri-search-line"></i></button>
+							<div class="avatar"><img src="./assets/reference/avatar.jpg" alt="" /></div>
+						</div>
+					</header>
+
+					<section class="page-title">
+						<span class="eyebrow green"><i class="ri-bowl-line"></i> 安排一顿饭</span>
+						<h2>安排 → 确认 → 买菜</h2>
+						<p>把每顿饭从头到尾串成一条线，不用东翻西找。</p>
+					</section>
+
+					<div class="segmented cols-3" aria-label="饭单状态">
+						<button class="segment active" type="button">进行中</button>
+						<button class="segment" type="button">已完成</button>
+						<button class="segment" type="button">已归档</button>
+					</div>
+
+					<!-- 进行中：按流程步骤分组，不是按类型堆面板 -->
+					<section class="section-head">
+						<div>
+							<h3>还差一步</h3>
+							<p>需要你接着往下走</p>
+						</div>
+						<button class="ghost-btn" type="button"><i class="ri-sort-asc"></i> 最近</button>
+					</section>
+
+					<section class="card-list">
+						<!-- pending_confirmation：等确认 -->
+						<a class="soft-card" href="./meal-plan-detail.html" style="display:grid;gap:9px;text-decoration:none;">
+							<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+								<strong style="font-size:18px;font-weight:850;">午餐 · 6月29日</strong>
+								<span class="state-pill attention">待确认</span>
+							</div>
+							<p style="margin:0;color:#595550;font-size:13px;line-height:1.35;">番茄牛腩 + 西兰花 + 米饭，菜单已列好，发给家人看一眼。</p>
+							<div style="display:flex;align-items:center;gap:8px;">
+								<span class="pill"><i class="ri-restaurant-line"></i> 3 道菜</span>
+								<span class="pill green"><i class="ri-user-line"></i> 家里 4 人</span>
+							</div>
+							<div class="flow-steps" style="margin-top:2px;">
+								<div class="flow-step done"><span class="n"><i class="ri-check-line"></i></span><span class="label">安排</span></div>
+								<div class="flow-step current"><span class="n">2</span><span class="label">确认</span></div>
+								<div class="flow-step"><span class="n">3</span><span class="label">买菜</span></div>
+								<div class="flow-step"><span class="n">4</span><span class="label">完成</span></div>
+							</div>
+							<span style="display:inline-flex;align-items:center;gap:5px;color:var(--orange);font-size:13px;font-weight:800;">发给家人确认 <i class="ri-arrow-right-s-line"></i></span>
+						</a>
+
+						<!-- confirmed：可以去买菜 -->
+						<a class="soft-card" href="./meal-plan-detail.html" style="display:grid;gap:9px;text-decoration:none;">
+							<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+								<strong style="font-size:18px;font-weight:850;">晚餐 · 6月29日</strong>
+								<span class="state-pill green">可以去买菜</span>
+							</div>
+							<p style="margin:0;color:#595550;font-size:13px;line-height:1.35;">清蒸鱼 + 上汤娃娃菜 + 小米粥，家人已确认，买菜清单 6 项待买。</p>
+							<div style="display:flex;align-items:center;gap:8px;">
+								<span class="pill"><i class="ri-restaurant-line"></i> 3 道菜</span>
+								<span class="pill orange"><i class="ri-shopping-basket-line"></i> 待买 6</span>
+							</div>
+							<div class="flow-steps" style="margin-top:2px;">
+								<div class="flow-step done"><span class="n"><i class="ri-check-line"></i></span><span class="label">安排</span></div>
+								<div class="flow-step done"><span class="n"><i class="ri-check-line"></i></span><span class="label">确认</span></div>
+								<div class="flow-step current"><span class="n">3</span><span class="label">买菜</span></div>
+								<div class="flow-step"><span class="n">4</span><span class="label">完成</span></div>
+							</div>
+							<span style="display:inline-flex;align-items:center;gap:5px;color:var(--green);font-size:13px;font-weight:800;">去买菜 <i class="ri-arrow-right-s-line"></i></span>
+						</a>
+
+						<!-- draft：继续安排 -->
+						<a class="soft-card" href="./meal-plan-new.html" style="display:grid;gap:9px;text-decoration:none;">
+							<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+								<strong style="font-size:18px;font-weight:850;">聚餐 · 周六</strong>
+								<span class="state-pill muted">继续安排</span>
+							</div>
+							<p style="margin:0;color:#595550;font-size:13px;line-height:1.35;">朋友来家里，还没想好做什么。先定个主菜就能往下走。</p>
+							<div style="display:flex;align-items:center;gap:8px;">
+								<span class="pill"><i class="ri-group-line"></i> 6 人</span>
+								<span class="pill coral"><i class="ri-cake-3-line"></i> 聚餐</span>
+							</div>
+							<div class="flow-steps" style="margin-top:2px;">
+								<div class="flow-step current"><span class="n">1</span><span class="label">安排</span></div>
+								<div class="flow-step"><span class="n">2</span><span class="label">确认</span></div>
+								<div class="flow-step"><span class="n">3</span><span class="label">买菜</span></div>
+								<div class="flow-step"><span class="n">4</span><span class="label">完成</span></div>
+							</div>
+							<span style="display:inline-flex;align-items:center;gap:5px;color:#38332e;font-size:13px;font-weight:800;">继续安排 <i class="ri-arrow-right-s-line"></i></span>
+						</a>
+					</section>
+
+					<section class="section-head">
+						<div>
+							<h3>本周饭单</h3>
+							<p>已排好的往后看</p>
+						</div>
+					</section>
+					<section class="card-list">
+						<a class="soft-card" href="./meal-plan-detail.html" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;">
+							<div>
+								<strong style="font-size:16px;font-weight:850;">早餐 · 明天</strong>
+								<p style="margin:3px 0 0;color:var(--muted);font-size:12px;">燕麦粥 + 水煮蛋 + 时蔬</p>
+							</div>
+							<span class="state-pill green">已确认</span>
+						</a>
+						<a class="soft-card" href="./meal-plan-detail.html" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;">
+							<div>
+								<strong style="font-size:16px;font-weight:850;">午餐 · 周三</strong>
+								<p style="margin:3px 0 0;color:var(--muted);font-size:12px;">番茄牛腩 + 米饭</p>
+							</div>
+							<span class="state-pill muted">已安排</span>
+						</a>
+					</section>
+				</div>
+
+				<button class="fab" type="button" aria-label="安排一顿饭" onclick="location.href='./meal-plan-new.html'"><i class="ri-add-line"></i></button>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab active" href="./today.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+		<script>
+			document.querySelectorAll(".segment").forEach((s) =>
+				s.addEventListener("click", () => {
+					document.querySelectorAll(".segment").forEach((i) => i.classList.remove("active"));
+					s.classList.add("active");
+				})
+			);
+		</script>
+	</body>
+</html>

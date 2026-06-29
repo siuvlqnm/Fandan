@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>安排饭 / 饭单</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="新建饭单">
+				<div class="screen">
+					<header class="topbar with-back">
+						<div class="brand with-back">
+							<a class="back-btn" href="./meal-plans.html" aria-label="返回"><i class="ri-arrow-left-s-line"></i></a>
+							<div>
+								<h1>安排一顿饭</h1>
+								<p>定好饭点，下一步看吃什么</p>
+							</div>
+						</div>
+						<button class="ghost-btn" type="button">存草稿</button>
+					</header>
+
+					<!-- 流程：当前在「安排」 -->
+					<div class="flow-steps" style="margin-top:16px;">
+						<div class="flow-step current"><span class="n">1</span><span class="label">安排</span></div>
+						<div class="flow-step"><span class="n">2</span><span class="label">确认</span></div>
+						<div class="flow-step"><span class="n">3</span><span class="label">买菜</span></div>
+						<div class="flow-step"><span class="n">4</span><span class="label">完成</span></div>
+					</div>
+
+					<!-- 第一步：这顿饭是什么 -->
+					<section class="form-card">
+						<div class="field">
+							<div class="field-label"><strong>饭名</strong></div>
+							<input class="text-input" type="text" placeholder="比如：周六午餐" value="午餐" />
+						</div>
+						<div class="field">
+							<div class="field-label"><strong>类型</strong></div>
+							<div class="chip-row">
+								<span class="chip active">单顿</span>
+								<span class="chip">一天</span>
+								<span class="chip">一周</span>
+								<span class="chip">聚餐</span>
+							</div>
+						</div>
+						<div class="field">
+							<div class="field-label"><strong>日期</strong><span class="hint">6月29日 周日</span></div>
+							<input class="text-input" type="text" value="2026-06-29" />
+						</div>
+						<div class="field">
+							<div class="field-label"><strong>给谁做</strong><span class="hint">目标</span></div>
+							<select class="select">
+								<option>家里 · 4 人</option>
+								<option>朋友聚餐 · 6 人</option>
+								<option>客户 · 2 人</option>
+								<option>+ 新建目标</option>
+							</select>
+						</div>
+					</section>
+
+					<!-- 第二步：选餐别（决定这一顿是哪餐） -->
+					<section class="section-head">
+						<div>
+							<h3>选哪一顿</h3>
+							<p>选好就能加菜</p>
+						</div>
+					</section>
+					<div class="slot-grid">
+						<button class="slot-card breakfast" type="button"><i class="ri-sun-fill"></i><strong>早餐</strong><span>07:00-09:00</span></button>
+						<button class="slot-card lunch active" type="button"><i class="ri-sun-fill"></i><strong>午餐</strong><span>11:00-13:30</span></button>
+						<button class="slot-card dinner" type="button"><i class="ri-moon-fill"></i><strong>晚餐</strong><span>17:00-19:30</span></button>
+						<button class="slot-card snack" type="button"><i class="ri-moon-clear-fill"></i><strong>宵夜</strong><span>20:30 以后</span></button>
+					</div>
+
+					<!-- 第三步：直接加常做菜（看吃什么的入口） -->
+					<section class="section-head">
+						<div>
+							<h3>吃什么</h3>
+							<p>从常做菜里加，或临时写一个</p>
+						</div>
+						<a class="ghost-btn" href="./dishes.html">挑常做菜</a>
+					</section>
+					<section class="card-list">
+						<article class="plan-item">
+							<img src="./assets/reference/lunch.jpg" alt="" />
+							<div class="pi-copy">
+								<strong>番茄牛腩</strong>
+								<span>主菜 · 来自常做菜</span>
+							</div>
+							<span class="pi-servings"><i class="ri-user-line"></i> 4 人份</span>
+						</article>
+						<article class="plan-item">
+							<img src="./assets/reference/dinner.jpg" alt="" />
+							<div class="pi-copy">
+								<strong>清炒西兰花</strong>
+								<span>配菜 · 来自常做菜</span>
+							</div>
+							<span class="pi-servings"><i class="ri-user-line"></i> 4 人份</span>
+						</article>
+						<button class="ghost-btn block" type="button" style="margin-top:0;"><i class="ri-add-line"></i> 加一道菜</button>
+					</section>
+				</div>
+
+				<!-- 底部固定操作：下一步就是确认，一条直线 -->
+				<div class="sticky-action two">
+					<button class="ghost-btn" type="button">存草稿</button>
+					<button class="primary-btn" type="button" onclick="location.href='./meal-plan-detail.html'">列好菜单 <i class="ri-arrow-right-s-line"></i></button>
+				</div>
+
+				<nav class="tabbar" aria-label="底部导航">
+					<a class="tab active" href="./today.html"><i class="ri-bowl-line"></i><span>今天</span></a>
+					<a class="tab" href="./dishes.html"><i class="ri-cooking-pot-line"></i><span>常做菜</span></a>
+					<a class="tab" href="./shopping.html"><i class="ri-shopping-basket-2-line"></i><span>买菜</span></a>
+					<a class="tab" href="./home.html"><i class="ri-home-5-line"></i><span>家</span></a>
+				</nav>
+			</section>
+		</main>
+		<script>
+			document.querySelectorAll(".chip").forEach((c) =>
+				c.addEventListener("click", () => {
+					c.parentElement.querySelectorAll(".chip").forEach((i) => i.classList.remove("active"));
+					c.classList.add("active");
+				})
+			);
+			document.querySelectorAll(".slot-card").forEach((c) =>
+				c.addEventListener("click", () => {
+					document.querySelectorAll(".slot-card").forEach((i) => i.classList.remove("active"));
+					c.classList.add("active");
+				})
+			);
+		</script>
+	</body>
+</html>

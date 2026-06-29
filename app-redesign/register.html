@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>饭单 · 注册</title>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" />
+		<link rel="stylesheet" href="./app.css" />
+	</head>
+	<body>
+		<main class="stage">
+			<section class="app" aria-label="注册">
+				<div class="screen" style="display:grid;grid-template-rows:auto 1fr;">
+					<header class="topbar with-back">
+						<div class="brand with-back">
+							<a class="back-btn" href="./login.html" aria-label="返回"><i class="ri-arrow-left-s-line"></i></a>
+							<div><h1>注册</h1><p>30 秒开始</p></div>
+						</div>
+					</header>
+
+					<div class="center-stage" style="align-content:start;padding-top:8px;">
+						<div class="stack" style="gap:16px;width:100%;">
+							<div class="big-logo"><img src="./assets/reference/hero.jpg" alt="" /></div>
+							<h1>建一个家</h1>
+							<p class="tag">把家里吃饭的事理顺：安排饭、挑常做菜、生成买菜清单。</p>
+
+							<div class="login-card">
+								<div class="field" style="border:0;padding:0;">
+									<div class="field-label"><strong>你的称呼</strong></div>
+									<input class="text-input" type="text" placeholder="比如 MarXII" />
+								</div>
+								<div class="field" style="border:0;padding:0;">
+									<div class="field-label"><strong>邮箱</strong></div>
+									<input class="text-input" type="email" placeholder="me@home.com" />
+								</div>
+								<div class="field" style="border:0;padding:0;">
+									<div class="field-label"><strong>密码</strong><span class="hint">至少 8 位</span></div>
+									<input class="text-input" type="password" placeholder="••••••••" />
+								</div>
+								<div class="field" style="border:0;padding:0;">
+									<div class="field-label"><strong>家庭名</strong><span class="hint">可改</span></div>
+									<input class="text-input" type="text" value="我家饭桌" />
+								</div>
+								<button class="primary-btn block lg" type="button" onclick="location.href='./today.html'">开始用饭单 <i class="ri-arrow-right-s-line"></i></button>
+							</div>
+
+							<p style="margin:0;color:var(--muted);font-size:13px;">已经有账号？<a href="./login.html" style="color:var(--green);font-weight:800;">去登录</a></p>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+	</body>
+</html>
