@@ -13,6 +13,7 @@ import {
 	deleteShoppingListItem,
 	generateShoppingList,
 	getShoppingList,
+	markShoppingListPurchased,
 	updateShoppingListItem
 } from '$lib/server/shopping-lists';
 import type { RequestEvent } from '@sveltejs/kit';
@@ -30,7 +31,7 @@ const itemFormSchema = z.object({
 	notes: formNullableTextSchema(1000)
 });
 
-type FormAction = 'addItem' | 'updateItem' | 'toggleItem' | 'deleteItem' | 'regenerate';
+type FormAction = 'addItem' | 'updateItem' | 'toggleItem' | 'markAllPurchased' | 'deleteItem' | 'regenerate';
 type ShoppingList = Awaited<ReturnType<typeof getShoppingList>>;
 type ShoppingListItem = ShoppingList['items'][number];
 
@@ -238,6 +239,18 @@ export const actions: Actions = {
 			redirectBack(event);
 		} catch (cause) {
 			return actionError('toggleItem', cause, values);
+		}
+	},
+
+	markAllPurchased: async (event) => {
+		const context = await requireContext(event);
+
+		try {
+			await markShoppingListPurchased(context, event.params.id);
+			await syncMealPlanStatusWithShoppingList(context, event.params.id);
+			redirectBack(event);
+		} catch (cause) {
+			return actionError('markAllPurchased', cause);
 		}
 	},
 

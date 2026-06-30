@@ -18,6 +18,7 @@ import {
 	DishDraftError,
 	generateDishDraft
 } from '$lib/server/ai/dish-drafts';
+import { getDishDraftModel, getWorkersAiBinding } from '$lib/server/ai/config';
 import type { Actions, PageServerLoad } from './$types';
 import { z } from 'zod';
 
@@ -115,8 +116,8 @@ export const actions: Actions = {
 			});
 		}
 
-		const env = event.platform?.env as (Env & { AI?: Ai; AI_DISH_MODEL?: string }) | undefined;
-		const provider = createWorkersAiDishDraftProvider(env?.AI, env?.AI_DISH_MODEL);
+		const env = event.platform?.env;
+		const provider = createWorkersAiDishDraftProvider(getWorkersAiBinding(env), getDishDraftModel(env));
 
 		try {
 			const result = await generateDishDraft(provider, promptResult.data);

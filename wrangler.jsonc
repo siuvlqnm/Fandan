@@ -14,6 +14,10 @@
 		"binding": "AI",
 		"remote": true
 	},
+	"vars": {
+		"AI_DISH_MODEL": "@cf/meta/llama-3.2-3b-instruct",
+		"AI_MEAL_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast"
+	},
 	"d1_databases": [
 		{
 			"binding": "DB",

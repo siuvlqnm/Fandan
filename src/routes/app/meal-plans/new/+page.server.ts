@@ -12,6 +12,7 @@ import {
 	MealDraftError,
 	type MealDraft
 } from '$lib/server/ai/meal-drafts';
+import { getMealDraftModel, getWorkersAiBinding } from '$lib/server/ai/config';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -278,8 +279,8 @@ export const actions: Actions = {
 			});
 		}
 
-		const env = event.platform?.env as (Env & { AI?: Ai; AI_MEAL_MODEL?: string }) | undefined;
-		const provider = createWorkersAiMealDraftProvider(env?.AI, env?.AI_MEAL_MODEL);
+		const env = event.platform?.env;
+		const provider = createWorkersAiMealDraftProvider(getWorkersAiBinding(env), getMealDraftModel(env));
 
 		try {
 			const result = await generateMealDraft(provider, {
@@ -332,8 +333,8 @@ export const actions: Actions = {
 		const remainingDrafts = parseSuggestedDishDrafts(values.suggestedDishDraftsJson).filter((dish) =>
 			remainingNames.includes(dish.name)
 		);
-		const env = event.platform?.env as (Env & { AI?: Ai; AI_MEAL_MODEL?: string }) | undefined;
-		const provider = createWorkersAiMealDraftProvider(env?.AI, env?.AI_MEAL_MODEL);
+		const env = event.platform?.env;
+		const provider = createWorkersAiMealDraftProvider(getWorkersAiBinding(env), getMealDraftModel(env));
 
 		try {
 			const result = await generateMealDraft(provider, {

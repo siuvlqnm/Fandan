@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getMealFlowState } from '$lib/domain/meal-flow';
 import { ApiError } from '$lib/server/api/errors';
 import { requireUserSpace } from '$lib/server/context';
+import { spaceMembers } from '$lib/server/db/schema';
 import { createDish, createDishSchema, listDishes } from '$lib/server/dishes';
 import { emptyItemFeedback, getMealPlanFeedbackSummary } from '$lib/server/feedback';
 import { archiveMealPlan, getMealPlan, updateMealPlan, updateMealPlanItemRecommendationRating } from '$lib/server/meal-plans';
@@ -12,8 +13,9 @@ import {
 	listMealPlanShareLinks,
 	revokeMealPlanShareLink
 } from '$lib/server/share-links';
-import { generateShoppingList, getMealPlanShoppingList, updateShoppingListItem } from '$lib/server/shopping-lists';
+import { generateShoppingList, getMealPlanShoppingList, markShoppingListPurchased, updateShoppingListItem } from '$lib/server/shopping-lists';
 import { listTargets } from '$lib/server/targets';
+import { and, eq, sql } from 'drizzle-orm';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -51,7 +53,7 @@ const metaFormSchema = z.object({
 });
 
 const addDishFormSchema = z.object({
-	dishId: z.string().trim().min(1, '请选择菜品'),
+	dishIds: z.array(z.string().trim().min(1)).min(1, '请选择菜品').max(20, '一次最多添加 20 道菜'),
 	mealSlot: formNullableTextSchema(40),
 	plannedDate: formNullableTextSchema(20),
 	servings: z.coerce.number().int().min(1, '份数至少为 1').max(999),
@@ -59,7 +61,7 @@ const addDishFormSchema = z.object({
 	notes: formNullableTextSchema(1000)
 });
 
-const quickDishFormSchema = addDishFormSchema.omit({ dishId: true }).extend({
+const quickDishFormSchema = addDishFormSchema.omit({ dishIds: true }).extend({
 	name: z.string().trim().min(1, '请输入菜品名称').max(80),
 	category: formNullableTextSchema(40)
 });
@@ -125,6 +127,7 @@ type FormAction =
 	| 'setStatus'
 	| 'generateShoppingList'
 	| 'toggleShoppingItem'
+	| 'markAllShoppingPurchased'
 	| 'createShareLink'
 	| 'revokeShareLink';
 
@@ -185,7 +188,7 @@ const readAddDishForm = async (request: Request) => {
 
 	return {
 		expectedUpdatedAt: expectedUpdatedAtFrom(formData),
-		dishId: formString(formData, 'dishId'),
+		dishIds: formData.getAll('dishIds').filter((value): value is string => typeof value === 'string' && value.length > 0),
 		mealSlot: formString(formData, 'mealSlot'),
 		plannedDate: formString(formData, 'plannedDate'),
 		servings: formString(formData, 'servings', '1'),
@@ -385,6 +388,11 @@ export const load: PageServerLoad = async (event) => {
 			getMealPlanFeedbackSummary(context, id),
 			listMealPlanShareLinks(context, id)
 		]);
+		const [memberCountRow] = await context.db
+			.select({ count: sql<number>`count(*)` })
+			.from(spaceMembers)
+			.where(and(eq(spaceMembers.spaceId, context.space.id), eq(spaceMembers.status, 'active')));
+		const workspaceMemberCount = Number(memberCountRow?.count ?? 1);
 		const targetById = new Map(targets.map((target) => [target.id, target]));
 		const dishById = new Map(dishes.map((dish) => [dish.id, dish]));
 		const enrichedItems = orderedItems(mealPlan).map((item, index, allItems) => {
@@ -429,6 +437,7 @@ export const load: PageServerLoad = async (event) => {
 		const activeShare = shareLinkList.some((shareLink) => shareLink.active);
 		const shoppingCheckedCount = shoppingList?.items.filter((item) => item.checked).length ?? 0;
 		const shoppingPendingCount = shoppingList ? shoppingList.items.length - shoppingCheckedCount : 0;
+		const collaborationMode = workspaceMemberCount > 1 ? 'workspace' : 'share';
 
 		return {
 			mealPlan: {
@@ -443,9 +452,12 @@ export const load: PageServerLoad = async (event) => {
 					shoppingItemCount: shoppingList?.items.length ?? 0,
 					shoppingPendingCount,
 					shareState: activeShare ? 'active' : 'none',
+					collaborationMode,
 					feedbackCount: feedbackSummary.total
 				})
 			},
+			workspaceMemberCount,
+			canConfirmInWorkspace: workspaceMemberCount > 1,
 			target: mealPlan.targetId ? (targetById.get(mealPlan.targetId) ?? null) : null,
 			targets,
 			dishes,
@@ -503,14 +515,19 @@ export const actions: Actions = {
 		try {
 			const mealPlan = await getMealPlan(context, event.params.id);
 			const items = orderedItems(mealPlan).map(toItemInput);
-			items.push({
-				dishId: result.data.dishId,
-				mealSlot: result.data.mealSlot ?? null,
-				plannedDate: result.data.plannedDate ?? null,
-				servings: result.data.servings,
-				recommendationRating: result.data.recommendationRating ?? null,
-				notes: result.data.notes ?? null,
-				sortOrder: items.length
+			const existingDishIds = new Set(items.map((item) => item.dishId).filter(Boolean));
+			const nextDishIds = Array.from(new Set(result.data.dishIds)).filter((dishId) => !existingDishIds.has(dishId));
+
+			nextDishIds.forEach((dishId) => {
+				items.push({
+					dishId,
+					mealSlot: result.data.mealSlot ?? null,
+					plannedDate: result.data.plannedDate ?? null,
+					servings: result.data.servings,
+					recommendationRating: result.data.recommendationRating ?? null,
+					notes: result.data.notes ?? null,
+					sortOrder: items.length
+				});
 			});
 			await updateMealPlan(context, event.params.id, { items, expectedUpdatedAt: values.expectedUpdatedAt });
 			redirectBack(event);
@@ -682,6 +699,24 @@ export const actions: Actions = {
 			redirectToPanel(event, 'shopping');
 		} catch (cause) {
 			return actionError('toggleShoppingItem', cause, values);
+		}
+	},
+
+	markAllShoppingPurchased: async (event) => {
+		const context = await requireContext(event);
+		const formData = await event.request.formData();
+		const shoppingListId = formData.get('shoppingListId');
+
+		if (typeof shoppingListId !== 'string' || !shoppingListId) {
+			return fail(400, { action: 'markAllShoppingPurchased', values: {}, errors: {}, message: '缺少购物清单 ID' });
+		}
+
+		try {
+			await markShoppingListPurchased(context, shoppingListId);
+			await syncMealPlanStatusWithShoppingList(context, event.params.id);
+			redirectToPanel(event, 'shopping');
+		} catch (cause) {
+			return actionError('markAllShoppingPurchased', cause, { shoppingListId });
 		}
 	},
 

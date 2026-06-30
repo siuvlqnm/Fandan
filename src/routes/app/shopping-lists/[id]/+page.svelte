@@ -78,6 +78,15 @@
 			<span class="fd-pill green">已买 {data.summary.checked}</span>
 			<span class="fd-pill">{data.mealPlan.title}</span>
 		</div>
+		{#if data.summary.pending > 0}
+			<form method="post" action="?/markAllPurchased" use:enhanceWithFeedback>
+				<button type="submit" class="fd-primary-btn block" data-confirm="确认把清单里的所有项目都标记为已买？" data-pending-label="标记中...">
+					<CheckCircle2 class="size-4" /> 全部买完
+				</button>
+			</form>
+		{:else}
+			<span class="fd-state-pill green" style="justify-content:flex-start;"><CheckCircle2 class="size-3.5" /> 全部买齐，这顿饭已进入完成状态</span>
+		{/if}
 		<a href={`/app/meal-plans/${data.mealPlan.id}`} class="fd-ghost-btn block">
 			<CheckCircle2 class="size-4" /> 看这顿饭安排 <ArrowRight class="size-4" />
 		</a>

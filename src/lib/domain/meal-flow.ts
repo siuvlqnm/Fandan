@@ -9,6 +9,7 @@ type MealFlowInput = {
 	shoppingItemCount?: number;
 	shoppingPendingCount?: number;
 	shareState?: ShareState;
+	collaborationMode?: 'share' | 'workspace';
 	feedbackCount?: number;
 };
 
@@ -27,6 +28,7 @@ export const getMealFlowState = ({
 	shoppingItemCount = 0,
 	shoppingPendingCount,
 	shareState = 'unknown',
+	collaborationMode = 'share',
 	feedbackCount = 0
 }: MealFlowInput): MealFlowState => {
 	if (status === 'archived') {
@@ -61,6 +63,16 @@ export const getMealFlowState = ({
 		}
 
 		if (shareState === 'none') {
+			if (collaborationMode === 'workspace') {
+				return {
+					label: '家庭内确认',
+					summary: '菜单已经列好，家庭成员可以直接在饭单里查看和确认。',
+					primaryLabel: '确认菜单',
+					tone: 'attention',
+					step: 'confirm'
+				};
+			}
+
 			return {
 				label: '发给家人确认',
 				summary: '菜单已经列好，下一步发给家人看一眼。',

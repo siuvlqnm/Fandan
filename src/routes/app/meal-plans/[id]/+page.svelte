@@ -35,7 +35,7 @@
 	let activePanel = $state<Panel>('menu');
 	let copiedShareId = $state<string | null>(null);
 	let addDishQuery = $state('');
-	let replacementDishId = $state('');
+	let selectedAddDishIds = $state<string[]>([]);
 
 	$effect(() => {
 		activePanel = data.initialPanel as Panel;
@@ -58,6 +58,7 @@
 	const activeShare = $derived(data.shareLinks.find((shareLink) => shareLink.active) ?? null);
 	const activeShareUrl = $derived(activeShare ? `${data.origin}${activeShare.path}` : '');
 	const canConfirmMealPlan = $derived(!isArchived && data.mealPlan.status !== 'confirmed' && data.mealPlan.status !== 'completed');
+	const useWorkspaceConfirm = $derived(data.canConfirmInWorkspace && !activeShare);
 	const formatShoppingTime = (value: string | null) => {
 		if (!value) return '';
 		const normalized = value.replace('T', ' ').replace(/\.\d+Z?$/, '').replace(/Z$/, '');
@@ -113,6 +114,7 @@
 		{ value: '7d', label: '7 天' },
 		{ value: 'custom', label: '自定义日期' }
 	];
+	const ratingOptions = [1, 2, 3, 4, 5];
 	const panels = $derived<{ id: Panel; label: string; helper: string }[]>([
 		{ id: 'menu', label: '吃什么', helper: `${dishCount} 道菜` },
 		{ id: 'confirm', label: '确认', helper: `${data.feedbackSummary.total} 条反馈` },
@@ -134,7 +136,9 @@
 		});
 	};
 	const primaryAction = $derived(
-		data.mealPlan.flow.step === 'confirm' && !activeShare
+		data.mealPlan.flow.step === 'confirm' && useWorkspaceConfirm
+			? { kind: 'workspaceConfirm' as const }
+			: data.mealPlan.flow.step === 'confirm' && !activeShare
 			? { kind: 'createShare' as const }
 			: data.mealPlan.flow.step === 'confirm'
 				? { kind: 'reviewConfirm' as const }
@@ -202,6 +206,9 @@
 			{:else if primaryAction.kind === 'createShare'}
 				<h3>发给家人确认</h3>
 				<p>把菜单发出去，收集忌口、喜欢和最终确认。</p>
+			{:else if primaryAction.kind === 'workspaceConfirm'}
+				<h3>家庭内直接确认</h3>
+				<p>这个家庭已有 {data.workspaceMemberCount} 位成员，不用再发链接；家人进饭单就能看菜单和反馈。</p>
 			{:else if primaryAction.kind === 'reviewConfirm'}
 				<h3>{data.feedbackSummary.total > 0 ? '看完反馈就确认菜单' : '确认后进入买菜'}</h3>
 				<p>{data.feedbackSummary.total > 0 ? `已收到 ${data.feedbackSummary.total} 条反馈，确认后反馈会继续保留。` : '链接已准备好；不等反馈时也可以直接确认这份菜单。'}</p>
@@ -225,6 +232,15 @@
 					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 					<button type="submit" class="fd-primary-btn" disabled={isArchived} data-pending-label="创建中..."><Link2 class="size-4" /> 发给家人</button>
 				</form>
+			{:else if primaryAction.kind === 'workspaceConfirm'}
+				<button type="button" class="fd-ghost-btn" onclick={showFeedbackPanel}><UsersRound class="size-4" /> 看反馈</button>
+				{#if canConfirmMealPlan}
+					<form method="post" action="?/setStatus" use:enhanceWithFeedback>
+						<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+						<input type="hidden" name="status" value="confirmed" />
+						<button type="submit" class="fd-primary-btn" data-pending-label="确认中..."><CheckCircle2 class="size-4" /> 确认菜单</button>
+					</form>
+				{/if}
 			{:else if primaryAction.kind === 'reviewConfirm'}
 				<button type="button" class="fd-ghost-btn" onclick={showFeedbackPanel}><UsersRound class="size-4" /> 看反馈</button>
 				{#if canConfirmMealPlan}
@@ -311,6 +327,23 @@
 										<span class="fd-pill" style="margin-top:4px;">{item.notes}</span>
 									{/if}
 									<div class="fd-plan-actions">
+										<form method="post" action="?/updateRecommendationRating" use:enhanceWithFeedback class="fd-rating-row" aria-label={`调整「${item.dishName}」推荐星级`}>
+											<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+											<input type="hidden" name="itemId" value={item.id} />
+											{#each ratingOptions as rating}
+												<button
+													type="submit"
+													name="recommendationRating"
+													value={rating}
+													class="fd-rating-star {item.recommendationRating && item.recommendationRating >= rating ? 'active' : ''}"
+													disabled={isArchived}
+													aria-label={`${rating} 星`}
+												>
+													<Star class="size-3.5" />
+												</button>
+											{/each}
+											<button type="submit" name="recommendationRating" value="" class="fd-rating-clear" disabled={isArchived}>清除</button>
+										</form>
 										{#if item.dishId}
 											<a href={`/app/dishes/${item.dishId}`} class="fd-ghost-btn">看做法 <ArrowRight class="size-4" /></a>
 										{/if}
@@ -334,13 +367,15 @@
 					<h3>家人反馈</h3>
 					<p>{data.feedbackSummary.total} 条 · {data.feedbackSummary.total > 0 ? '已收集' : '还没人看'}</p>
 				</div>
-				{#if !activeShare}
+				{#if !activeShare && !useWorkspaceConfirm}
 					<form method="post" action="?/createShareLink" use:enhanceWithFeedback>
 						<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 						<button type="submit" class="fd-primary-btn" disabled={isArchived} data-pending-label="创建中...">
 							<Link2 class="size-4" /> 发给家人
 						</button>
 					</form>
+				{:else if useWorkspaceConfirm}
+					<span class="fd-state-pill green"><UsersRound class="size-3.5" /> 家庭内确认</span>
 				{:else}
 					<button type="button" class="fd-ghost-btn" onclick={() => {}}><Share2 class="size-4" /> 已分享</button>
 				{/if}
@@ -370,6 +405,25 @@
 								<ShieldOff class="size-4" /> 停止分享
 							</button>
 						</form>
+					</div>
+				{:else if useWorkspaceConfirm}
+					<div style="display:grid;gap:12px;">
+						<div style="display:flex;align-items:center;gap:8px;">
+							<UsersRound class="size-5" style="color:var(--fd-green);" />
+							<strong style="font-size:15px;font-weight:850;">家庭成员直接操作这顿饭</strong>
+						</div>
+						<p style="margin:0;color:#595550;font-size:13px;line-height:1.45;">当前家庭已有 {data.workspaceMemberCount} 位成员。成员打开饭单就能看菜单、改反馈和继续买菜，不需要再发访客链接。</p>
+						{#if canConfirmMealPlan}
+							<form method="post" action="?/setStatus" use:enhanceWithFeedback>
+								<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+								<input type="hidden" name="status" value="confirmed" />
+								<button type="submit" class="fd-primary-btn block" data-pending-label="确认中...">
+									<CheckCircle2 class="size-4" /> 确认菜单，进入买菜
+								</button>
+							</form>
+						{:else}
+							<a href="?panel=shopping" class="fd-primary-btn block"><ShoppingCart class="size-4" /> 去买菜</a>
+						{/if}
 					</div>
 				{:else}
 					<form method="post" action="?/createShareLink" use:enhanceWithFeedback style="display:grid;gap:14px;">
@@ -507,6 +561,16 @@
 						<span class="fd-pill green">已买 {data.shoppingSummary.checked}</span>
 						<span class="fd-pill">{data.mealPlan.title}</span>
 					</div>
+					{#if data.shoppingSummary.pending > 0}
+						<form method="post" action="?/markAllShoppingPurchased" use:enhanceWithFeedback>
+							<input type="hidden" name="shoppingListId" value={data.shoppingList.id} />
+							<button type="submit" class="fd-primary-btn block" data-confirm="确认把清单里的所有项目都标记为已买？" data-pending-label="标记中...">
+								<CheckCircle2 class="size-4" /> 全部买完
+							</button>
+						</form>
+					{:else}
+						<span class="fd-state-pill green" style="justify-content:flex-start;"><CheckCircle2 class="size-3.5" /> 清单已买齐，这顿饭会自动标记完成</span>
+					{/if}
 				</section>
 
 				{#if data.shoppingList.items.length === 0}
@@ -644,23 +708,36 @@
 					<input type="hidden" name="plannedDate" value={defaultItemDate ?? ''} />
 					<input type="hidden" name="mealSlot" value={defaultItemSlot ?? ''} />
 					<input type="hidden" name="servings" value={defaultItemServings} />
-					<input type="hidden" name="recommendationRating" value="" />
 					<input type="hidden" name="notes" value="" />
 					<div class="fd-choice-panel">
 						<label class="fd-search">
 							<Search class="size-4" />
 							<input bind:value={addDishQuery} type="search" placeholder="搜菜名、分类、食材" disabled={isArchived || data.dishes.length === 0} />
 						</label>
+						<div class="fd-rating-picker" aria-label="添加菜品时设置推荐星级">
+							<span>推荐星级</span>
+							{#each ratingOptions as rating}
+								<label class="fd-rating-option">
+									<input class="sr-only" type="radio" name="recommendationRating" value={rating} disabled={isArchived} />
+									<Star class="size-4" />
+									{rating}
+								</label>
+							{/each}
+							<label class="fd-rating-option muted">
+								<input class="sr-only" type="radio" name="recommendationRating" value="" checked disabled={isArchived} />
+								不设
+							</label>
+						</div>
 						<div class="fd-choice-list">
 							{#each filteredAddDishes as dish}
-								<label class="fd-choice-card">
-									<input bind:group={replacementDishId} class="fd-choice-radio" type="radio" name="dishId" value={dish.id} disabled={isArchived} required />
+								<label class="fd-choice-card dish-pick">
+									<input bind:group={selectedAddDishIds} class="fd-choice-radio" type="checkbox" name="dishIds" value={dish.id} disabled={isArchived} />
 									<DishVisual name={dish.name} category={dish.category} size="sm" soft />
 									<span class="min-w-0">
 										<strong>{dish.name}</strong>
 										<span>{dish.category ?? '常做菜'} · {dish.ingredients.length} 种食材 · 基准 {dish.baseServings} 人份</span>
 									</span>
-									{#if replacementDishId === dish.id}<CheckCircle2 class="size-4" style="color:var(--fd-green);" />{/if}
+									{#if selectedAddDishIds.includes(dish.id)}<CheckCircle2 class="size-4" style="color:var(--fd-green);" />{/if}
 								</label>
 							{/each}
 						</div>
@@ -669,9 +746,11 @@
 						{:else if data.dishes.length > filteredAddDishes.length}
 							<p style="margin:0;color:var(--fd-muted);font-size:11px;">已显示前 {filteredAddDishes.length} 道，继续输入关键词可以缩小范围。</p>
 						{/if}
-						{#if form?.action === 'addDish' && errors.dishId?.[0]}<p class="fd-state-pill coral" style="justify-content:flex-start;margin-top:6px;">{errors.dishId[0]}</p>{/if}
+						{#if form?.action === 'addDish' && errors.dishIds?.[0]}<p class="fd-state-pill coral" style="justify-content:flex-start;margin-top:6px;">{errors.dishIds[0]}</p>{/if}
 					</div>
-					<button type="submit" class="fd-primary-btn block" style="margin-top:12px;" disabled={isArchived || data.dishes.length === 0} data-pending-label="添加中..."><Plus class="size-4" /> 加到这顿菜单</button>
+					<button type="submit" class="fd-primary-btn block" style="margin-top:12px;" disabled={isArchived || data.dishes.length === 0 || selectedAddDishIds.length === 0} data-pending-label="添加中...">
+						<Plus class="size-4" /> 加到这顿菜单{selectedAddDishIds.length > 0 ? ` · ${selectedAddDishIds.length} 道` : ''}
+					</button>
 				</form>
 			</details>
 

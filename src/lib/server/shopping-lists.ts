@@ -142,10 +142,16 @@ const overlapsDateRange = (startDate: string | null, endDate: string | null, sta
 const latestText = (...values: Array<string | null | undefined>) =>
 	values.filter((value): value is string => Boolean(value)).sort((left, right) => right.localeCompare(left))[0] ?? null;
 
-const touchShoppingList = async (context: AuthenticatedContext, shoppingListId: string) => {
+const syncShoppingListStatus = async (context: AuthenticatedContext, shoppingListId: string) => {
+	const rows = await context.db
+		.select({ checked: shoppingListItems.checked })
+		.from(shoppingListItems)
+		.where(eq(shoppingListItems.shoppingListId, shoppingListId));
+	const status = rows.length > 0 && rows.every((item) => item.checked) ? 'completed' : 'active';
+
 	await context.db
 		.update(shoppingLists)
-		.set({ updatedAt: versionedNow })
+		.set({ status, updatedAt: versionedNow })
 		.where(eq(shoppingLists.id, shoppingListId));
 };
 
@@ -622,7 +628,7 @@ export const createShoppingListItem = async (
 		checkedByUserId: input.checked ? context.user.id : null,
 		checkedAt: input.checked ? nowText() : null
 	});
-	await touchShoppingList(context, shoppingListId);
+	await syncShoppingListStatus(context, shoppingListId);
 
 	return getShoppingList(context, shoppingListId);
 };
@@ -655,8 +661,27 @@ export const updateShoppingListItem = async (
 				updatedAt: sql`CURRENT_TIMESTAMP`
 			})
 			.where(and(eq(shoppingListItems.id, itemId), eq(shoppingListItems.shoppingListId, shoppingListId)));
-		await touchShoppingList(context, shoppingListId);
+		await syncShoppingListStatus(context, shoppingListId);
 	}
+
+	return getShoppingList(context, shoppingListId);
+};
+
+export const markShoppingListPurchased = async (context: AuthenticatedContext, shoppingListId: string) => {
+	await getShoppingListRow(context, shoppingListId);
+	const checkedAt = nowText();
+
+	await context.db
+		.update(shoppingListItems)
+		.set({
+			checked: true,
+			checkedByUserId: context.user.id,
+			checkedAt,
+			updatedByUserId: context.user.id,
+			updatedAt: sql`CURRENT_TIMESTAMP`
+		})
+		.where(and(eq(shoppingListItems.shoppingListId, shoppingListId), eq(shoppingListItems.checked, false)));
+	await syncShoppingListStatus(context, shoppingListId);
 
 	return getShoppingList(context, shoppingListId);
 };
@@ -667,7 +692,7 @@ export const deleteShoppingListItem = async (context: AuthenticatedContext, shop
 	await context.db
 		.delete(shoppingListItems)
 		.where(and(eq(shoppingListItems.id, itemId), eq(shoppingListItems.shoppingListId, shoppingListId)));
-	await touchShoppingList(context, shoppingListId);
+	await syncShoppingListStatus(context, shoppingListId);
 
 	return { deleted: true, id: itemId, shoppingListId };
 };

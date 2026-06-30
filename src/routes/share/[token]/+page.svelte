@@ -31,6 +31,7 @@
 	const disabledByConfirmed = $derived(data.share?.mealPlan.status === 'confirmed' || data.share?.mealPlan.status === 'completed');
 	const canFeedback = $derived(Boolean(data.share?.shareLink.canFeedback) && !disabledByConfirmed);
 	const canConfirm = $derived(Boolean(data.share?.shareLink.canConfirm));
+	const publicFeedback = $derived(data.share?.feedback ?? []);
 	const reactionOptions = [
 		{ value: 'like', label: '喜欢', icon: Heart },
 		{ value: 'dislike', label: '不喜欢', icon: ThumbsDown },
@@ -132,7 +133,7 @@
 			</div>
 			{#if disabledByConfirmed}
 				<div class="rounded-2xl bg-secondary/60 p-4 text-sm leading-6 text-secondary-foreground">
-					这顿饭已经确认，反馈已停止收集。如需调整，请联系创建者重新发起确认。
+					这顿饭已经确认，下面仍会保留已收到的反馈。如需调整，请联系创建者重新发起确认。
 				</div>
 			{:else if !canFeedback}
 				<div class="rounded-2xl bg-muted/60 p-4 text-sm leading-6 text-muted-foreground">
@@ -238,14 +239,37 @@
 
 				<Button type="submit" variant="outline" class="h-12 w-full rounded-2xl bg-white" disabled={!canFeedback} data-pending-label="提交中...">
 					<Send class="size-4" />
-					提交反馈
+					只提交意见，不确认
 				</Button>
 			</form>
+			{/if}
+			{#if publicFeedback.length > 0}
+				<div class="mt-5 space-y-3">
+					<h3 class="text-base font-semibold">已收到的反馈</h3>
+					{#each publicFeedback as item}
+						<article class="rounded-2xl border border-border/70 bg-white p-3 text-sm">
+							<div class="flex flex-wrap items-center gap-2">
+								<span class="font-semibold">{item.guestName}</span>
+								<span class="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-primary">{item.reactionLabel}</span>
+							</div>
+							{#if item.note}
+								<p class="mt-2 leading-6 text-muted-foreground">{item.note}</p>
+							{/if}
+							{#if item.dietaryNote}
+								<p class="mt-2 leading-6 text-muted-foreground">忌口/补充：{item.dietaryNote}</p>
+							{/if}
+						</article>
+					{/each}
+				</div>
 			{/if}
 		</section>
 
 		{#if canConfirm}
 			<section class="app-panel space-y-4 border-primary/20 p-4">
+				<div class="space-y-1">
+					<h2 class="text-xl font-semibold">最终确认</h2>
+					<p class="text-sm text-muted-foreground">点这里会告诉创建者菜单可以进入买菜；只想提意见请用上面的按钮。</p>
+				</div>
 				{#if disabledByConfirmed}
 					<div class="flex items-center gap-3 rounded-2xl bg-secondary p-4 text-secondary-foreground">
 						<CheckCircle2 class="size-6 shrink-0 text-primary" />
@@ -274,7 +298,7 @@
 					</div>
 					<Button type="submit" class="h-12 w-full rounded-2xl text-base" data-pending-label="确认中...">
 						<CheckCircle2 class="size-4" />
-						确认这份饭单
+						确认菜单并发送
 					</Button>
 				</form>
 				{/if}

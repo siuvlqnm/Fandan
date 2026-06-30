@@ -88,8 +88,18 @@ const serializeFeedback = (row: Feedback) => ({
 	id: row.id,
 	shareLinkId: row.shareLinkId,
 	mealPlanItemId: row.mealPlanItemId,
-	guestName: row.guestName,
+	guestName: row.guestName || '访客',
 	reaction: row.reaction,
+	reactionLabel:
+		row.reaction === 'like'
+			? '喜欢'
+			: row.reaction === 'dislike'
+				? '不喜欢'
+				: row.reaction === 'replace'
+					? '想替换'
+					: row.reaction === 'confirm'
+						? '确认'
+						: '备注',
 	note: row.note,
 	dietaryNote: row.dietaryNote,
 	createdAt: row.createdAt
@@ -167,6 +177,16 @@ const loadPublicItems = async (context: RequestContext, mealPlanId: string) =>
 		.leftJoin(dishes, eq(mealPlanItems.dishId, dishes.id))
 		.where(eq(mealPlanItems.mealPlanId, mealPlanId))
 		.orderBy(asc(mealPlanItems.sortOrder), asc(mealPlanItems.createdAt));
+
+const loadPublicFeedback = async (context: RequestContext, shareLinkId: string) => {
+	const rows = await context.db
+		.select()
+		.from(feedback)
+		.where(eq(feedback.shareLinkId, shareLinkId))
+		.orderBy(desc(feedback.createdAt));
+
+	return rows.map(serializeFeedback);
+};
 
 const assertMealPlanItemIds = async (context: RequestContext, mealPlanId: string, itemIds: string[]) => {
 	const uniqueIds = Array.from(new Set(itemIds));
@@ -295,10 +315,14 @@ export const getPublicShare = async (context: RequestContext, token: string) => 
 	const row = await loadShareLinkBundle(context, token);
 	assertPermission(row.shareLink.canView, 'Share link does not allow viewing');
 
-	const items = await loadPublicItems(context, row.mealPlan.id);
+	const [items, publicFeedback] = await Promise.all([
+		loadPublicItems(context, row.mealPlan.id),
+		loadPublicFeedback(context, row.shareLink.id)
+	]);
 
 	return {
 		shareLink: serializeShareLink(row.shareLink),
+		feedback: publicFeedback,
 		mealPlan: {
 			id: row.mealPlan.id,
 			title: row.mealPlan.title,

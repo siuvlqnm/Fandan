@@ -9,7 +9,7 @@ import {
 	optionListText
 } from '$lib/domain/food-options';
 
-const DEFAULT_MODEL = '@cf/meta/llama-3.2-3b-instruct';
+export const DEFAULT_DISH_DRAFT_MODEL = '@cf/meta/llama-3.2-3b-instruct';
 const MAX_ATTEMPTS = 2;
 const TIMEOUT_MS = 12_000;
 const MAX_OUTPUT_TOKENS = 1_800;
@@ -220,7 +220,7 @@ const normalizeDraftCandidate = (candidate: unknown, prompt: string) => {
 
 export const createWorkersAiDishDraftProvider = (
 	ai: Ai | undefined,
-	model = DEFAULT_MODEL
+	model = DEFAULT_DISH_DRAFT_MODEL
 ): DishDraftProvider | null => {
 	if (!ai) {
 		return null;
