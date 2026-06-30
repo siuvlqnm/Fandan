@@ -12,7 +12,7 @@ import {
 	listMealPlanShareLinks,
 	revokeMealPlanShareLink
 } from '$lib/server/share-links';
-import { generateShoppingList, getMealPlanShoppingList } from '$lib/server/shopping-lists';
+import { generateShoppingList, getMealPlanShoppingList, updateShoppingListItem } from '$lib/server/shopping-lists';
 import { listTargets } from '$lib/server/targets';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
@@ -113,6 +113,8 @@ const shareLinkFormSchema = z
 
 type MealPlan = Awaited<ReturnType<typeof getMealPlan>>;
 type MealPlanItem = MealPlan['items'][number];
+type MealPlanShoppingList = NonNullable<Awaited<ReturnType<typeof getMealPlanShoppingList>>>;
+type ShoppingListItem = MealPlanShoppingList['items'][number];
 type FormAction =
 	| 'updateMeta'
 	| 'addDish'
@@ -122,6 +124,7 @@ type FormAction =
 	| 'moveItem'
 	| 'setStatus'
 	| 'generateShoppingList'
+	| 'toggleShoppingItem'
 	| 'createShareLink'
 	| 'revokeShareLink';
 
@@ -246,6 +249,19 @@ const readExpectedVersions = async (request: Request) => {
 	};
 };
 
+const readShoppingToggleForm = async (request: Request) => {
+	const formData = await request.formData();
+	const shoppingListId = formData.get('shoppingListId');
+	const itemId = formData.get('itemId');
+	const checked = formData.get('checked');
+
+	return {
+		shoppingListId: typeof shoppingListId === 'string' && shoppingListId ? shoppingListId : null,
+		itemId: typeof itemId === 'string' && itemId ? itemId : null,
+		checked: checked === 'true'
+	};
+};
+
 const shanghaiDateEndToIso = (dateKey: string | null | undefined) => {
 	if (!dateKey || !dateKeyPattern.test(dateKey)) return null;
 
@@ -307,6 +323,50 @@ const redirectForStatus = (event: RequestEvent, status: z.infer<typeof mealPlanS
 
 const groupKey = (item: { plannedDate: string | null; mealSlot: string | null }) =>
 	`${item.plannedDate ?? 'no-date'}::${item.mealSlot ?? 'no-slot'}`;
+
+const groupShoppingItems = (items: ShoppingListItem[]) =>
+	Array.from(
+		items
+			.reduce(
+				(map, item) => {
+					const category = item.category ?? '其他';
+					const group = map.get(category) ?? {
+						category,
+						items: [] as ShoppingListItem[],
+						checkedCount: 0
+					};
+					group.items.push(item);
+					group.checkedCount += item.checked ? 1 : 0;
+					map.set(category, group);
+					return map;
+				},
+				new Map<string, { category: string; items: ShoppingListItem[]; checkedCount: number }>()
+			)
+			.values()
+	).map((group) => ({
+		...group,
+		items: group.items.sort((first, second) => Number(first.checked) - Number(second.checked))
+	}));
+
+const syncMealPlanStatusWithShoppingList = async (
+	context: Awaited<ReturnType<typeof requireContext>>,
+	mealPlanId: string
+) => {
+	const [mealPlan, shoppingList] = await Promise.all([
+		getMealPlan(context, mealPlanId),
+		getMealPlanShoppingList(context, mealPlanId)
+	]);
+
+	if (!shoppingList) return;
+
+	const allChecked = shoppingList.items.length > 0 && shoppingList.items.every((item) => item.checked);
+
+	if (mealPlan.status !== 'archived' && allChecked && mealPlan.status !== 'completed') {
+		await updateMealPlan(context, mealPlan.id, { status: 'completed' });
+	} else if (mealPlan.status === 'completed' && !allChecked) {
+		await updateMealPlan(context, mealPlan.id, { status: 'confirmed' });
+	}
+};
 
 export const load: PageServerLoad = async (event) => {
 	const context = await requireContext(event);
@@ -390,6 +450,7 @@ export const load: PageServerLoad = async (event) => {
 			targets,
 			dishes,
 			shoppingList,
+			shoppingGroups: shoppingList ? groupShoppingItems(shoppingList.items) : [],
 			shoppingSummary: {
 				total: shoppingList?.items.length ?? 0,
 				checked: shoppingCheckedCount,
@@ -596,14 +657,31 @@ export const actions: Actions = {
 		const values = await readExpectedVersions(event.request);
 
 		try {
-			const shoppingList = await generateShoppingList(context, event.params.id, {
+			await generateShoppingList(context, event.params.id, {
 				expectedMealPlanUpdatedAt: values.expectedUpdatedAt,
 				expectedShoppingListUpdatedAt: values.expectedShoppingListUpdatedAt
 			});
 
-			return redirect(303, `/app/shopping-lists/${shoppingList.id}`);
+			redirectToPanel(event, 'shopping');
 		} catch (cause) {
 			return actionError('generateShoppingList', cause, values);
+		}
+	},
+
+	toggleShoppingItem: async (event) => {
+		const context = await requireContext(event);
+		const values = await readShoppingToggleForm(event.request);
+
+		if (!values.shoppingListId || !values.itemId) {
+			return fail(400, { action: 'toggleShoppingItem', values, errors: {}, message: '缺少购物项 ID' });
+		}
+
+		try {
+			await updateShoppingListItem(context, values.shoppingListId, values.itemId, { checked: values.checked });
+			await syncMealPlanStatusWithShoppingList(context, event.params.id);
+			redirectToPanel(event, 'shopping');
+		} catch (cause) {
+			return actionError('toggleShoppingItem', cause, values);
 		}
 	},
 

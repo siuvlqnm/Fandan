@@ -858,6 +858,7 @@
 		box-shadow: 0 10px 22px rgba(213, 109, 93, 0.22);
 	}
 	.fd-primary-btn.block {
+		display: flex !important;
 		width: 100%;
 	}
 	.fd-primary-btn.lg {
@@ -875,6 +876,7 @@
 		padding: 0 14px;
 	}
 	.fd-ghost-btn.block {
+		display: flex !important;
 		width: 100%;
 	}
 	.fd-danger-btn {
@@ -883,6 +885,7 @@
 		padding: 0 14px;
 	}
 	.fd-danger-btn.block {
+		display: flex !important;
 		width: 100%;
 	}
 	.fd-round-btn {
@@ -2047,8 +2050,33 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 8px;
 	}
+	.fd-flow-cta-actions > *,
+	.fd-confirm-inline > *,
+	.fd-action-grid > * {
+		min-width: 0;
+	}
+	.fd-flow-cta-actions form,
+	.fd-confirm-inline form {
+		display: grid;
+		min-width: 0;
+	}
+	.fd-flow-cta-actions .fd-primary-btn,
+	.fd-flow-cta-actions .fd-ghost-btn,
+	.fd-flow-cta-actions .fd-danger-btn,
+	.fd-confirm-inline .fd-primary-btn,
+	.fd-confirm-inline .fd-ghost-btn,
+	.fd-confirm-inline .fd-danger-btn,
+	.fd-action-grid .fd-primary-btn,
+	.fd-action-grid .fd-ghost-btn,
+	.fd-action-grid .fd-danger-btn {
+		width: 100%;
+	}
 	.fd-flow-cta-actions > .fd-primary-btn:only-child,
+	.fd-flow-cta-actions > .fd-ghost-btn:only-child,
+	.fd-flow-cta-actions > .fd-danger-btn:only-child,
+	.fd-flow-cta-actions > form:only-child,
 	.fd-flow-cta-actions > form:only-child .fd-primary-btn {
+		grid-column: 1 / -1;
 		width: 100%;
 	}
 	.fd-confirm-inline {

@@ -8,6 +8,7 @@
 	import {
 		ArrowLeft,
 		ArrowRight,
+		Check,
 		CheckCircle2,
 		Copy,
 		ExternalLink,
@@ -50,9 +51,27 @@
 	const feedbackTotals = $derived(data.feedbackSummary.totals);
 	const dishCount = $derived(data.groups.reduce((total, group) => total + group.items.length, 0));
 	const shoppingCount = $derived(data.shoppingList?.items.length ?? 0);
+	const shoppingCompletionLabel = $derived(`${data.shoppingSummary.checked}/${data.shoppingSummary.total}`);
+	const shoppingCompletionPercent = $derived(
+		data.shoppingSummary.total === 0 ? 0 : Math.round((data.shoppingSummary.checked / data.shoppingSummary.total) * 100)
+	);
 	const activeShare = $derived(data.shareLinks.find((shareLink) => shareLink.active) ?? null);
 	const activeShareUrl = $derived(activeShare ? `${data.origin}${activeShare.path}` : '');
 	const canConfirmMealPlan = $derived(!isArchived && data.mealPlan.status !== 'confirmed' && data.mealPlan.status !== 'completed');
+	const formatShoppingTime = (value: string | null) => {
+		if (!value) return '';
+		const normalized = value.replace('T', ' ').replace(/\.\d+Z?$/, '').replace(/Z$/, '');
+		return normalized.length >= 16 ? normalized.slice(5, 16) : normalized;
+	};
+	const shoppingActorLabel = (item: NonNullable<PageData['shoppingList']>['items'][number]) => {
+		if (item.checked && item.checkedBy) {
+			const timeLabel = formatShoppingTime(item.checkedAt);
+			return timeLabel ? `${item.checkedBy.name} 标记已买 · ${timeLabel}` : `${item.checkedBy.name} 标记已买`;
+		}
+		if (item.updatedBy) return `${item.updatedBy.name} 更新`;
+		if (item.createdBy) return `${item.createdBy.name} 添加`;
+		return '购物项';
+	};
 	const formatShareExpiry = (value: string | null) =>
 		value
 			? new Intl.DateTimeFormat('zh-CN', {
@@ -188,10 +207,10 @@
 				<p>{data.feedbackSummary.total > 0 ? `已收到 ${data.feedbackSummary.total} 条反馈，确认后反馈会继续保留。` : '链接已准备好；不等反馈时也可以直接确认这份菜单。'}</p>
 			{:else if primaryAction.kind === 'generateShop'}
 				<h3>生成买菜清单</h3>
-				<p>{data.feedbackSummary.total > 0 ? `反馈已保留 ${data.feedbackSummary.total} 条。下一步把食材整理成买菜清单。` : '根据当前菜单把食材整理成一张买菜清单。'}</p>
+				<p>{data.feedbackSummary.total > 0 ? `反馈已保留 ${data.feedbackSummary.total} 条。去买什么里生成并检查食材。` : '根据当前菜单把食材整理成一张买菜清单。'}</p>
 			{:else if primaryAction.kind === 'goShop'}
 				<h3>去买菜</h3>
-				<p>清单已经生成，打开后边买边勾。</p>
+				<p>清单已经生成，就在买什么里边买边勾。</p>
 			{:else}
 				<h3>{data.mealPlan.status === 'completed' ? '这顿饭已完成' : '买菜已完成'}</h3>
 				<p>{data.shoppingSummary.total > 0 ? `${data.shoppingSummary.checked}/${data.shoppingSummary.total} 项已经买齐，可以回看菜单或完成记录。` : '这顿饭已经完成，可以回看菜单和反馈。'}</p>
@@ -202,14 +221,14 @@
 				<button type="button" class="fd-ghost-btn" onclick={() => (activePanel = 'edit')}><Plus class="size-4" /> 加菜</button>
 				<button type="button" class="fd-primary-btn" onclick={() => (activePanel = 'confirm')}><Share2 class="size-4" /> 去确认</button>
 			{:else if primaryAction.kind === 'createShare'}
-				<form method="post" action="?/createShareLink" use:enhanceWithFeedback style="display:contents;">
+				<form method="post" action="?/createShareLink" use:enhanceWithFeedback>
 					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 					<button type="submit" class="fd-primary-btn" disabled={isArchived} data-pending-label="创建中..."><Link2 class="size-4" /> 发给家人</button>
 				</form>
 			{:else if primaryAction.kind === 'reviewConfirm'}
 				<button type="button" class="fd-ghost-btn" onclick={showFeedbackPanel}><UsersRound class="size-4" /> 看反馈</button>
 				{#if canConfirmMealPlan}
-					<form method="post" action="?/setStatus" use:enhanceWithFeedback style="display:contents;">
+					<form method="post" action="?/setStatus" use:enhanceWithFeedback>
 						<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 						<input type="hidden" name="status" value="confirmed" />
 						<button type="submit" class="fd-primary-btn" data-pending-label="确认中..."><CheckCircle2 class="size-4" /> 确认菜单</button>
@@ -221,24 +240,20 @@
 				{#if data.feedbackSummary.total > 0}
 					<button type="button" class="fd-ghost-btn" onclick={showFeedbackPanel}><UsersRound class="size-4" /> 回看反馈</button>
 				{/if}
-				<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback style="display:contents;">
-					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
-					<input type="hidden" name="expectedShoppingListUpdatedAt" value={data.shoppingList?.updatedAt ?? ''} />
-					<button type="submit" class="fd-primary-btn" data-pending-label="生成中..."><ShoppingCart class="size-4" /> 生成清单</button>
-				</form>
+				<button type="button" class="fd-primary-btn" onclick={() => (activePanel = 'shopping')}><ShoppingCart class="size-4" /> 去生成</button>
 			{:else if primaryAction.kind === 'done'}
 				<button type="button" class="fd-ghost-btn" onclick={() => (activePanel = 'menu')}><ArrowLeft class="size-4" /> 看菜单</button>
 				{#if data.mealPlan.status !== 'completed' && !isArchived}
-					<form method="post" action="?/setStatus" use:enhanceWithFeedback style="display:contents;">
+					<form method="post" action="?/setStatus" use:enhanceWithFeedback>
 						<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 						<input type="hidden" name="status" value="completed" />
 						<button type="submit" class="fd-primary-btn" data-pending-label="完成中..."><CheckCircle2 class="size-4" /> 标记完成</button>
 					</form>
 				{:else if data.shoppingList}
-					<a href={`/app/shopping-lists/${data.shoppingList.id}`} class="fd-primary-btn"><CheckCircle2 class="size-4" /> 看清单</a>
+					<button type="button" class="fd-primary-btn" onclick={() => (activePanel = 'shopping')}><CheckCircle2 class="size-4" /> 看清单</button>
 				{/if}
 			{:else}
-				<a href={`/app/shopping-lists/${data.shoppingList!.id}`} class="fd-primary-btn"><ShoppingCart class="size-4" /> 去买菜</a>
+				<button type="button" class="fd-primary-btn" onclick={() => (activePanel = 'shopping')}><ShoppingCart class="size-4" /> 去买菜</button>
 			{/if}
 		</div>
 	</section>
@@ -474,18 +489,68 @@
 			<div class="fd-section-head">
 				<div>
 					<h3>买什么</h3>
-					<p>{data.shoppingList ? `已生成 ${shoppingCount} 项` : '确认后自动生成清单'}</p>
+					<p>{data.shoppingList ? `已生成 ${shoppingCount} 项，可以直接勾选` : '根据这顿菜单生成清单'}</p>
 				</div>
 			</div>
 
 			{#if data.shoppingList}
-				<a href={`/app/shopping-lists/${data.shoppingList.id}`} class="fd-soft-card" style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-decoration:none;">
-					<div>
-						<strong style="font-size:16px;font-weight:850;">打开购物清单</strong>
-						<p style="margin:3px 0 0;color:var(--fd-muted);font-size:12px;">{shoppingCount} 项，去勾选买到的</p>
+				<section class="fd-detail-card" style="margin-top:12px;display:grid;gap:12px;">
+					<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+						<strong style="font-size:16px;font-weight:850;">买菜进度</strong>
+						<span style="color:var(--fd-muted);font-size:13px;font-weight:760;">{shoppingCompletionLabel}</span>
 					</div>
-					<ArrowRight class="size-5" style="color:#6a645d;" />
-				</a>
+					<div style="height:10px;border-radius:999px;background:var(--fd-line);overflow:hidden;">
+						<div style="width:{shoppingCompletionPercent}%;height:100%;background:var(--fd-green);"></div>
+					</div>
+					<div style="display:flex;flex-wrap:wrap;gap:6px;">
+						<span class="fd-pill orange">待买 {data.shoppingSummary.pending}</span>
+						<span class="fd-pill green">已买 {data.shoppingSummary.checked}</span>
+						<span class="fd-pill">{data.mealPlan.title}</span>
+					</div>
+				</section>
+
+				{#if data.shoppingList.items.length === 0}
+					<div class="fd-empty" style="margin-top:14px;">
+						<span class="emoji"><ShoppingCart class="size-8" /></span>
+						<h3>清单还是空的</h3>
+						<p>这顿菜可能还没有录食材，可以打开完整清单临时加购物项。</p>
+						<a href={`/app/shopping-lists/${data.shoppingList.id}`} class="fd-ghost-btn block">添加购物项 <ArrowRight class="size-4" /></a>
+					</div>
+				{:else}
+					<section style="margin-top:8px;" data-testid="meal-shopping-list-items">
+						{#each data.shoppingGroups as group}
+							<section class="fd-shopping-group">
+								<div class="fd-shopping-group-head">
+									<div>
+										<h3>{group.category}</h3>
+										<p>{group.items.length - group.checkedCount} 个待买 · {group.checkedCount} 个已买</p>
+									</div>
+									<span class="fd-shopping-status">{group.checkedCount}/{group.items.length}</span>
+								</div>
+								<section class="fd-shopping-items">
+									{#each group.items as item}
+										<article class="fd-check-card shopping {item.checked ? 'is-done' : ''}" data-testid={`meal-shopping-list-item-${item.id}`}>
+											<form method="post" action="?/toggleShoppingItem" use:enhanceWithFeedback style="display:contents;">
+												<input type="hidden" name="shoppingListId" value={data.shoppingList.id} />
+												<input type="hidden" name="itemId" value={item.id} />
+												<input type="hidden" name="checked" value={item.checked ? 'false' : 'true'} />
+												<button type="submit" class="fd-check" aria-label={item.checked ? '标记未购买' : '标记已购买'}><Check class="size-4" strokeWidth={3} /></button>
+											</form>
+											<div class="fd-check-copy min-w-0">
+												<strong>{item.name}</strong>
+												<span>{item.quantity || '未填数量'}{item.unit ? ` ${item.unit}` : ''}{item.notes ? ` · ${item.notes}` : ''}</span>
+												<span style="font-size:11px;color:var(--fd-muted);">{shoppingActorLabel(item)}</span>
+											</div>
+											<a href={`/app/shopping-lists/${data.shoppingList.id}`} class="fd-icon-del" aria-label="编辑购物项">
+												<MoreHorizontal class="size-4" />
+											</a>
+										</article>
+									{/each}
+								</section>
+							</section>
+						{/each}
+					</section>
+				{/if}
 			{:else}
 				<div class="fd-soft-card" style="margin-top:12px;display:flex;align-items:center;gap:12px;">
 					<span class="fd-empty" style="margin:0;padding:0;place-items:center;">
@@ -510,6 +575,11 @@
 					<ShoppingCart class="size-4" /> {data.shoppingList ? '重新生成清单' : '生成购物清单'}
 				</button>
 			</form>
+			{#if data.shoppingList}
+				<a href={`/app/shopping-lists/${data.shoppingList.id}`} class="fd-ghost-btn block" style="margin-top:10px;">
+					临时加项和编辑数量 <ArrowRight class="size-4" />
+				</a>
+			{/if}
 
 			<div class="fd-section-head"><div><h3 style="font-size:16px;">这顿偏好</h3></div></div>
 			<div class="fd-soft-card" style="margin-top:10px;">

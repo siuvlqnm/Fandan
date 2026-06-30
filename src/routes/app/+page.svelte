@@ -180,14 +180,13 @@
 			{@const disabled = !existingMeal && isSlotDisabled(slot)}
 			{@const state = slotState(slot)}
 			{@const variant = slotVariant(slot.id)}
-			<form method="post" action="?/quickStart" use:enhanceWithFeedback={{ pendingLabel: '正在安排...' }}>
+			<form method="post" action="?/quickStart" use:enhanceWithFeedback>
 				<input type="hidden" name="quickStartDate" value={selectedQuickDate} />
 				<input type="hidden" name="quickStartSlot" value={slot.id} />
 				<button
 					type="submit"
 					class="fd-meal-card {variant} {disabled ? 'is-past' : ''} {existingMeal ? 'is-scheduled' : ''} {slot.id === nextSlot?.id && dateMode === 'today' && !existingMeal ? 'is-focus' : ''} w-full text-left"
 					disabled={disabled}
-					data-pending-label={existingMeal ? '正在打开...' : '正在安排...'}
 				>
 					<span class="mc-icon"><Icon strokeWidth={2.4} /></span>
 					<span class="mc-body min-w-0">
