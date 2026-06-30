@@ -103,8 +103,8 @@
 			<Trash2 class="size-4" /> 删除偏好
 		</button>
 	</form>
-</main>
 
-<div class="fd-sticky-action">
-	<a href={`/app/meal-plans/new?targetId=${target.id}`} class="fd-primary-btn block lg"><ClipboardList class="size-4" /> 按这个口味安排饭 <ArrowRight class="size-4" /></a>
-</div>
+	<div class="fd-bottom-action">
+		<a href={`/app/meal-plans/new?targetId=${target.id}`} class="fd-primary-btn block lg"><ClipboardList class="size-4" /> 按这个口味安排饭 <ArrowRight class="size-4" /></a>
+	</div>
+</main>

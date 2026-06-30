@@ -1,17 +1,13 @@
 <script lang="ts">
+	import DishVisual from '$lib/components/dish-visual.svelte';
 	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import FlowSteps from '$lib/components/flow-steps.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import lunchImage from '$lib/assets/meal-ui/lunch.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import {
-		Archive,
-		ArrowDown,
 		ArrowLeft,
 		ArrowRight,
-		ArrowUp,
-		ArchiveRestore,
 		CheckCircle2,
 		Copy,
 		ExternalLink,
@@ -20,6 +16,7 @@
 		MoreHorizontal,
 		Plus,
 		RefreshCw,
+		Search,
 		Share2,
 		ShoppingCart,
 		ShieldOff,
@@ -36,6 +33,8 @@
 
 	let activePanel = $state<Panel>('menu');
 	let copiedShareId = $state<string | null>(null);
+	let addDishQuery = $state('');
+	let replacementDishId = $state('');
 
 	$effect(() => {
 		activePanel = data.initialPanel as Panel;
@@ -44,11 +43,16 @@
 	const errors = $derived((form?.errors ?? {}) as Record<string, string[]>);
 	const isArchived = $derived(data.mealPlan.status === 'archived');
 	const defaultDate = $derived(data.mealPlan.startDate ?? '');
+	const currentItem = $derived(data.mealPlan.items[0] ?? null);
+	const defaultItemDate = $derived(currentItem?.plannedDate ?? defaultDate);
+	const defaultItemSlot = $derived(currentItem?.mealSlot ?? '');
+	const defaultItemServings = $derived(currentItem?.servings ?? data.target?.peopleCount ?? 1);
 	const feedbackTotals = $derived(data.feedbackSummary.totals);
-	const dishCount = $derived(data.mealPlan.items.length);
+	const dishCount = $derived(data.groups.reduce((total, group) => total + group.items.length, 0));
 	const shoppingCount = $derived(data.shoppingList?.items.length ?? 0);
 	const activeShare = $derived(data.shareLinks.find((shareLink) => shareLink.active) ?? null);
 	const activeShareUrl = $derived(activeShare ? `${data.origin}${activeShare.path}` : '');
+	const canConfirmMealPlan = $derived(!isArchived && data.mealPlan.status !== 'confirmed' && data.mealPlan.status !== 'completed');
 	const formatShareExpiry = (value: string | null) =>
 		value
 			? new Intl.DateTimeFormat('zh-CN', {
@@ -73,14 +77,16 @@
 					: 'fd-state-pill';
 	const selectClass = 'fd-select';
 	const textAreaClass = 'fd-textarea';
-	const recommendationOptions = [
-		{ value: '', label: '不标注' },
-		{ value: 5, label: '5 星强推荐' },
-		{ value: 4, label: '4 星推荐' },
-		{ value: 3, label: '3 星可选' },
-		{ value: 2, label: '2 星普通' },
-		{ value: 1, label: '1 星备选' }
-	];
+	const filteredAddDishes = $derived.by(() => {
+		const query = addDishQuery.trim().toLowerCase();
+		const source = query
+			? data.dishes.filter((dish) => {
+					const haystack = `${dish.name} ${dish.category ?? ''} ${dish.ingredients.map((ingredient) => ingredient.name).join(' ')}`.toLowerCase();
+					return haystack.includes(query);
+				})
+			: data.dishes;
+		return source.slice(0, 30);
+	});
 	const shareExpiryOptions = [
 		{ value: 'never', label: '永久有效' },
 		{ value: '24h', label: '24 小时' },
@@ -102,11 +108,19 @@
 			if (copiedShareId === shareLinkId) copiedShareId = null;
 		}, 1800);
 	};
+	const showFeedbackPanel = () => {
+		activePanel = 'confirm';
+		requestAnimationFrame(() => {
+			document.getElementById('meal-plan-feedback')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+		});
+	};
 	const primaryAction = $derived(
 		data.mealPlan.flow.step === 'confirm' && !activeShare
 			? { kind: 'createShare' as const }
 			: data.mealPlan.flow.step === 'confirm'
-				? { kind: 'confirm' as const }
+				? { kind: 'reviewConfirm' as const }
+				: data.mealPlan.flow.step === 'done'
+					? { kind: 'done' as const }
 				: data.mealPlan.flow.step === 'shop' && data.shoppingList
 					? { kind: 'goShop' as const }
 					: data.mealPlan.flow.step === 'shop'
@@ -134,7 +148,7 @@
 	<!-- 详情头 -->
 	<section class="fd-detail-card" style="margin-top:16px;">
 		<div class="fd-detail-head">
-			<img src={lunchImage} alt="" />
+			<DishVisual name={data.mealPlan.title} category={data.mealPlan.typeLabel} size="lg" />
 			<div>
 				<h2>{data.mealPlan.title}</h2>
 				<p>{data.mealPlan.targetName} · {data.mealPlan.startDate || '未设置日期'}</p>
@@ -160,6 +174,75 @@
 		<p class="fd-soft-card" style="margin-top:12px;font-size:13px;color:var(--fd-muted);">这顿饭已经收起，当前页面保持只读。</p>
 	{/if}
 
+	<section class="fd-flow-cta" aria-label="下一步操作">
+		<div class="min-w-0">
+			<span class={flowStateClass(data.mealPlan.flow.tone)}>当前：{data.mealPlan.flow.label}</span>
+			{#if primaryAction.kind === 'arrange'}
+				<h3>先把菜单定下来</h3>
+				<p>{dishCount > 0 ? `已经有 ${dishCount} 道菜，可以继续加菜，也可以去确认。` : '先加几道菜，再发给家人确认。'}</p>
+			{:else if primaryAction.kind === 'createShare'}
+				<h3>发给家人确认</h3>
+				<p>把菜单发出去，收集忌口、喜欢和最终确认。</p>
+			{:else if primaryAction.kind === 'reviewConfirm'}
+				<h3>{data.feedbackSummary.total > 0 ? '看完反馈就确认菜单' : '确认后进入买菜'}</h3>
+				<p>{data.feedbackSummary.total > 0 ? `已收到 ${data.feedbackSummary.total} 条反馈，确认后反馈会继续保留。` : '链接已准备好；不等反馈时也可以直接确认这份菜单。'}</p>
+			{:else if primaryAction.kind === 'generateShop'}
+				<h3>生成买菜清单</h3>
+				<p>{data.feedbackSummary.total > 0 ? `反馈已保留 ${data.feedbackSummary.total} 条。下一步把食材整理成买菜清单。` : '根据当前菜单把食材整理成一张买菜清单。'}</p>
+			{:else if primaryAction.kind === 'goShop'}
+				<h3>去买菜</h3>
+				<p>清单已经生成，打开后边买边勾。</p>
+			{:else}
+				<h3>{data.mealPlan.status === 'completed' ? '这顿饭已完成' : '买菜已完成'}</h3>
+				<p>{data.shoppingSummary.total > 0 ? `${data.shoppingSummary.checked}/${data.shoppingSummary.total} 项已经买齐，可以回看菜单或完成记录。` : '这顿饭已经完成，可以回看菜单和反馈。'}</p>
+			{/if}
+		</div>
+		<div class="fd-flow-cta-actions">
+			{#if primaryAction.kind === 'arrange'}
+				<button type="button" class="fd-ghost-btn" onclick={() => (activePanel = 'edit')}><Plus class="size-4" /> 加菜</button>
+				<button type="button" class="fd-primary-btn" onclick={() => (activePanel = 'confirm')}><Share2 class="size-4" /> 去确认</button>
+			{:else if primaryAction.kind === 'createShare'}
+				<form method="post" action="?/createShareLink" use:enhanceWithFeedback style="display:contents;">
+					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+					<button type="submit" class="fd-primary-btn" disabled={isArchived} data-pending-label="创建中..."><Link2 class="size-4" /> 发给家人</button>
+				</form>
+			{:else if primaryAction.kind === 'reviewConfirm'}
+				<button type="button" class="fd-ghost-btn" onclick={showFeedbackPanel}><UsersRound class="size-4" /> 看反馈</button>
+				{#if canConfirmMealPlan}
+					<form method="post" action="?/setStatus" use:enhanceWithFeedback style="display:contents;">
+						<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+						<input type="hidden" name="status" value="confirmed" />
+						<button type="submit" class="fd-primary-btn" data-pending-label="确认中..."><CheckCircle2 class="size-4" /> 确认菜单</button>
+					</form>
+				{:else}
+					<a href="?panel=shopping" class="fd-primary-btn"><ShoppingCart class="size-4" /> 去买菜</a>
+				{/if}
+			{:else if primaryAction.kind === 'generateShop'}
+				{#if data.feedbackSummary.total > 0}
+					<button type="button" class="fd-ghost-btn" onclick={showFeedbackPanel}><UsersRound class="size-4" /> 回看反馈</button>
+				{/if}
+				<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback style="display:contents;">
+					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+					<input type="hidden" name="expectedShoppingListUpdatedAt" value={data.shoppingList?.updatedAt ?? ''} />
+					<button type="submit" class="fd-primary-btn" data-pending-label="生成中..."><ShoppingCart class="size-4" /> 生成清单</button>
+				</form>
+			{:else if primaryAction.kind === 'done'}
+				<button type="button" class="fd-ghost-btn" onclick={() => (activePanel = 'menu')}><ArrowLeft class="size-4" /> 看菜单</button>
+				{#if data.mealPlan.status !== 'completed' && !isArchived}
+					<form method="post" action="?/setStatus" use:enhanceWithFeedback style="display:contents;">
+						<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+						<input type="hidden" name="status" value="completed" />
+						<button type="submit" class="fd-primary-btn" data-pending-label="完成中..."><CheckCircle2 class="size-4" /> 标记完成</button>
+					</form>
+				{:else if data.shoppingList}
+					<a href={`/app/shopping-lists/${data.shoppingList.id}`} class="fd-primary-btn"><CheckCircle2 class="size-4" /> 看清单</a>
+				{/if}
+			{:else}
+				<a href={`/app/shopping-lists/${data.shoppingList!.id}`} class="fd-primary-btn"><ShoppingCart class="size-4" /> 去买菜</a>
+			{/if}
+		</div>
+	</section>
+
 	<!-- 面板切换 -->
 	<div class="fd-segmented" style="grid-template-columns:repeat(4,1fr);margin-top:14px;">
 		{#each panels as panel}
@@ -179,7 +262,7 @@
 			<div class="fd-section-head">
 				<div>
 					<h3>吃什么</h3>
-					<p>点菜可改份量、看做法</p>
+					<p>这顿菜单，可以放多道菜</p>
 				</div>
 				<button type="button" class="fd-ghost-btn" onclick={() => (activePanel = 'edit')}><Plus class="size-4" /> 加菜</button>
 			</div>
@@ -200,9 +283,9 @@
 						</div>
 					</div>
 					<div class="fd-card-list">
-						{#each group.items as item, index}
-							<article class="fd-plan-item" data-testid={`meal-plan-item-${item.id}`}>
-								<img src={lunchImage} alt="" />
+						{#each group.items as item}
+							<article class="fd-plan-item single" data-testid={`meal-plan-item-${item.id}`}>
+								<DishVisual name={item.dishName} category={item.dishCategory} size="sm" />
 								<div class="pi-copy min-w-0">
 									<strong>{item.dishName}</strong>
 									<span>{item.dishCategory ?? '未分类'} · {item.servings} 份 · {item.dishIngredientCount} 种食材</span>
@@ -212,37 +295,14 @@
 									{#if item.notes}
 										<span class="fd-pill" style="margin-top:4px;">{item.notes}</span>
 									{/if}
-								</div>
-								<div style="display:grid;gap:6px;justify-items:end;">
-									<form method="post" action="?/updateRecommendationRating" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }}>
-										<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
-										<input type="hidden" name="itemId" value={item.id} />
-										<select name="recommendationRating" class="fd-select" style="height:34px;font-size:12px;padding:6px 30px 6px 10px;width:110px;" disabled={isArchived} onchange={(e) => e.currentTarget.form?.requestSubmit()}>
-											{#each recommendationOptions as option}
-												<option value={option.value} selected={item.recommendationRating === option.value || (!item.recommendationRating && option.value === '')}>{option.label}</option>
-											{/each}
-										</select>
-									</form>
-									<div style="display:flex;gap:6px;">
-										<form method="post" action="?/moveItem">
-											<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
-											<input type="hidden" name="itemId" value={item.id} />
-											<input type="hidden" name="direction" value="up" />
-											<button type="submit" class="fd-round-btn" style="width:34px;height:34px;font-size:18px;" disabled={isArchived || !item.canMoveUp} aria-label="上移"><ArrowUp class="size-4" /></button>
-										</form>
-										<form method="post" action="?/moveItem">
-											<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
-											<input type="hidden" name="itemId" value={item.id} />
-											<input type="hidden" name="direction" value="down" />
-											<button type="submit" class="fd-round-btn" style="width:34px;height:34px;font-size:18px;" disabled={isArchived || !item.canMoveDown} aria-label="下移"><ArrowDown class="size-4" /></button>
-										</form>
+									<div class="fd-plan-actions">
 										{#if item.dishId}
-											<a href={`/app/dishes/${item.dishId}`} class="fd-round-btn" style="width:34px;height:34px;font-size:16px;display:grid;place-items:center;text-decoration:none;" aria-label="看菜品"><ArrowRight class="size-4" /></a>
+											<a href={`/app/dishes/${item.dishId}`} class="fd-ghost-btn">看做法 <ArrowRight class="size-4" /></a>
 										{/if}
 										<form method="post" action="?/removeItem" use:enhanceWithFeedback>
 											<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
 											<input type="hidden" name="itemId" value={item.id} />
-											<button type="submit" class="fd-icon-del" style="width:34px;height:34px;font-size:16px;" disabled={isArchived} aria-label="移除" data-confirm={`从饭单中移除「${item.dishName}」？`}><Trash2 class="size-4" /></button>
+											<button type="submit" class="fd-danger-btn" disabled={isArchived} data-confirm={`从饭单中移除「${item.dishName}」？`}><Trash2 class="size-4" /> 移除</button>
 										</form>
 									</div>
 								</div>
@@ -253,7 +313,7 @@
 			{/if}
 		</section>
 	{:else if activePanel === 'confirm'}
-		<section style="margin-top:4px;" data-testid="meal-plan-feedback">
+		<section id="meal-plan-feedback" style="margin-top:4px;scroll-margin-top:16px;" data-testid="meal-plan-feedback">
 			<div class="fd-section-head">
 				<div>
 					<h3>家人反馈</h3>
@@ -346,6 +406,21 @@
 			{#if data.feedbackSummary.total === 0}
 				<p class="fd-soft-card" style="margin-top:12px;font-size:13px;color:var(--fd-muted);">暂无反馈。创建分享链接并发给家人后，这里会聚合确认、忌口和每道菜的意见。</p>
 			{:else}
+				<div class="fd-confirm-inline">
+					<div>
+						<strong>反馈已收到</strong>
+						<span>{data.feedbackSummary.total} 条反馈会一直保留在这顿饭里。</span>
+					</div>
+					{#if canConfirmMealPlan}
+						<form method="post" action="?/setStatus" use:enhanceWithFeedback>
+							<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+							<input type="hidden" name="status" value="confirmed" />
+							<button type="submit" class="fd-primary-btn" data-pending-label="确认中..."><CheckCircle2 class="size-4" /> 确认菜单</button>
+						</form>
+					{:else}
+						<span class="fd-state-pill green"><CheckCircle2 class="size-3.5" /> 已确认</span>
+					{/if}
+				</div>
 				{#if data.feedbackSummary.dietaryNotes.length > 0 || data.feedbackSummary.globalNotes.length > 0}
 					<div class="fd-section-head"><div><h3>全局备注</h3></div></div>
 					<div class="fd-card-list">
@@ -393,36 +468,6 @@
 				{/if}
 			{/if}
 
-			<details class="fd-soft-card" style="margin-top:12px;padding:0;">
-				<summary style="display:flex;min-height:48px;cursor:pointer;list-style:none;align-items:center;justify-content:space-between;padding:12px 16px;font-size:14px;font-weight:700;color:#4f4943;">
-					收尾动作 <span class="fd-state-pill muted">{data.mealPlan.statusLabel}</span>
-				</summary>
-				<div style="border-top:1px solid var(--fd-line-soft);padding:16px;">
-					<p style="margin:0 0 12px;font-size:13px;color:var(--fd-muted);">通常不用手动改；需要结束反馈或收起记录时再处理。</p>
-					{#if data.feedbackSummary.latestConfirmation}
-						<p style="margin:0 0 12px;"><span class="fd-pill green"><CheckCircle2 class="size-3.5" /> {data.feedbackSummary.latestConfirmation.guestName} 已确认</span></p>
-					{/if}
-					<div style="display:flex;gap:8px;flex-wrap:wrap;">
-						{#each data.statusOptions as option}
-							<form method="post" action="?/setStatus" use:enhanceWithFeedback>
-								<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
-								<input type="hidden" name="status" value={option.value} />
-								<button
-									type="submit"
-									class="fd-ghost-btn {data.mealPlan.status === option.value ? 'active' : ''}"
-									style="{data.mealPlan.status === option.value ? 'border-color:var(--fd-green);background:var(--fd-green-soft);color:var(--fd-green-deep);' : ''}"
-									disabled={isArchived || data.mealPlan.status === option.value}
-									data-confirm={option.value === 'archived' ? '收起后页面会保持只读，确认收起这顿饭？' : undefined}
-									data-pending-label="更新中..."
-								>
-									{#if option.value === 'archived'}<Archive class="size-4" />{:else if option.value === 'completed'}<CheckCircle2 class="size-4" />{:else}<ArchiveRestore class="size-4" />{/if}
-									{option.label}
-								</button>
-							</form>
-						{/each}
-					</div>
-				</div>
-			</details>
 		</section>
 	{:else if activePanel === 'shopping'}
 		<section style="margin-top:4px;">
@@ -458,7 +503,7 @@
 				<input type="hidden" name="expectedShoppingListUpdatedAt" value={data.shoppingList?.updatedAt ?? ''} />
 				<button
 					type="submit"
-					class="fd-primary-btn {data.shoppingList ? '' : 'orange'} block"
+					class="fd-primary-btn {data.shoppingList ? '' : 'orange'} block lg"
 					data-confirm={data.shoppingList ? '重新生成会替换当前购物清单项目，确认继续？' : undefined}
 					data-pending-label={data.shoppingList ? '重新生成中...' : '生成中...'}
 				>
@@ -523,35 +568,40 @@
 			</details>
 
 			<details class="fd-form-card" style="padding:0 17px 14px;">
-				<summary style="cursor:pointer;padding:14px 0;font-size:16px;font-weight:850;border-bottom:1px solid var(--fd-line-soft);list-style:none;">添加已有菜品</summary>
+				<summary style="cursor:pointer;padding:14px 0;font-size:16px;font-weight:850;border-bottom:1px solid var(--fd-line-soft);list-style:none;">从常做菜里加菜</summary>
 				<form method="post" action="?/addDish" use:enhanceWithFeedback={{ pendingLabel: '添加中...' }} style="margin-top:4px;">
 					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
-					<div class="fd-field">
-						<div class="fd-field-label"><strong>菜品</strong></div>
-						<select id="dish-id" name="dishId" class={selectClass} disabled={isArchived || data.dishes.length === 0} required>
-							<option value="" selected>选择菜品</option>
-							{#each data.dishes as dish}<option value={dish.id}>{dish.name}</option>{/each}
-						</select>
+					<input type="hidden" name="plannedDate" value={defaultItemDate ?? ''} />
+					<input type="hidden" name="mealSlot" value={defaultItemSlot ?? ''} />
+					<input type="hidden" name="servings" value={defaultItemServings} />
+					<input type="hidden" name="recommendationRating" value="" />
+					<input type="hidden" name="notes" value="" />
+					<div class="fd-choice-panel">
+						<label class="fd-search">
+							<Search class="size-4" />
+							<input bind:value={addDishQuery} type="search" placeholder="搜菜名、分类、食材" disabled={isArchived || data.dishes.length === 0} />
+						</label>
+						<div class="fd-choice-list">
+							{#each filteredAddDishes as dish}
+								<label class="fd-choice-card">
+									<input bind:group={replacementDishId} class="fd-choice-radio" type="radio" name="dishId" value={dish.id} disabled={isArchived} required />
+									<DishVisual name={dish.name} category={dish.category} size="sm" soft />
+									<span class="min-w-0">
+										<strong>{dish.name}</strong>
+										<span>{dish.category ?? '常做菜'} · {dish.ingredients.length} 种食材 · 基准 {dish.baseServings} 人份</span>
+									</span>
+									{#if replacementDishId === dish.id}<CheckCircle2 class="size-4" style="color:var(--fd-green);" />{/if}
+								</label>
+							{/each}
+						</div>
+						{#if filteredAddDishes.length === 0}
+							<p style="margin:0;color:var(--fd-muted);font-size:12px;">没找到，下面可以快速新建一道。</p>
+						{:else if data.dishes.length > filteredAddDishes.length}
+							<p style="margin:0;color:var(--fd-muted);font-size:11px;">已显示前 {filteredAddDishes.length} 道，继续输入关键词可以缩小范围。</p>
+						{/if}
 						{#if form?.action === 'addDish' && errors.dishId?.[0]}<p class="fd-state-pill coral" style="justify-content:flex-start;margin-top:6px;">{errors.dishId[0]}</p>{/if}
 					</div>
-					<div class="fd-field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;border-bottom:1px solid var(--fd-line-soft);">
-						<div style="padding:13px 0;"><div class="fd-field-label"><strong>日期</strong></div><Input id="add-planned-date" name="plannedDate" type="date" value={defaultDate} disabled={isArchived} class="fd-text-input" /></div>
-						<div style="padding:13px 0;"><div class="fd-field-label"><strong>餐别</strong></div><select id="add-meal-slot" name="mealSlot" class={selectClass} disabled={isArchived}><option value="" selected>未设置</option>{#each data.mealSlotOptions as option}<option value={option}>{option}</option>{/each}</select></div>
-					</div>
-					<div class="fd-field">
-						<div class="fd-field-label"><strong>份数</strong></div>
-						<Input id="add-servings" name="servings" type="number" min="1" max="999" value="1" disabled={isArchived} class="fd-text-input" />
-						{#if form?.action === 'addDish' && errors.servings?.[0]}<p class="fd-state-pill coral" style="justify-content:flex-start;margin-top:6px;">{errors.servings[0]}</p>{/if}
-					</div>
-					<div class="fd-field">
-						<div class="fd-field-label"><strong>推荐星级</strong></div>
-						<select id="add-recommendation-rating" name="recommendationRating" class={selectClass} disabled={isArchived}>{#each recommendationOptions as option}<option value={option.value}>{option.label}</option>{/each}</select>
-					</div>
-					<div class="fd-field">
-						<div class="fd-field-label"><strong>条目备注</strong></div>
-						<textarea id="add-notes" name="notes" class={textAreaClass} disabled={isArchived}></textarea>
-					</div>
-					<button type="submit" class="fd-primary-btn block" disabled={isArchived || data.dishes.length === 0} data-pending-label="添加中..."><Plus class="size-4" /> 添加菜品</button>
+					<button type="submit" class="fd-primary-btn block" style="margin-top:12px;" disabled={isArchived || data.dishes.length === 0} data-pending-label="添加中..."><Plus class="size-4" /> 加到这顿菜单</button>
 				</form>
 			</details>
 
@@ -559,6 +609,11 @@
 				<summary style="cursor:pointer;padding:14px 0;font-size:16px;font-weight:850;border-bottom:1px solid var(--fd-line-soft);list-style:none;">快速新建菜品</summary>
 				<form method="post" action="?/quickAddDish" use:enhanceWithFeedback={{ pendingLabel: '新建中...' }} style="margin-top:4px;">
 					<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
+					<input type="hidden" name="plannedDate" value={defaultItemDate ?? ''} />
+					<input type="hidden" name="mealSlot" value={defaultItemSlot ?? ''} />
+					<input type="hidden" name="servings" value={defaultItemServings} />
+					<input type="hidden" name="recommendationRating" value="" />
+					<input type="hidden" name="notes" value="" />
 					<div class="fd-field">
 						<div class="fd-field-label"><strong>菜品名称</strong></div>
 						<Input id="quick-dish-name" name="name" placeholder="例如：番茄炒蛋" disabled={isArchived} required class="fd-text-input" />
@@ -568,54 +623,11 @@
 						<div class="fd-field-label"><strong>分类</strong></div>
 						<Input id="quick-dish-category" name="category" placeholder="家常菜" disabled={isArchived} class="fd-text-input" />
 					</div>
-					<div class="fd-field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;border-bottom:1px solid var(--fd-line-soft);">
-						<div style="padding:13px 0;"><div class="fd-field-label"><strong>日期</strong></div><Input id="quick-planned-date" name="plannedDate" type="date" value={defaultDate} disabled={isArchived} class="fd-text-input" /></div>
-						<div style="padding:13px 0;"><div class="fd-field-label"><strong>餐别</strong></div><select id="quick-meal-slot" name="mealSlot" class={selectClass} disabled={isArchived}><option value="" selected>未设置</option>{#each data.mealSlotOptions as option}<option value={option}>{option}</option>{/each}</select></div>
-					</div>
-					<div class="fd-field">
-						<div class="fd-field-label"><strong>份数</strong></div>
-						<Input id="quick-servings" name="servings" type="number" min="1" max="999" value="1" disabled={isArchived} class="fd-text-input" />
-					</div>
-					<div class="fd-field">
-						<div class="fd-field-label"><strong>推荐星级</strong></div>
-						<select id="quick-recommendation-rating" name="recommendationRating" class={selectClass} disabled={isArchived}>{#each recommendationOptions as option}<option value={option.value}>{option.label}</option>{/each}</select>
-					</div>
-					<div class="fd-field">
-						<div class="fd-field-label"><strong>条目备注</strong></div>
-						<textarea id="quick-notes" name="notes" class={textAreaClass} disabled={isArchived}></textarea>
-					</div>
-					<button type="submit" class="fd-primary-btn block" disabled={isArchived} data-pending-label="新建中..."><Plus class="size-4" /> 新建并加入</button>
+					<button type="submit" class="fd-primary-btn block" style="margin-top:12px;" disabled={isArchived} data-pending-label="新建中..."><Plus class="size-4" /> 新建并加入</button>
 				</form>
 			</details>
 		</section>
 	{/if}
 </main>
-
-<!-- 底部直线推进 -->
-<div class="fd-sticky-action two">
-	{#if primaryAction.kind === 'arrange'}
-		<button type="button" class="fd-ghost-btn" onclick={() => (activePanel = 'edit')}><Plus class="size-4" /> 继续安排</button>
-		<button type="button" class="fd-primary-btn" onclick={() => (activePanel = 'confirm')}><Share2 class="size-4" /> 去确认 <ArrowRight class="size-4" /></button>
-	{:else if primaryAction.kind === 'createShare'}
-		<button type="button" class="fd-ghost-btn" onclick={() => (activePanel = 'menu')}><ArrowLeft class="size-4" /> 看菜单</button>
-		<form method="post" action="?/createShareLink" use:enhanceWithFeedback style="display:contents;">
-			<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
-			<button type="submit" class="fd-primary-btn" disabled={isArchived} data-pending-label="创建中..."><Link2 class="size-4" /> 发给家人确认 <ArrowRight class="size-4" /></button>
-		</form>
-	{:else if primaryAction.kind === 'confirm'}
-		<button type="button" class="fd-ghost-btn" onclick={() => (activePanel = 'menu')}><ArrowLeft class="size-4" /> 看菜单</button>
-		<button type="button" class="fd-primary-btn" onclick={() => (activePanel = 'confirm')}><UsersRound class="size-4" /> 继续确认 <ArrowRight class="size-4" /></button>
-	{:else if primaryAction.kind === 'generateShop'}
-		<button type="button" class="fd-ghost-btn" onclick={() => (activePanel = 'confirm')}><ArrowLeft class="size-4" /> 回确认</button>
-		<form method="post" action="?/generateShoppingList" use:enhanceWithFeedback style="display:contents;">
-			<input type="hidden" name="expectedUpdatedAt" value={data.mealPlan.updatedAt} />
-			<input type="hidden" name="expectedShoppingListUpdatedAt" value={data.shoppingList?.updatedAt ?? ''} />
-			<button type="submit" class="fd-primary-btn" data-pending-label="生成中..."><ShoppingCart class="size-4" /> 生成清单 <ArrowRight class="size-4" /></button>
-		</form>
-	{:else if primaryAction.kind === 'goShop'}
-		<button type="button" class="fd-ghost-btn" onclick={() => (activePanel = 'menu')}><ArrowLeft class="size-4" /> 看菜单</button>
-		<a href={`/app/shopping-lists/${data.shoppingList!.id}`} class="fd-primary-btn"><ShoppingCart class="size-4" /> 去买菜 <ArrowRight class="size-4" /></a>
-	{/if}
-</div>
 
 <MobileBottomNav />

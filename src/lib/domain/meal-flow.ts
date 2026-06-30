@@ -7,6 +7,7 @@ type MealFlowInput = {
 	itemCount: number;
 	hasShoppingList?: boolean;
 	shoppingItemCount?: number;
+	shoppingPendingCount?: number;
 	shareState?: ShareState;
 	feedbackCount?: number;
 };
@@ -24,6 +25,7 @@ export const getMealFlowState = ({
 	itemCount,
 	hasShoppingList = false,
 	shoppingItemCount = 0,
+	shoppingPendingCount,
 	shareState = 'unknown',
 	feedbackCount = 0
 }: MealFlowInput): MealFlowState => {
@@ -88,13 +90,23 @@ export const getMealFlowState = ({
 	}
 
 	if (status === 'confirmed' || status === 'completed') {
+		if (hasShoppingList && (status === 'completed' || (shoppingItemCount > 0 && shoppingPendingCount === 0))) {
+			return {
+				label: '已买齐',
+				summary: '买菜清单已经全部勾完，这顿饭可以收尾了。',
+				primaryLabel: '查看这顿饭',
+				tone: 'success',
+				step: 'done'
+			};
+		}
+
 		if (hasShoppingList) {
 			return {
-				label: status === 'completed' ? '已完成' : '可以去买菜',
+				label: '可以去买菜',
 				summary: shoppingItemCount > 0 ? `购物清单有 ${shoppingItemCount} 项。` : '购物清单已准备好。',
-				primaryLabel: status === 'completed' ? '查看这顿饭' : '去买菜',
+				primaryLabel: '去买菜',
 				tone: 'success',
-				step: status === 'completed' ? 'done' : 'shop'
+				step: 'shop'
 			};
 		}
 

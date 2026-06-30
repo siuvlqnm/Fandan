@@ -297,6 +297,14 @@ const redirectToPanel = (event: RequestEvent, panel: 'confirm' | 'shopping'): ne
 	throw redirect(303, `${event.url.pathname}?panel=${panel}`);
 };
 
+const redirectForStatus = (event: RequestEvent, status: z.infer<typeof mealPlanStatusSchema>): never => {
+	if (status === 'confirmed') {
+		redirectToPanel(event, 'shopping');
+	}
+
+	throw redirect(303, event.url.pathname);
+};
+
 const groupKey = (item: { plannedDate: string | null; mealSlot: string | null }) =>
 	`${item.plannedDate ?? 'no-date'}::${item.mealSlot ?? 'no-slot'}`;
 
@@ -359,6 +367,8 @@ export const load: PageServerLoad = async (event) => {
 				.values()
 		);
 		const activeShare = shareLinkList.some((shareLink) => shareLink.active);
+		const shoppingCheckedCount = shoppingList?.items.filter((item) => item.checked).length ?? 0;
+		const shoppingPendingCount = shoppingList ? shoppingList.items.length - shoppingCheckedCount : 0;
 
 		return {
 			mealPlan: {
@@ -371,6 +381,7 @@ export const load: PageServerLoad = async (event) => {
 					itemCount: mealPlan.items.length,
 					hasShoppingList: Boolean(shoppingList),
 					shoppingItemCount: shoppingList?.items.length ?? 0,
+					shoppingPendingCount,
 					shareState: activeShare ? 'active' : 'none',
 					feedbackCount: feedbackSummary.total
 				})
@@ -379,6 +390,11 @@ export const load: PageServerLoad = async (event) => {
 			targets,
 			dishes,
 			shoppingList,
+			shoppingSummary: {
+				total: shoppingList?.items.length ?? 0,
+				checked: shoppingCheckedCount,
+				pending: shoppingPendingCount
+			},
 			feedbackSummary,
 			shareLinks: shareLinkList,
 			origin: event.url.origin,
@@ -569,7 +585,7 @@ export const actions: Actions = {
 				});
 			}
 
-			redirectToPanel(event, 'confirm');
+			redirectForStatus(event, result.data.status);
 		} catch (cause) {
 			return actionError('setStatus', cause, values);
 		}

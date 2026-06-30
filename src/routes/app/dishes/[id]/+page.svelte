@@ -1,8 +1,7 @@
 <script lang="ts">
+	import DishVisual from '$lib/components/dish-visual.svelte';
 	import DishForm from '$lib/components/dish-form.svelte';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
-	import dinnerImage from '$lib/assets/meal-ui/dinner.jpg';
-	import lunchImage from '$lib/assets/meal-ui/lunch.jpg';
 	import { ArrowLeft, ArrowRight, CookingPot, ListChecks, MoreHorizontal, Trash2 } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -42,9 +41,9 @@
 
 	<!-- 大图 + 头 -->
 	<section style="position:relative;margin-top:14px;border-radius:26px;overflow:hidden;box-shadow:var(--fd-shadow);">
-		<img src={lunchImage} alt={dish.name} style="display:block;width:100%;height:170px;object-fit:cover;" />
-		<div style="position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));">
-			<h2 style="margin:0;color:#fff;font-size:26px;font-weight:900;">{dish.name}</h2>
+		<div style="height:170px;"><DishVisual name={dish.name} category={dish.category} size="hero" /></div>
+		<div style="position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(180deg,transparent,rgba(33,24,18,.36));">
+			<h2 style="margin:0;color:#211812;font-size:26px;font-weight:900;">{dish.name}</h2>
 			<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
 				<span class="fd-pill" style="background:rgba(255,255,255,.86);">{dish.baseServings} 人份</span>
 				<span class="fd-pill green" style="background:rgba(234,247,223,.95);">{dish.category || '家常菜'}</span>
@@ -128,9 +127,9 @@
 	{#if dish.updatedBy}
 		<p style="margin:16px 0 0;color:var(--fd-muted);font-size:11px;text-align:center;">最近由 {dish.updatedBy.name} 更新</p>
 	{/if}
-</main>
 
-<div class="fd-sticky-action two">
-	<a href="/app/dishes" class="fd-ghost-btn"><ArrowLeft class="size-4" /> 常做菜</a>
-	<a href={`/app/meal-plans/new?dishId=${dish.id}`} class="fd-primary-btn"><ListChecks class="size-4" /> 用它安排饭 <ArrowRight class="size-4" /></a>
-</div>
+	<div class="fd-bottom-action two">
+		<a href="/app/dishes" class="fd-ghost-btn"><ArrowLeft class="size-4" /> 常做菜</a>
+		<a href={`/app/meal-plans/new?dishId=${dish.id}`} class="fd-primary-btn"><ListChecks class="size-4" /> 用它安排饭 <ArrowRight class="size-4" /></a>
+	</div>
+</main>

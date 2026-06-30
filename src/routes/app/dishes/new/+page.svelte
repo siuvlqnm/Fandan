@@ -1,7 +1,6 @@
 <script lang="ts">
 	import DishForm from '$lib/components/dish-form.svelte';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
-	import lunchImage from '$lib/assets/meal-ui/lunch.jpg';
 	import { ArrowLeft, ChefHat, Sparkles } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -31,10 +30,10 @@
 	<!-- 封面 -->
 	<section class="fd-hero-card" style="margin-top:14px;grid-template-columns:minmax(0,1fr) 110px;min-height:120px;">
 		<div class="fd-hero-copy">
-			<h3 style="font-size:18px;">菜的照片</h3>
-			<p>有图一眼认得出，买菜时也好对。</p>
+			<h3 style="font-size:18px;">菜品卡片</h3>
+			<p>先用名称和分类自动生成识别样式，前期不用上传图片。</p>
 			<div class="mini">
-				<span class="fd-pill muted">暂未上传</span>
+				<span class="fd-pill muted">自动生成</span>
 			</div>
 		</div>
 		<div class="fd-hero-media" style="display:grid;place-items:center;background:rgba(46,138,45,.06);">

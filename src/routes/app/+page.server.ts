@@ -70,6 +70,68 @@ const overlapsRange = (
 	return Boolean(start && end && start <= endKey && end >= startKey);
 };
 
+const mealPlanSlotKey = (mealPlan: {
+	id: string;
+	items: Array<{ plannedDate: string | null; mealSlot: string | null }>;
+}) => {
+	const anchoredItem = mealPlan.items.find((item) => item.plannedDate && item.mealSlot);
+	return anchoredItem ? `${anchoredItem.plannedDate}::${anchoredItem.mealSlot}` : `meal-plan:${mealPlan.id}`;
+};
+
+const dedupeMealPlansBySlot = <
+	T extends {
+		id: string;
+		startDate: string | null;
+		endDate: string | null;
+		createdAt: string;
+		updatedAt: string;
+		items: Array<{ plannedDate: string | null; mealSlot: string | null }>;
+	}
+>(
+	mealPlans: T[]
+) => {
+	const map = new Map<string, T>();
+
+	for (const mealPlan of [...mealPlans].sort((left, right) => left.updatedAt.localeCompare(right.updatedAt))) {
+		map.set(mealPlanSlotKey(mealPlan), mealPlan);
+	}
+
+	return Array.from(map.values()).sort((left, right) => planStart(left).localeCompare(planStart(right)));
+};
+
+const mealPlansByDateAndSlot = (
+	mealPlans: Array<{
+		id: string;
+		title: string;
+		status: string;
+		updatedAt: string;
+		flow: ReturnType<typeof getMealFlowState>;
+		items: Array<{ plannedDate: string | null; mealSlot: string | null }>;
+	}>
+) => {
+	return mealPlans.reduce<Record<string, Record<string, { id: string; title: string; flowLabel: string; updatedAt: string }>>>(
+		(map, mealPlan) => {
+			if (mealPlan.status === 'archived') return map;
+
+			for (const item of mealPlan.items) {
+				if (!item.plannedDate || !item.mealSlot) continue;
+				map[item.plannedDate] ??= {};
+				const current = map[item.plannedDate][item.mealSlot];
+				if (current && current.updatedAt >= mealPlan.updatedAt) continue;
+				map[item.plannedDate][item.mealSlot] = {
+					id: mealPlan.id,
+					title: mealPlan.title,
+					flowLabel: mealPlan.flow.label,
+					updatedAt: mealPlan.updatedAt
+				};
+			}
+
+			return map;
+		},
+		{}
+	);
+};
+
 export const load: PageServerLoad = async (event) => {
 	const { locals, url } = event;
 
@@ -101,10 +163,11 @@ export const load: PageServerLoad = async (event) => {
 		.sort((left, right) => planStart(left).localeCompare(planStart(right)));
 
 	const currentMealPlans = enrichedMealPlans.filter((mealPlan) => mealPlan.status !== 'archived');
-	const pendingMealPlans = currentMealPlans.filter((mealPlan) => mealPlan.status === 'pending_confirmation').slice(0, 3);
-	const todayMealPlans = currentMealPlans.filter((mealPlan) => overlapsDate(mealPlan, todayKey)).slice(0, 3);
-	const weekMealPlans = currentMealPlans.filter((mealPlan) => overlapsRange(mealPlan, weekStartKey, weekEndKey)).slice(0, 5);
-	const recentMealPlans = [...currentMealPlans]
+	const uniqueMealPlans = dedupeMealPlansBySlot(currentMealPlans);
+	const pendingMealPlans = uniqueMealPlans.filter((mealPlan) => mealPlan.status === 'pending_confirmation').slice(0, 3);
+	const todayMealPlans = uniqueMealPlans.filter((mealPlan) => overlapsDate(mealPlan, todayKey)).slice(0, 3);
+	const weekMealPlans = uniqueMealPlans.filter((mealPlan) => overlapsRange(mealPlan, weekStartKey, weekEndKey)).slice(0, 5);
+	const recentMealPlans = [...uniqueMealPlans]
 		.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
 		.slice(0, 4);
 	const familyDashboard = await getFamilyWorkspaceDashboard(context, {
@@ -134,6 +197,7 @@ export const load: PageServerLoad = async (event) => {
 		pendingMealPlans,
 		pendingTasks: familyDashboard.pendingTasks,
 		activityItems: familyDashboard.activityItems,
+		quickStartMealPlans: mealPlansByDateAndSlot(enrichedMealPlans),
 		todayMealPlans,
 		weekMealPlans,
 		recentMealPlans,

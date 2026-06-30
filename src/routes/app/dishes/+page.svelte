@@ -1,20 +1,22 @@
 <script lang="ts">
+	import DishVisual from '$lib/components/dish-visual.svelte';
 	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
 	import avatarImage from '$lib/assets/meal-ui/avatar.jpg';
-	import breakfastImage from '$lib/assets/meal-ui/breakfast.jpg';
-	import dinnerImage from '$lib/assets/meal-ui/dinner.jpg';
-	import lunchImage from '$lib/assets/meal-ui/lunch.jpg';
 	import logoImage from '$lib/assets/meal-ui/logo.png';
-	import snackImage from '$lib/assets/meal-ui/snack.jpg';
 	import { ArrowRight, Plus, Search, Soup, Trash2 } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
-
-	const dishImages = [lunchImage, dinnerImage, breakfastImage, snackImage];
 	const featuredDish = $derived(data.dishes[0] ?? null);
-	const dishImage = (index: number) => dishImages[index % dishImages.length];
+
+	const categoryHref = (value: string | null) => {
+		const params = new URLSearchParams();
+		if (data.filters.q) params.set('q', data.filters.q);
+		if (value && value !== 'all') params.set('category', value);
+		const query = params.toString();
+		return `/app/dishes${query ? `?${query}` : ''}`;
+	};
 </script>
 
 <svelte:head>
@@ -49,11 +51,13 @@
 				<p>{featuredDish.category || '家常菜'} · {featuredDish.ingredients.length} 种食材 · 可直接加入下一顿</p>
 				<div class="mini">
 					<span class="fd-pill">{featuredDish.baseServings} 人份</span>
-					<span class="fd-pill green">家常</span>
-					<span class="fd-pill">常被选择</span>
+					<span class="fd-pill green">常做</span>
+					<span class="fd-pill">优先推荐</span>
 				</div>
 			</div>
-			<div class="fd-hero-media"><img src={lunchImage} alt={featuredDish.name} /></div>
+			<div class="fd-hero-media">
+				<DishVisual name={featuredDish.name} category={featuredDish.category} size="hero" />
+			</div>
 		</section>
 	{/if}
 
@@ -65,10 +69,10 @@
 		<button type="submit" class="fd-round-btn" style="width:48px;height:48px;font-size:18px;" aria-label="搜索"><Search class="size-5" /></button>
 	</form>
 
-	{#if data.total > 5 && data.categoryOptions.length > 1}
-		<div class="fd-segmented" style="margin-top:12px;" aria-label="常做菜分类">
-			{#each data.categoryOptions.slice(0, 4) as option}
-				<a href={option.value === 'all' ? '/app/dishes' : `/app/dishes?category=${encodeURIComponent(String(option.value))}`} class="fd-segment {data.filters.category === option.value ? 'active' : ''}">
+	{#if data.categoryOptions.length > 1}
+		<div class="fd-category-strip" aria-label="常做菜分类">
+			{#each data.categoryOptions as option}
+				<a href={categoryHref(option.value)} class="fd-category-chip {data.filters.category === option.value ? 'active' : ''}">
 					{option.label}
 				</a>
 			{/each}
@@ -97,32 +101,32 @@
 			</a>
 		</div>
 	{:else}
-		<section class="fd-card-list">
-			{#each data.dishes as dish, index}
-				<article class="fd-list-card" data-testid={`dish-${dish.id}`}>
-					<span class="thumb"><img src={dishImage(index)} alt={dish.name} /></span>
-					<span class="list-copy min-w-0">
-						<a href={`/app/dishes/${dish.id}`} class="min-w-0">
-							<strong>{dish.name}</strong>
-							<span class="sub">{dish.category || '未分类'} · {dish.ingredients.length} 种食材</span>
-							<small>{dish.ingredients.length > 0 ? dish.ingredients.map((ingredient) => ingredient.name).join('、') : '还没有食材，之后补也可以'}</small>
-						</a>
-						<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
-							<a href={`/app/meal-plans/new?dishId=${dish.id}`} class="fd-ghost-btn" style="height:34px;font-size:12px;padding:0 12px;">加入下一顿 <ArrowRight class="size-3.5" /></a>
-							<form method="post" action="?/delete" use:enhanceWithFeedback>
-								<input type="hidden" name="id" value={dish.id} />
-								<button type="submit" class="fd-icon-del" style="width:34px;height:34px;font-size:16px;" aria-label={`删除常做菜「${dish.name}」`} data-confirm={`删除常做菜「${dish.name}」？`} data-pending-label="删除中...">
-									<Trash2 class="size-4" />
-								</button>
-							</form>
-						</div>
-					</span>
+		<section class="fd-dish-masonry">
+			{#each data.dishes as dish}
+				<article class="fd-dish-masonry-card" data-testid={`dish-${dish.id}`}>
+					<a href={`/app/dishes/${dish.id}`} class="fd-dish-masonry-main">
+						<strong>{dish.name}</strong>
+						<span>{dish.category || '未分类'}</span>
+					</a>
+					{#if dish.ingredients.length > 0}
+						<p>{dish.ingredients.slice(0, 3).map((ingredient) => ingredient.name).join(' / ')}</p>
+					{:else}
+						<p class="muted">之后补食材</p>
+					{/if}
+					<div class="fd-dish-masonry-actions">
+						<span>{dish.ingredients.length} 种</span>
+						<a href={`/app/meal-plans/new?dishId=${dish.id}`} class="fd-mini-icon-btn" aria-label={`用「${dish.name}」安排下一顿`}><ArrowRight class="size-4" /></a>
+						<form method="post" action="?/delete" use:enhanceWithFeedback class="fd-icon-form">
+							<input type="hidden" name="id" value={dish.id} />
+							<button type="submit" class="fd-icon-del" aria-label={`删除常做菜「${dish.name}」`} data-confirm={`删除常做菜「${dish.name}」？`} data-pending-label="删除中...">
+								<Trash2 class="size-4" />
+							</button>
+						</form>
+					</div>
 				</article>
 			{/each}
 		</section>
 	{/if}
 </main>
-
-<a href="/app/dishes/new" class="fd-fab" aria-label="新增常做菜"><Plus class="size-6" /></a>
 
 <MobileBottomNav />

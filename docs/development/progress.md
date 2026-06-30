@@ -2,6 +2,149 @@
 
 This file records completed implementation slices so other Codex threads can quickly resume work without reconstructing context from Git history or Linear.
 
+## 2026-06-30 - Flow State And Compact Dish Card Follow-up
+
+Status: implemented, documented and verified on 2026-06-30.
+
+What changed:
+
+- Removed the foreground generated dish visual from the small `常做菜` masonry cards. The top recommendation card still keeps the visual treatment, while list cards now prioritize readable dish names.
+- Reduced the small dish cards to compact three-column masonry cards with stable action buttons; card text no longer sits underneath the generated visual.
+- Fixed shopping-completion state derivation. When a generated shopping list has all items checked, the meal flow now becomes `已买齐` / `完成` instead of continuing to show `去买菜`.
+- Added shopping-list to meal-plan status sync. Checking the final pending item marks the meal plan completed; adding or unchecking a shopping item moves it back to confirmed.
+- Removed the remaining `更多状态管理` block from meal-plan detail. Status progression now happens through the primary flow card and the shopping-list checkbox state.
+- Kept `看这顿饭安排`, `添加购物项`, `停止分享` and shopping-list regeneration actions on full-width or grid-safe button styles to avoid narrow-screen misalignment.
+
+Verification completed:
+
+- `npm run check` passed with 0 errors and 0 warnings.
+- 390 x 844 browser verification with a real local account:
+  - `常做菜` cards measured 113 px wide by 110 px tall, with no foreground `.fd-dish-visual` inside the small cards and no horizontal overflow.
+  - Shopping-list detail showed `看这顿饭安排` and `添加购物项` as full-width buttons inside their containers.
+  - After checking the last shopping item, the meal detail flow card changed to `当前：已买齐` and no longer showed `去买菜`.
+  - Meal detail no longer contains `更多状态管理`.
+- Screenshots saved under `docs/audits/2026-06-30-app-redesign-review/flow-state-layout-fix/`.
+
+Notes for next threads:
+
+- The small dish-card phase intentionally has no dish image upload and no foreground fallback icon. Keep the visual identity on larger surfaces only unless card density changes again.
+- Shopping completion now drives the meal-plan completed state. If future product rules need a separate cooked/served confirmation, add a new explicit state instead of reusing `completed` ambiguously.
+- Local Node is still `22.9.0`; Vite recommends `20.19+`, `22.12+` or `24+`. Build passes, but upgrading Node would remove the warning.
+
+## 2026-06-30 - P0 Feedback Persistence And Finish Flow Fix
+
+Status: implemented, documented and re-verified on 2026-06-30.
+
+What changed:
+
+- Fixed the meal-plan finish flow so `看反馈 -> 确认菜单 -> 生成清单/去买菜` is exposed as the main page flow instead of being hidden inside `收尾动作`.
+- Added visible `确认菜单` forms in the feedback review area and the top flow card. Confirming now redirects to the shopping panel so the next step is obvious.
+- Kept submitted feedback visible after creator-side menu confirmation. The confirmed meal detail now explicitly says feedback is preserved, and the confirm panel still shows item feedback.
+- Removed the duplicate bottom progression button row from meal-plan detail to avoid competing with the top flow card and bottom app navigation.
+- Moved shopping-list `看这顿饭安排` into the progress card and kept `添加购物项` as the only bottom form action, reducing narrow-screen button crowding.
+- Reworked `常做菜` item browsing from large square/two-column cards into a three-column masonry grid. The top recommendation card and category filter remain.
+- Standardized narrow action buttons so long labels can wrap inside their button boxes instead of pushing neighboring buttons out of alignment.
+
+Verification completed:
+
+- `npm run check` passed with 0 errors and 0 warnings.
+- `npm run build` passed.
+- Local preview restarted at `http://localhost:4173`.
+- Mobile browser flow at 390 x 844: created a meal, created a share link, submitted public item feedback, verified the owner feedback panel showed it, confirmed the menu, verified the page moved to the shopping step, then reopened feedback and confirmed the submitted note remained visible.
+- Generated the shopping list and verified the shopping-list detail has no horizontal overflow and no visible button overlap.
+- Rechecked `常做菜` masonry at 390 x 844: no horizontal overflow and no visible button overlap.
+- Browser console had 0 error entries during the reviewed flows.
+- Screenshots saved under `docs/audits/2026-06-30-app-redesign-review/p0-feedback-finish-flow/`.
+
+Notes for next threads:
+
+- Do not move menu confirmation back into `更多状态管理`; it is a primary flow action.
+- Public share URL in the local Worker preview may render with `127.0.0.1` and no port. For local manual testing, use the same `/share/{token}` path on `http://localhost:4173`.
+- Local Node is still `22.9.0`; Vite recommends `20.19+`, `22.12+` or `24+`. Build passes, but upgrading Node would remove the warning.
+
+## 2026-06-30 - Meal Slot Dedup And App Interaction Correction
+
+Status: implemented, documented and re-verified on 2026-06-30. This supersedes the earlier same-day single-dish interpretation.
+
+What changed:
+
+- Restored the `常做菜` top recommendation card and changed the dish items below it into two-column compact App tiles while preserving the category selector.
+- Corrected the product rule: one date + meal slot can only have one meal plan, but a meal plan can contain multiple dishes.
+- Added quick-start duplicate protection. Clicking the same date and meal slot now opens/reuses the existing meal plan instead of creating another lunch/dinner.
+- De-duplicated the home-page meal-slot display so old duplicate local data does not appear as multiple `午餐` entries in `今天进展`.
+- Reworked meal creation back to multi-dish menus. Manual dish names, AI draft dishes and existing dishes can all produce a multi-dish menu again.
+- Reworked existing-dish selection away from native selects. New meal creation uses searchable multi-select cards; meal-detail add-dish uses searchable single-add cards.
+- Added a top `下一步` action card to meal-plan detail so the user sees whether to add dishes, send confirmation, generate a shopping list or go shopping without hunting through tabs.
+- New meal creation now returns to the meal-plan detail first instead of jumping directly to the shopping list, preserving the `安排 -> 确认 -> 买菜 -> 完成` flow.
+- Removed `待买` / `已买` / `全部` tabs from shopping-list detail. Items now stay on one page, grouped by category, with unchecked items first and checked items shown in-place with a completed state.
+- Moved per-item shopping actions into a single overflow button so item rows stay aligned on narrow mobile screens.
+- Kept the no-upload dish-photo phase honest by continuing to use generated dish visuals instead of fake food photos.
+
+Verification completed:
+
+- `npm run check` passed with 0 errors and 0 warnings.
+- `npm run build` passed.
+- Local preview restarted at `http://localhost:4173`.
+- 390 x 844 browser captures were re-reviewed under `docs/audits/2026-06-30-app-redesign-review/interaction-correction/`.
+- Repeatedly clicking `明天` + `午餐` landed on the same meal-plan URL: `/app/meal-plans/8dec9d89-b814-4efd-90d4-10787e737f57`.
+- Checked `/app`, `/app/dishes`, `/app/meal-plans/new` and the verified meal-plan detail at 390 x 844; `scrollWidth` matched `clientWidth` on all four pages.
+- Browser console had 0 error entries during the reviewed flows.
+
+Notes for next threads:
+
+- LES-130 remains Done; this pass was logged as a follow-up comment because it extends the same visual polish issue.
+- Do not reintroduce the single-dish rule. The intended rule is one meal-plan record per date + meal slot, with multiple dishes allowed inside that menu.
+- Local Node is still `22.9.0`; Vite recommends `20.19+`, `22.12+` or `24+`. Build passes, but upgrading Node would remove the warning.
+
+## 2026-06-30 - App Redesign Polish Fixes
+
+Status: implemented and visually re-verified on 2026-06-30.
+
+What changed:
+
+- Added shared `src/lib/components/dish-visual.svelte` so dish surfaces have a generated visual identity based on dish name/category while upload is not in scope.
+- Replaced fake dish photos on dish list/detail and meal-plan dish rows with the generated dish visual.
+- Reworked dense dish list cards so text, generated visual and actions have stable space on mobile.
+- Converted detail/new page bottom actions from fixed floating bars into in-flow bottom action rows, removing content overlap on meal-plan detail, shopping-list detail, dish detail, target detail and meal-plan create.
+- Updated new-dish page copy to describe the no-upload phase as automatic identification styling.
+
+Verification completed:
+
+- `npm run check` passed with 0 errors and 0 warnings.
+- `npm run build` passed.
+- Local preview at 390 x 844 captured and reviewed updated screenshots under `docs/audits/2026-06-30-app-redesign-review/fix-verification/`.
+- Browser console had no error entries during the reviewed flows.
+
+Notes for next threads:
+
+- Dish upload remains intentionally out of scope for the first phase. The generated dish visual should become the fallback once uploaded images are added later.
+- Local Node is still `22.9.0`; Vite recommends `20.19+`, `22.12+` or `24+`. Build passes, but upgrading Node would remove the warning.
+
+## 2026-06-30 - App Redesign Visual Audit And Linear Alignment
+
+Status: documented and aligned on 2026-06-30. No runtime code change.
+
+What changed:
+
+- Saved the authenticated mobile visual audit to `docs/audits/2026-06-30-app-redesign-review/AUDIT.md`.
+- Copied the 390 x 844 screenshot evidence into `docs/audits/2026-06-30-app-redesign-review/`.
+- Confirmed the Claude Code redesign direction is broadly healthy: the App now reads as a warm mobile lifestyle tool rather than an admin dashboard.
+- Recorded remaining polish risks: sticky action bars covering content on meal-plan and shopping-list details, cramped dish-list rows, tight dashboard meal-card copy, and long-text risks in settings.
+- Created Linear issue `LES-130` under `LES-120` for the required follow-up polish.
+- Added a Linear project document titled `2026-06-30 App 重设计落地审查`.
+- Commented on `LES-120` with the audit location and follow-up issue.
+
+Verification completed:
+
+- `npm run build` passed during the audit.
+- 390 x 844 browser captures were taken for dashboard, meal-plan list, dishes, shopping lists, settings, meal detail, shopping-list detail and share confirmation.
+
+Notes for next threads:
+
+- Start from `LES-130` if picking up visual polish.
+- Re-run the same screenshot set after fixing the sticky CTA and card density issues.
+- Current local Node remains `22.9.0`; Vite recommends `20.19+`, `22.12+` or `24+`.
+
 ## 2026-06-29 - .fd-* Design Vocabulary Pass
 
 Status: implemented locally on 2026-06-29. No database migration and no server/action/route change; this is a full CSS-vocabulary and markup replacement across all `/app/*` pages plus a shared flow-stepper component, ported from the static HTML prototypes in `app-redesign/`.

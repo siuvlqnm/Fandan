@@ -1,11 +1,10 @@
 <script lang="ts">
+	import DishVisual from '$lib/components/dish-visual.svelte';
 	import FlowSteps from '$lib/components/flow-steps.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import dinnerImage from '$lib/assets/meal-ui/dinner.jpg';
-	import lunchImage from '$lib/assets/meal-ui/lunch.jpg';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
-	import { ArrowLeft, ArrowRight, Check, Clock3, Moon, Plus, Sparkles, Sun, UsersRound, Utensils } from 'lucide-svelte';
+	import { ArrowLeft, ArrowRight, Clock3, Moon, Search, Sparkles, Sun, UsersRound, Utensils } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -15,6 +14,7 @@
 	const dishes = $derived(form?.dishes ?? data.dishes);
 	const targets = $derived(form?.targets ?? data.targets);
 	const mealAi = $derived(form?.mealAi);
+	let dishQuery = $state('');
 	const selectedIds = $derived(new Set(values.dishIds ?? []));
 	const selectedDishes = $derived(dishes.filter((dish) => selectedIds.has(dish.id)));
 	const suggestedNames = $derived(
@@ -24,6 +24,17 @@
 			.filter(Boolean)
 	);
 	const suggestedDrafts = $derived(mealAi?.status === 'draft' ? mealAi.suggestedDishes : []);
+	const filteredDishes = $derived.by(() => {
+		const query = dishQuery.trim().toLowerCase();
+		const source = query
+			? dishes.filter((dish) => {
+					const haystack = `${dish.name} ${dish.category ?? ''} ${dish.ingredients.map((ingredient) => ingredient.name).join(' ')}`.toLowerCase();
+					return haystack.includes(query);
+				})
+			: dishes;
+		return source.slice(0, query ? 30 : 8);
+	});
+	const candidateDishes = $derived(filteredDishes.filter((dish) => !selectedIds.has(dish.id)));
 
 	const slotOptions = [
 		{ value: '早餐', icon: Sun, hint: '07:00-09:00', variant: 'breakfast' },
@@ -103,8 +114,8 @@
 				<Input id="title" name="title" value={values.title ?? ''} placeholder="比如：周六午餐" class="fd-text-input" />
 			</div>
 			<div class="fd-field">
-				<div class="fd-field-label"><strong>这顿想吃什么？</strong><span class="hint">用逗号或换行分隔</span></div>
-				<textarea id="dish-names" name="dishNamesText" class="fd-textarea" style="min-height:84px;" placeholder="例如：番茄炒蛋、清炒时蔬">{values.dishNamesText ?? ''}</textarea>
+				<div class="fd-field-label"><strong>这顿想吃什么？</strong><span class="hint">可写多道</span></div>
+				<textarea id="dish-names" name="dishNamesText" class="fd-textarea" style="min-height:76px;" placeholder="临时写菜名，用顿号或换行分开，例如：番茄炒蛋、清炒时蔬">{values.dishNamesText ?? ''}</textarea>
 				{#if errors.dishNamesText?.[0]}<p class="fd-state-pill coral" style="justify-content:flex-start;margin-top:6px;">{errors.dishNamesText[0]}</p>{/if}
 			</div>
 			<div class="fd-field">
@@ -154,7 +165,7 @@
 		<section class="fd-section-head">
 			<div>
 				<h3>吃什么</h3>
-				<p>{selectedDishes.length + suggestedNames.length > 0 ? `已选 ${selectedDishes.length + suggestedNames.length} 道菜` : '从常做菜里加，或临时写一个'}</p>
+				<p>{selectedDishes.length + suggestedNames.length > 0 ? `已选 ${selectedDishes.length + suggestedNames.length} 道菜` : '从常做菜里搜，或上面临时写菜名'}</p>
 			</div>
 			<a href="/app/dishes" class="fd-ghost-btn"><Utensils class="size-4" /> 挑常做菜</a>
 		</section>
@@ -164,8 +175,8 @@
 			<section class="fd-card-list">
 				{#each suggestedNames as name}
 					{@const draft = draftForName(name)}
-					<article class="fd-plan-item">
-						<img src={lunchImage} alt="" />
+					<article class="fd-plan-item has-actions">
+						<DishVisual name={name} category={draft?.category} size="sm" />
 						<div class="pi-copy min-w-0">
 							<strong>{name}</strong>
 							<span>{draft?.category ?? '新菜'} · 来自 AI 建议</span>
@@ -193,8 +204,8 @@
 		{#if selectedDishes.length > 0}
 			<section class="fd-card-list">
 				{#each selectedDishes as dish}
-					<label class="fd-plan-item" style="cursor:pointer;">
-						<img src={dinnerImage} alt="" />
+					<label class="fd-plan-item has-actions" style="cursor:pointer;">
+						<DishVisual name={dish.name} category={dish.category} size="sm" />
 						<div class="pi-copy min-w-0">
 							<strong>{dish.name}</strong>
 							<span>{dish.category ?? '常做菜'} · {dish.ingredients.length} 种食材 · 基准 {dish.baseServings} 人份</span>
@@ -203,7 +214,6 @@
 							<UsersRound class="size-3.5" /> 已选
 						</span>
 						<input type="checkbox" name="dishIds" value={dish.id} checked class="sr-only" />
-						<span class="fd-round-btn" style="width:30px;height:30px;font-size:14px;background:var(--fd-green-soft);color:var(--fd-green-deep);border-color:transparent;"><Check class="size-4" strokeWidth={3} /></span>
 					</label>
 				{/each}
 			</section>
@@ -211,30 +221,49 @@
 
 		<!-- 选已有菜 -->
 		{#if dishes.length > 0}
-			<details class="fd-form-card" style="padding:0 17px 14px;">
-				<summary style="cursor:pointer;padding:14px 0;font-size:15px;font-weight:850;border-bottom:1px solid var(--fd-line-soft);list-style:none;">
-					从常做菜里加（{dishes.length} 道可选）
-				</summary>
-				<div class="fd-card-list" style="margin-top:12px;">
-					{#each dishes as dish}
-						<label class="fd-check-card {selectedIds.has(dish.id) ? 'is-done' : ''}" style="cursor:pointer;">
-							<input type="checkbox" name="dishIds" value={dish.id} checked={selectedIds.has(dish.id)} class="size-5" />
-							<span class="fd-check" aria-hidden="true"><Check class="size-4" strokeWidth={3} /></span>
-							<span class="min-w-0 flex-1">
-								<span class="block truncate" style="font-weight:800;">{dish.name}</span>
-								<span class="block" style="font-size:11px;color:var(--fd-muted);">{dish.category ?? '常做菜'} · {dish.ingredients.length} 种食材 · 基准 {dish.baseServings} 人份</span>
-							</span>
-						</label>
-					{/each}
+			<section class="fd-form-card" style="padding:14px 17px;">
+				<div class="fd-field-label" style="margin-bottom:10px;">
+					<strong>从常做菜里选</strong>
+					<span class="hint">{dishQuery.trim() ? `搜到 ${filteredDishes.length} 道` : `先显示 ${candidateDishes.length} 道`}</span>
 				</div>
-			</details>
+				<div class="fd-choice-panel">
+					<label class="fd-search">
+						<Search class="size-4" />
+						<input bind:value={dishQuery} type="search" placeholder="搜菜名、分类、食材" />
+					</label>
+					<div class="fd-choice-list">
+						{#each candidateDishes as dish}
+							<label class="fd-choice-card">
+								<input class="fd-choice-radio" type="checkbox" name="dishIds" value={dish.id} />
+								<DishVisual name={dish.name} category={dish.category} size="sm" soft />
+								<span class="min-w-0">
+									<strong>{dish.name}</strong>
+									<span>{dish.category ?? '常做菜'} · {dish.ingredients.length} 种食材 · 基准 {dish.baseServings} 人份</span>
+								</span>
+							</label>
+						{/each}
+					</div>
+					{#if filteredDishes.length === 0}
+						<p style="margin:0;color:var(--fd-muted);font-size:12px;">没搜到。可以在上面临时写一道菜名。</p>
+					{:else if dishes.length > filteredDishes.length}
+						<p style="margin:0;color:var(--fd-muted);font-size:11px;">共有 {dishes.length} 道常做菜，输入关键词可以按菜名、分类、食材缩小范围。</p>
+					{:else if candidateDishes.length === 0}
+						<p style="margin:0;color:var(--fd-muted);font-size:12px;">当前显示的菜都已选，可以继续搜索别的菜。</p>
+					{/if}
+				</div>
+			</section>
+		{:else}
+			<section class="fd-form-card" style="padding:14px 17px;">
+				<strong style="display:block;font-size:15px;font-weight:850;">还没有常做菜</strong>
+				<p style="margin:6px 0 0;color:var(--fd-muted);font-size:12px;line-height:1.45;">先在上面临时写一道菜名，也可以去常做菜页补充后再回来选择。</p>
+			</section>
 		{/if}
 	</form>
-</main>
 
-<div class="fd-sticky-action two">
-	<button type="submit" form="meal-draft-form" class="fd-ghost-btn" disabled={!data.aiAvailable} data-pending-label="正在生成草稿...">存草稿</button>
-	<button type="submit" form="meal-create-form" class="fd-primary-btn" data-pending-label="正在安排...">
-		列好菜单 <ArrowRight class="size-4" />
-	</button>
-</div>
+	<div class="fd-bottom-action two">
+		<button type="submit" form="meal-draft-form" class="fd-ghost-btn" disabled={!data.aiAvailable} data-pending-label="正在生成草稿...">存草稿</button>
+		<button type="submit" form="meal-create-form" class="fd-primary-btn" data-pending-label="正在安排...">
+			列好菜单 <ArrowRight class="size-4" />
+		</button>
+	</div>
+</main>

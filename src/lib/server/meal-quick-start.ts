@@ -6,7 +6,7 @@ import {
 	type MealQuickStartSlotId
 } from '$lib/domain/meal-quick-start';
 import { createDish, createDishSchema, listDishes } from '$lib/server/dishes';
-import { createMealPlan } from '$lib/server/meal-plans';
+import { createMealPlan, findMealPlanByDateAndSlot } from '$lib/server/meal-plans';
 
 type UserSpaceContext = Parameters<typeof listDishes>[0];
 
@@ -42,6 +42,15 @@ export const createQuickStartMealPlan = async (
 
 	if (!isMealSlotAvailable(slot, input.quickStartDate)) {
 		throw new Error(`${slot.label} 已经过了，换一个还来得及的餐别吧。`);
+	}
+
+	const existingMealPlan = await findMealPlanByDateAndSlot(context, {
+		plannedDate: input.quickStartDate,
+		mealSlot: slot.mealSlot
+	});
+
+	if (existingMealPlan) {
+		return existingMealPlan;
 	}
 
 	const dishes = await listDishes(context);

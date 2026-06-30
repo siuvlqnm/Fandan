@@ -3,8 +3,7 @@ import { z } from 'zod';
 import { ApiError } from '$lib/server/api/errors';
 import { requireUserSpace } from '$lib/server/context';
 import { createDish, createDishSchema, listDishes } from '$lib/server/dishes';
-import { createMealPlan } from '$lib/server/meal-plans';
-import { generateShoppingList } from '$lib/server/shopping-lists';
+import { createMealPlan, findMealPlanByDateAndSlot, getMealPlan, updateMealPlan } from '$lib/server/meal-plans';
 import { listTargets } from '$lib/server/targets';
 import {
 	createWorkersAiMealDraftProvider,
@@ -180,6 +179,46 @@ const createMealAction = async (event: RequestEvent) => {
 		}
 		const dishIds = Array.from(new Set([...result.data.dishIds, ...inlineDishIds]));
 		const title = result.data.title || `${result.data.plannedDate || '今晚'} ${result.data.mealSlot || '用餐'}`;
+		const existingMealPlan = await findMealPlanByDateAndSlot(context, {
+			plannedDate: result.data.plannedDate,
+			mealSlot: result.data.mealSlot
+		});
+
+		if (existingMealPlan) {
+			const existing = await getMealPlan(context, existingMealPlan.id);
+			const existingDishIds = new Set(existing.items.map((item) => item.dishId).filter(Boolean));
+			const items = existing.items
+				.sort((first, second) => first.sortOrder - second.sortOrder || first.createdAt.localeCompare(second.createdAt))
+				.map((item, index) => ({
+					dishId: item.dishId,
+					mealSlot: item.mealSlot,
+					plannedDate: item.plannedDate,
+					servings: item.servings,
+					recommendationRating: item.recommendationRating,
+					notes: item.notes,
+					sortOrder: index
+				}));
+
+			for (const dishId of dishIds) {
+				if (existingDishIds.has(dishId)) continue;
+				items.push({
+					dishId,
+					mealSlot: result.data.mealSlot ?? null,
+					plannedDate: result.data.plannedDate ?? null,
+					servings: result.data.servings,
+					recommendationRating: null,
+					notes: null,
+					sortOrder: items.length
+				});
+			}
+
+			if (items.length !== existing.items.length) {
+				await updateMealPlan(context, existing.id, { items });
+			}
+
+			return redirect(303, `/app/meal-plans/${existing.id}`);
+		}
+
 		const mealPlan = await createMealPlan(context, {
 			title,
 			targetId: result.data.targetId,
@@ -190,15 +229,14 @@ const createMealAction = async (event: RequestEvent) => {
 			notes: result.data.notes,
 			items: dishIds.map((dishId, index) => ({
 				dishId,
-				mealSlot: result.data.mealSlot,
-				plannedDate: result.data.plannedDate,
+				mealSlot: result.data.mealSlot ?? null,
+				plannedDate: result.data.plannedDate ?? null,
 				servings: result.data.servings,
 				recommendationRating: null,
 				sortOrder: index
 			}))
 		});
-		const shoppingList = await generateShoppingList(context, mealPlan.id);
-		return redirect(303, `/app/shopping-lists/${shoppingList.id}?first=1`);
+		return redirect(303, `/app/meal-plans/${mealPlan.id}`);
 	} catch (cause) {
 		toPageError(cause);
 	}
@@ -291,6 +329,9 @@ export const actions: Actions = {
 		const [dishes, targets] = await Promise.all([listDishes(context), listTargets(context)]);
 		const currentNames = parseDishNames(values.dishNamesText);
 		const remainingNames = currentNames.filter((name) => name !== replaceDishName);
+		const remainingDrafts = parseSuggestedDishDrafts(values.suggestedDishDraftsJson).filter((dish) =>
+			remainingNames.includes(dish.name)
+		);
 		const env = event.platform?.env as (Env & { AI?: Ai; AI_MEAL_MODEL?: string }) | undefined;
 		const provider = createWorkersAiMealDraftProvider(env?.AI, env?.AI_MEAL_MODEL);
 
@@ -306,9 +347,6 @@ export const actions: Actions = {
 			const replacement = result.draft.suggestedDishes.find((dish) => !remainingNames.includes(dish.name) && dish.name !== replaceDishName);
 
 			if (!replacement) throw new MealDraftError('invalid_response', 'AI 没有给出可替换的菜，请手动调整或再试一次。');
-			const remainingDrafts = parseSuggestedDishDrafts(values.suggestedDishDraftsJson).filter(
-				(dish) => remainingNames.includes(dish.name) && dish.name !== replaceDishName
-			);
 			const nextDrafts = [...remainingDrafts, replacement];
 			const nextNames = [...remainingNames, replacement.name];
 
@@ -323,7 +361,7 @@ export const actions: Actions = {
 					constraints: result.draft.constraints,
 					uncertainFields: result.draft.uncertainFields,
 					suggestedDishes: nextDrafts,
-					existingDishIds: values.dishIds,
+					existingDishIds: [],
 					attempts: result.attempts,
 					model: result.model
 				}

@@ -27,6 +27,8 @@
 	const selectedQuickDate = $derived(
 		dateMode === 'today' ? data.quickStart.today : dateMode === 'tomorrow' ? data.quickStart.tomorrow : customDate || data.quickStart.today
 	);
+	const existingMealForSlot = (slot: PageData['quickStart']['slots'][number]) =>
+		data.quickStartMealPlans[selectedQuickDate]?.[slot.mealSlot] ?? null;
 	const nextSlot = $derived(data.quickStart.slots.find((slot) => !slot.disabledToday) ?? data.quickStart.slots.at(-1));
 	const currentMealText = $derived(nextSlot ? `适合安排${nextSlot.mealSlot}` : '适合先想明天');
 	const visibleMealPlans = $derived(
@@ -44,6 +46,7 @@
 	const slotVariant = (id: PageData['quickStart']['slots'][number]['id']) =>
 		id === 'dinner' ? 'green' : id === 'late_night' ? 'coral' : 'warm';
 	const slotState = (slot: PageData['quickStart']['slots'][number]) => {
+		if (existingMealForSlot(slot)) return { text: '已安排', cls: 'scheduled' };
 		if (slot.disabledToday && dateMode === 'today') return { text: '过', cls: '' };
 		if (slot.id === nextSlot?.id && dateMode === 'today') return { text: '推荐', cls: 'recommend' };
 		if (slot.id === 'late_night') return { text: '轻', cls: 'light' };
@@ -173,7 +176,8 @@
 	<section style="display:grid;gap:7px;margin-top:9px;">
 		{#each data.quickStart.slots as slot}
 			{@const Icon = slotIcon(slot.id)}
-			{@const disabled = isSlotDisabled(slot)}
+			{@const existingMeal = existingMealForSlot(slot)}
+			{@const disabled = !existingMeal && isSlotDisabled(slot)}
 			{@const state = slotState(slot)}
 			{@const variant = slotVariant(slot.id)}
 			<form method="post" action="?/quickStart" use:enhanceWithFeedback={{ pendingLabel: '正在安排...' }}>
@@ -181,9 +185,9 @@
 				<input type="hidden" name="quickStartSlot" value={slot.id} />
 				<button
 					type="submit"
-					class="fd-meal-card {variant} {slot.disabledToday && dateMode === 'today' ? 'is-past' : ''} {slot.id === nextSlot?.id && dateMode === 'today' ? 'is-focus' : ''} w-full text-left"
+					class="fd-meal-card {variant} {disabled ? 'is-past' : ''} {existingMeal ? 'is-scheduled' : ''} {slot.id === nextSlot?.id && dateMode === 'today' && !existingMeal ? 'is-focus' : ''} w-full text-left"
 					disabled={disabled}
-					data-pending-label="正在安排..."
+					data-pending-label={existingMeal ? '正在打开...' : '正在安排...'}
 				>
 					<span class="mc-icon"><Icon strokeWidth={2.4} /></span>
 					<span class="mc-body min-w-0">
@@ -192,7 +196,13 @@
 							<span class="time" style="color:{variant === 'green' ? '#2e8a2d' : variant === 'coral' ? '#d16a5c' : '#e18400'};">{slotTimeHint(slot)}</span>
 							<span class="state {state.cls}">{state.text}</span>
 						</span>
-						<p class="mc-desc">推荐：{slot.recommendedNames.length > 0 ? slot.recommendedNames.join('、') : '先想好主菜'}</p>
+						<p class="mc-desc">
+							{#if existingMeal}
+								{existingMeal.title} · {existingMeal.flowLabel}
+							{:else}
+								推荐：{slot.recommendedNames.length > 0 ? slot.recommendedNames.join('、') : '先想好主菜'}
+							{/if}
+						</p>
 					</span>
 					<span class="mc-img"><img src={slotImage[slot.id]} alt={slot.mealSlot} /></span>
 				</button>

@@ -7,7 +7,7 @@ import {
 	INGREDIENT_UNIT_OPTIONS,
 	normalizeOptionalOption
 } from '$lib/domain/food-options';
-import { getMealPlan } from '$lib/server/meal-plans';
+import { getMealPlan, updateMealPlan } from '$lib/server/meal-plans';
 import {
 	createShoppingListItem,
 	deleteShoppingListItem,
@@ -33,7 +33,6 @@ const itemFormSchema = z.object({
 type FormAction = 'addItem' | 'updateItem' | 'toggleItem' | 'deleteItem' | 'regenerate';
 type ShoppingList = Awaited<ReturnType<typeof getShoppingList>>;
 type ShoppingListItem = ShoppingList['items'][number];
-type ItemFilter = 'pending' | 'checked' | 'all';
 
 const requireContext = async (event: RequestEvent) => {
 	if (!event.locals.user || !event.locals.session) {
@@ -112,6 +111,18 @@ const redirectBack = (event: RequestEvent): never => {
 	throw redirect(303, event.url.pathname);
 };
 
+const syncMealPlanStatusWithShoppingList = async (context: Awaited<ReturnType<typeof requireContext>>, shoppingListId: string) => {
+	const shoppingList = await getShoppingList(context, shoppingListId);
+	const mealPlan = await getMealPlan(context, shoppingList.mealPlanId);
+	const allChecked = shoppingList.items.length > 0 && shoppingList.items.every((item) => item.checked);
+
+	if (mealPlan.status !== 'archived' && allChecked && mealPlan.status !== 'completed') {
+		await updateMealPlan(context, mealPlan.id, { status: 'completed' });
+	} else if (mealPlan.status === 'completed' && !allChecked) {
+		await updateMealPlan(context, mealPlan.id, { status: 'confirmed' });
+	}
+};
+
 const groupItems = (items: ShoppingListItem[]) =>
 	Array.from(
 		items
@@ -131,22 +142,10 @@ const groupItems = (items: ShoppingListItem[]) =>
 				new Map<string, { category: string; items: ShoppingListItem[]; checkedCount: number }>()
 			)
 			.values()
-	);
-
-const readItemFilter = (value: string | null): ItemFilter =>
-	value === 'checked' || value === 'all' ? value : 'pending';
-
-const filterItems = (items: ShoppingListItem[], filter: ItemFilter) => {
-	if (filter === 'checked') {
-		return items.filter((item) => item.checked);
-	}
-
-	if (filter === 'pending') {
-		return items.filter((item) => !item.checked);
-	}
-
-	return items;
-};
+	).map((group) => ({
+		...group,
+		items: group.items.sort((first, second) => Number(first.checked) - Number(second.checked))
+	}));
 
 export const load: PageServerLoad = async (event) => {
 	const context = await requireContext(event);
@@ -160,16 +159,13 @@ export const load: PageServerLoad = async (event) => {
 		const shoppingList = await getShoppingList(context, id);
 		const mealPlan = await getMealPlan(context, shoppingList.mealPlanId);
 		const checkedCount = shoppingList.items.filter((item) => item.checked).length;
-		const filter = readItemFilter(event.url.searchParams.get('filter'));
-		const visibleItems = filterItems(shoppingList.items, filter);
 
 		return {
 			shoppingList,
 			mealPlan,
 			firstUse: event.url.searchParams.get('first') === '1',
 			canInvite: context.membership.role === 'owner',
-			filter,
-			groups: groupItems(visibleItems),
+			groups: groupItems(shoppingList.items),
 			summary: {
 				total: shoppingList.items.length,
 				checked: checkedCount,
@@ -193,6 +189,7 @@ export const actions: Actions = {
 
 		try {
 			await createShoppingListItem(context, event.params.id, { ...result.data, checked: false });
+			await syncMealPlanStatusWithShoppingList(context, event.params.id);
 
 			return {
 				action: 'addItem',
@@ -237,6 +234,7 @@ export const actions: Actions = {
 
 		try {
 			await updateShoppingListItem(context, event.params.id, values.itemId, { checked: values.checked });
+			await syncMealPlanStatusWithShoppingList(context, event.params.id);
 			redirectBack(event);
 		} catch (cause) {
 			return actionError('toggleItem', cause, values);
@@ -253,6 +251,7 @@ export const actions: Actions = {
 
 		try {
 			await deleteShoppingListItem(context, event.params.id, itemId);
+			await syncMealPlanStatusWithShoppingList(context, event.params.id);
 			redirectBack(event);
 		} catch (cause) {
 			return actionError('deleteItem', cause, { itemId });

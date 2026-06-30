@@ -247,6 +247,28 @@ export const listMealPlans = async (
 	);
 };
 
+export const findMealPlanByDateAndSlot = async (
+	context: AuthenticatedContext,
+	input: { plannedDate: string | null | undefined; mealSlot: string | null | undefined }
+) => {
+	const plannedDate = input.plannedDate?.trim();
+	const mealSlot = input.mealSlot?.trim();
+
+	if (!plannedDate || !mealSlot) {
+		return null;
+	}
+
+	const mealPlansForSpace = await listMealPlans(context);
+
+	return (
+		mealPlansForSpace.find(
+			(mealPlan) =>
+				mealPlan.status !== 'archived' &&
+				mealPlan.items.some((item) => item.plannedDate === plannedDate && item.mealSlot === mealSlot)
+		) ?? null
+	);
+};
+
 export const getMealPlan = async (context: AuthenticatedContext, id: string) => {
 	const [mealPlan] = await context.db
 		.select()

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import MobileBottomNav from '$lib/components/mobile-bottom-nav.svelte';
 	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import basketImage from '$lib/assets/meal-ui/basket.jpg';
 	import { INGREDIENT_CATEGORY_OPTIONS, INGREDIENT_UNIT_OPTIONS } from '$lib/domain/food-options';
 	import { enhanceWithFeedback } from '$lib/forms/enhance';
@@ -14,18 +13,8 @@
 	const addValues = $derived((form?.action === 'addItem' ? (form.values ?? {}) : {}) as Record<string, unknown>);
 	const completionLabel = $derived(`${data.summary.checked}/${data.summary.total}`);
 	const completionPercent = $derived(data.summary.total === 0 ? 0 : Math.round((data.summary.checked / data.summary.total) * 100));
-	const filterOptions = $derived([
-		{ id: 'pending' as const, label: '待买', count: data.summary.pending },
-		{ id: 'checked' as const, label: '已买', count: data.summary.checked },
-		{ id: 'all' as const, label: '全部', count: data.summary.total }
-	]);
 	const textAreaClass = 'fd-textarea';
 	const selectClass = 'fd-select';
-	const filterHref = (filter: PageData['filter']) => {
-		const params = new URLSearchParams({ filter });
-		if (data.firstUse) params.set('first', '1');
-		return `?${params.toString()}`;
-	};
 	const formatShoppingTime = (value: string | null) => {
 		if (!value) return '';
 		const normalized = value.replace('T', ' ').replace(/\.\d+Z?$/, '').replace(/Z$/, '');
@@ -56,8 +45,8 @@
 		<a href="/app/shopping-lists" class="fd-brand with-back">
 			<span class="fd-back-btn"><ArrowLeft class="size-5" /></span>
 			<span class="min-w-0 leading-tight">
-				<h1>{data.shoppingList.title}</h1>
-				<p>来自 {data.mealPlan.title} · {data.summary.total} 项</p>
+				<h1>买菜清单</h1>
+				<p>{data.mealPlan.title} · {data.summary.total} 项</p>
 			</span>
 		</a>
 		<div class="fd-actions">
@@ -89,6 +78,9 @@
 			<span class="fd-pill green">已买 {data.summary.checked}</span>
 			<span class="fd-pill">{data.mealPlan.title}</span>
 		</div>
+		<a href={`/app/meal-plans/${data.mealPlan.id}`} class="fd-ghost-btn block">
+			<CheckCircle2 class="size-4" /> 看这顿饭安排 <ArrowRight class="size-4" />
+		</a>
 	</section>
 
 	{#if form?.message}
@@ -104,23 +96,14 @@
 					<span style="display:block;margin-top:2px;font-size:12px;color:#4f6a4f;line-height:1.4;">下面是按基准份数生成的购物清单；没有食材的菜可以先手动补购物项。</span>
 				</div>
 			</div>
-			<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+			<div class="fd-action-grid">
 				<a href={`/app/meal-plans/${data.mealPlan.id}`} class="fd-ghost-btn block">查看这顿饭</a>
 				{#if data.canInvite}<a href="/app/invitations" class="fd-ghost-btn block">邀请家人一起看</a>{/if}
 			</div>
 		</section>
 	{/if}
 
-	<!-- 筛选 -->
-	<div class="fd-segmented cols-3" style="margin-top:14px;" aria-label="购物项筛选">
-		{#each filterOptions as option}
-			<a href={filterHref(option.id)} class="fd-segment {data.filter === option.id ? 'active' : ''}" aria-current={data.filter === option.id ? 'page' : undefined}>
-				{option.label} <span style="font-size:11px;opacity:.7;">{option.count}</span>
-			</a>
-		{/each}
-	</div>
-
-	<section style="margin-top:4px;" data-testid="shopping-list-items">
+	<section style="margin-top:8px;" data-testid="shopping-list-items">
 		{#if data.shoppingList.items.length === 0}
 			<div class="fd-empty" style="margin-top:14px;">
 				<span class="emoji"><ShoppingBag class="size-8" /></span>
@@ -128,81 +111,80 @@
 				<p>回到饭单添加带食材的菜品，或先手动补充购物项。</p>
 				<a href={`/app/meal-plans/${data.mealPlan.id}`} class="fd-primary-btn lg block" style="margin-top:6px;">打开饭单 <ArrowRight class="size-4" /></a>
 			</div>
-		{:else if data.groups.length === 0}
-			<div class="fd-empty" style="margin-top:14px;">
-				<span class="emoji"><CheckCircle2 class="size-8" /></span>
-				<h3>{data.filter === 'checked' ? '还没有已买项' : '没有待买项'}</h3>
-				<p>{data.filter === 'checked' ? '家人勾选后会显示在这里。' : '当前清单已经都处理完了，可以切到已买或全部查看。'}</p>
-			</div>
 		{:else}
 			{#each data.groups as group}
-				<section class="fd-section-head">
+				<section class="fd-shopping-group">
+					<div class="fd-shopping-group-head">
 					<div>
 						<h3>{group.category}</h3>
-						<p>{group.checkedCount}/{group.items.length} 已买</p>
+							<p>{group.items.length - group.checkedCount} 个待买 · {group.checkedCount} 个已买</p>
 					</div>
-				</section>
-				<section class="fd-card-list">
+						<span class="fd-shopping-status">{group.checkedCount}/{group.items.length}</span>
+					</div>
+				<section class="fd-shopping-items">
 					{#each group.items as item}
-						<article class="fd-check-card {item.checked ? 'is-done' : ''}" style="grid-template-columns:36px minmax(0,1fr) auto;" data-testid={`shopping-list-item-${item.id}`}>
+						<article class="fd-check-card shopping {item.checked ? 'is-done' : ''}" data-testid={`shopping-list-item-${item.id}`}>
 							<form method="post" action="?/toggleItem" use:enhanceWithFeedback style="display:contents;">
 								<input type="hidden" name="itemId" value={item.id} />
 								<input type="hidden" name="checked" value={item.checked ? 'false' : 'true'} />
 								<button type="submit" class="fd-check" aria-label={item.checked ? '标记未购买' : '标记已购买'}><Check class="size-4" strokeWidth={3} /></button>
 							</form>
 							<div class="fd-check-copy min-w-0">
-								<strong style="{item.checked ? 'text-decoration:line-through;color:var(--fd-muted);' : ''}">{item.name}</strong>
+								<strong>{item.name}</strong>
 								<span>{item.quantity || '未填数量'}{item.unit ? ` ${item.unit}` : ''}{item.notes ? ` · ${item.notes}` : ''}</span>
 								<span style="font-size:11px;color:var(--fd-muted);">{shoppingActorLabel(item)}</span>
 							</div>
-							<div style="display:grid;gap:6px;justify-items:end;">
+							<div class="fd-item-actions">
 								<details style="position:relative;">
 									<summary class="fd-icon-del" style="width:34px;height:34px;font-size:16px;list-style:none;cursor:pointer;display:grid;place-items:center;" aria-label="编辑"><MoreHorizontal class="size-4" /></summary>
-									<form method="post" action="?/updateItem" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} style="position:absolute;right:0;top:42px;z-index:5;width:240px;display:grid;gap:10px;padding:14px;background:#fff;border:1px solid var(--fd-line);border-radius:18px;box-shadow:var(--fd-shadow);">
-										<input type="hidden" name="itemId" value={item.id} />
-										<div class="fd-field" style="padding:0;border:0;">
-											<div class="fd-field-label" style="font-size:11px;"><strong>名称</strong></div>
-											<Input id={`name-${item.id}`} name="name" value={item.name} required class="fd-text-input" style="height:40px;" />
-										</div>
-										<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+									<div style="position:absolute;right:0;top:42px;z-index:5;width:250px;display:grid;gap:10px;padding:14px;background:#fff;border:1px solid var(--fd-line);border-radius:18px;box-shadow:var(--fd-shadow);">
+										<form method="post" action="?/updateItem" use:enhanceWithFeedback={{ pendingLabel: '保存中...' }} style="display:grid;gap:10px;">
+											<input type="hidden" name="itemId" value={item.id} />
 											<div class="fd-field" style="padding:0;border:0;">
-												<div class="fd-field-label" style="font-size:11px;"><strong>数量</strong></div>
-												<Input id={`quantity-${item.id}`} name="quantity" value={item.quantity ?? ''} class="fd-text-input" style="height:40px;" />
+												<div class="fd-field-label" style="font-size:11px;"><strong>名称</strong></div>
+												<Input id={`name-${item.id}`} name="name" value={item.name} required class="fd-text-input" style="height:40px;" />
+											</div>
+											<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+												<div class="fd-field" style="padding:0;border:0;">
+													<div class="fd-field-label" style="font-size:11px;"><strong>数量</strong></div>
+													<Input id={`quantity-${item.id}`} name="quantity" value={item.quantity ?? ''} class="fd-text-input" style="height:40px;" />
+												</div>
+												<div class="fd-field" style="padding:0;border:0;">
+													<div class="fd-field-label" style="font-size:11px;"><strong>单位</strong></div>
+													<select id={`unit-${item.id}`} name="unit" class={selectClass} style="height:40px;">
+														<option value="" selected={!item.unit}>选择单位</option>
+														{#each INGREDIENT_UNIT_OPTIONS as unit}
+															<option value={unit} selected={selectedOption(item.unit, INGREDIENT_UNIT_OPTIONS, '适量') === unit}>{unit}</option>
+														{/each}
+													</select>
+												</div>
 											</div>
 											<div class="fd-field" style="padding:0;border:0;">
-												<div class="fd-field-label" style="font-size:11px;"><strong>单位</strong></div>
-												<select id={`unit-${item.id}`} name="unit" class={selectClass} style="height:40px;">
-													<option value="" selected={!item.unit}>选择单位</option>
-													{#each INGREDIENT_UNIT_OPTIONS as unit}
-														<option value={unit} selected={selectedOption(item.unit, INGREDIENT_UNIT_OPTIONS, '适量') === unit}>{unit}</option>
+												<div class="fd-field-label" style="font-size:11px;"><strong>分类</strong></div>
+												<select id={`category-${item.id}`} name="category" class={selectClass} style="height:40px;">
+													{#each INGREDIENT_CATEGORY_OPTIONS as category}
+														<option value={category} selected={selectedOption(item.category, INGREDIENT_CATEGORY_OPTIONS, '其他') === category}>{category}</option>
 													{/each}
 												</select>
 											</div>
-										</div>
-										<div class="fd-field" style="padding:0;border:0;">
-											<div class="fd-field-label" style="font-size:11px;"><strong>分类</strong></div>
-											<select id={`category-${item.id}`} name="category" class={selectClass} style="height:40px;">
-												{#each INGREDIENT_CATEGORY_OPTIONS as category}
-													<option value={category} selected={selectedOption(item.category, INGREDIENT_CATEGORY_OPTIONS, '其他') === category}>{category}</option>
-												{/each}
-											</select>
-										</div>
-										<div class="fd-field" style="padding:0;border:0;">
-											<div class="fd-field-label" style="font-size:11px;"><strong>备注</strong></div>
-											<textarea id={`notes-${item.id}`} name="notes" class={textAreaClass} style="min-height:60px;">{item.notes ?? ''}</textarea>
-										</div>
-										<button type="submit" class="fd-primary-btn" style="height:40px;" data-pending-label="保存中..."><Save class="size-4" /> 保存</button>
-									</form>
+											<div class="fd-field" style="padding:0;border:0;">
+												<div class="fd-field-label" style="font-size:11px;"><strong>备注</strong></div>
+												<textarea id={`notes-${item.id}`} name="notes" class={textAreaClass} style="min-height:60px;">{item.notes ?? ''}</textarea>
+											</div>
+											<button type="submit" class="fd-primary-btn" style="height:40px;" data-pending-label="保存中..."><Save class="size-4" /> 保存</button>
+										</form>
+										<form method="post" action="?/deleteItem" use:enhanceWithFeedback style="display:contents;">
+											<input type="hidden" name="itemId" value={item.id} />
+											<button type="submit" class="fd-danger-btn block" style="height:40px;" aria-label="删除购物项" data-confirm={`删除购物项「${item.name}」？`} data-pending-label="删除中...">
+												<Trash2 class="size-4" /> 删除
+											</button>
+										</form>
+									</div>
 								</details>
-								<form method="post" action="?/deleteItem" use:enhanceWithFeedback style="display:contents;">
-									<input type="hidden" name="itemId" value={item.id} />
-									<button type="submit" class="fd-icon-del" style="width:34px;height:34px;font-size:16px;" aria-label="删除购物项" data-confirm={`删除购物项「${item.name}」？`} data-pending-label="删除中...">
-										<Trash2 class="size-4" />
-									</button>
-								</form>
 							</div>
 						</article>
 					{/each}
+				</section>
 				</section>
 			{/each}
 		{/if}
@@ -249,14 +231,8 @@
 			<div class="fd-field-label"><strong>备注</strong></div>
 			<textarea id="new-item-notes" name="notes" class={textAreaClass}>{String(addValues.notes ?? '')}</textarea>
 		</div>
-		<button type="submit" class="fd-primary-btn block" data-pending-label="添加中..."><Plus class="size-4" /> 添加</button>
+		<button type="submit" class="fd-primary-btn block lg" data-pending-label="添加中..."><Plus class="size-4" /> 添加购物项</button>
 	</form>
 </main>
-
-<div class="fd-sticky-action">
-	<a href={`/app/meal-plans/${data.mealPlan.id}`} class="fd-primary-btn block lg">
-		<CheckCircle2 class="size-4" /> 看这顿饭安排 <ArrowRight class="size-4" />
-	</a>
-</div>
 
 <MobileBottomNav />
